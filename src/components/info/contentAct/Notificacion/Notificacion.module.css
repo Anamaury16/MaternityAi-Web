@@ -1,0 +1,39 @@
+.container {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+  & .nombre_notificacion {
+    color: #c0446b;
+    font-weight: bold;
+    background-color: #ffe8ee;
+    width: 15%;
+    padding: 6px 10px;
+    border-radius: 20px;
+  }
+
+  & .title {
+    color: #b95575;
+  }
+
+  & .desc {
+    font-size: 18px;
+    color: rgb(73, 73, 73);
+  }
+
+  & .fecha {
+    display: flex;
+    justify-content: space-between;
+    color: rgb(73, 73, 73);
+  }
+
+  & .nombre {
+    color: #e3658d;
+    font-weight: bold;
+  }
+
+  & img {
+    width: 170px;
+    height: 160px;
+    padding: 50px;
+  }
+}

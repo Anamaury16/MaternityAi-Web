@@ -1,0 +1,17 @@
+.mensaje {
+  & h1 {
+    color: #ca436e;
+    margin-bottom: 0;
+  }
+
+  & p {
+    font-size: 18px;
+    color: rgb(83, 83, 83);
+  }
+
+  & h2 {
+    margin-bottom: 0px;
+
+    color: #ca436e;
+  }
+}

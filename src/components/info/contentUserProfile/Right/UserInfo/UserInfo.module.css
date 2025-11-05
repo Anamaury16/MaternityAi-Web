@@ -1,0 +1,56 @@
+.containerInfo {
+  padding-top: 40px;
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid #eeeeee;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+  background-color: rgba(223, 223, 223, 0.1);
+
+  & h2 {
+    color: #ca436e;
+    font-size: 40px;
+  }
+
+  & .data {
+    width: 50vh;
+    & p {
+      color: #ca436e;
+    }
+
+    & span {
+      display: flex;
+      border: 2px solid rgb(219, 219, 219);
+      border-radius: 20px;
+      padding: 9px 15px;
+      background-color: white;
+    }
+  }
+
+  & .foto {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    & img {
+      width: 60px;
+    }
+
+    & button {
+      border: none;
+      background-color: transparent;
+      margin-top: 10px;
+    }
+    & .color {
+      color: red;
+    }
+
+    & .fotoperfil {
+      color: #ca436e;
+    }
+  }
+}

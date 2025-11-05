@@ -1,0 +1,81 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+
+  & img {
+    padding-left: 50px;
+  }
+
+  & h2 {
+    font-weight: normal;
+    font-size: 40px;
+    margin-top: 30px;
+    margin-bottom: 0;
+    color: #df5d86;
+  }
+
+  & p {
+    color: gray;
+  }
+
+  & .comenzar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  & h2 {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+  }
+
+  & .parrafo {
+    padding: 0 25%;
+  }
+
+  & .formulario {
+    width: 50%;
+    margin-left: 20px;
+
+    & .boton {
+      display: flex;
+      justify-content: center;
+    }
+
+    & P {
+      padding-left: 15px;
+      margin-bottom: 0;
+    }
+    & input {
+      width: 90%;
+      height: 45px;
+      margin-top: 8px;
+      padding-left: 15px;
+      font-size: 15px;
+      border-radius: 12px;
+      border: 2px solid rgb(224, 224, 224);
+    }
+
+    & .confirm {
+      & .register {
+        background-color: transparent;
+        border: none;
+        color: #df5d86;
+      }
+    }
+  }
+  & .lastbutton {
+    margin-top: 20px;
+    background-color: #df5d86;
+    color: white;
+    font-size: 16px;
+    border-radius: 30px;
+    width: 120px;
+    height: 45px;
+    border: none;
+    box-shadow: 2px 2px 5px rgb(158, 158, 158);
+  }
+}

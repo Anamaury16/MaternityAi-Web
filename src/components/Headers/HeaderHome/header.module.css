@@ -1,0 +1,18 @@
+.container {
+  padding-top: 30px;
+  padding-bottom: 30px;
+
+  display: flex;
+  font-size: 17px;
+  gap: 60px;
+}
+
+.home {
+  text-decoration: none;
+  color: gray;
+}
+
+.nosotros {
+  text-decoration: none;
+  color: gray;
+}

@@ -1,0 +1,8 @@
+.container {
+  margin: 40px 40px;
+  height: 80vh;
+
+  display: flex;
+  flex: row;
+  gap: 5px;
+}

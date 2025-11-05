@@ -1,0 +1,14 @@
+.container {
+  display: flex;
+  margin-top: 80px;
+  height: 80vh;
+
+  gap: 40px;
+  & .historial {
+    width: 25%;
+  }
+
+  & .chat {
+    width: 70%;
+  }
+}

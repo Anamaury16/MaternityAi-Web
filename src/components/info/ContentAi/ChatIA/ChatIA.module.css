@@ -1,0 +1,42 @@
+.contenedor1 {
+  padding: 0 10%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 80%;
+
+  & .input {
+    margin-top: 6px;
+    outline: none;
+    padding: 20px 15px 20px 40px;
+    font-size: 15px;
+    border-radius: 30px;
+    border: 1px solid #ccc;
+    box-shadow: -4px 4px 6px rgb(170, 170, 170);
+  }
+
+  & .chats {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    overflow: auto;
+
+    & .user,
+    & .Ai {
+      width: fit-content;
+      overflow-wrap: anywhere;
+    }
+
+    & .user {
+      max-width: 55%;
+      align-self: flex-end;
+      text-align: left;
+    }
+
+    & .Ai {
+      max-width: 60%;
+    }
+  }
+}

@@ -1,0 +1,64 @@
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
+  & .logo {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  & nav {
+    display: flex;
+    gap: 40px;
+    background-color: #e2e0e0;
+    padding: 0 40px;
+    border-radius: 25px;
+    box-shadow: 4px 4px 6px rgb(143, 143, 143);
+
+    & .link {
+      text-decoration: none;
+      color: black;
+      display: flex;
+      align-items: center;
+    }
+
+    & .main {
+      text-decoration: none;
+      color: black;
+      display: flex;
+      align-items: center;
+    }
+
+    & .actividad {
+      text-decoration: none;
+      color: black;
+      display: flex;
+      align-items: center;
+    }
+
+    & .ai {
+      text-decoration: none;
+      color: black;
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  & .perfil {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    padding-top: 10px;
+    cursor: pointer;
+
+    & .name {
+      margin: 0%;
+    }
+    & .desc {
+      margin: 0;
+      font-size: 12px;
+    }
+  }
+}

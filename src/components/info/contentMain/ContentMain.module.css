@@ -1,0 +1,47 @@
+.container {
+  margin: 20px 0;
+  display: flex;
+  justify-content: space-between;
+
+  & .informacion_usuario {
+    & p {
+      font-size: 22px;
+    }
+
+    & h1 {
+      font-size: 48px;
+      margin: 0;
+    }
+  }
+
+  & .right {
+    width: 40%;
+  }
+
+  & img {
+    padding-left: 100px;
+  }
+
+  & .right {
+    margin-top: 40px;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 25% 71.5%;
+    grid-template-areas:
+      'datos datos'
+      'consejos registros';
+
+    & .datos {
+      grid-area: datos;
+    }
+
+    & .consejos {
+      grid-area: consejos;
+    }
+
+    & .registros {
+      grid-area: registros;
+    }
+  }
+}

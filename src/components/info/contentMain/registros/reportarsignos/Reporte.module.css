@@ -1,0 +1,9 @@
+.reporte {
+  background: linear-gradient(90deg, #d86f90, #e98aa5, #f5b8c9);
+  color: white;
+  border-radius: 20px;
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+  box-shadow: -4px 5px 10px rgb(218, 218, 218);
+}

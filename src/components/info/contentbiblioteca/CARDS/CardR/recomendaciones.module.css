@@ -1,0 +1,36 @@
+.recomendaciones {
+  background: linear-gradient(to bottom, #fbeff3, #e799b2, #c57e94);
+  border-radius: 20px;
+  padding: 10px 30px 70px 30px;
+  box-shadow: -3px 3px 6px rgb(180, 180, 180);
+
+  & h3 {
+    color: white;
+    font-weight: normal;
+    font-size: 28px;
+  }
+
+  & .articulo {
+    border: 1px solid none;
+    border-radius: 12px;
+    background-color: white;
+    padding: 17px 10px 17px 30px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: rgb(170, 170, 170);
+    margin-bottom: 10px;
+  }
+
+  & .articulo:hover {
+    box-shadow: 3px 3px 6px rgb(124, 124, 124);
+    cursor: pointer;
+  }
+
+  & button {
+    background-color: transparent;
+    border: none;
+    color: #f8a2bd;
+    font-size: 12px;
+  }
+}
