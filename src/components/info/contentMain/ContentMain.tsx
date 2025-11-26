@@ -7,10 +7,14 @@ export const ContentMain = () => {
   return (
     <section className={styles.container}>
       <div className={styles.informacion_usuario}>
-        <p className="">
-          Buenas tardes, <h1 className="">Ana Milena</h1>
-          <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" />
-        </p>
+        <div className={styles.mensaje_bienvendida}>
+          Buenas tardes, <h1 className="">34bff32</h1>
+        </div>
+        <img
+          alt="foto trimestre"
+          className={styles.foto}
+          src="./image/etapas/primertrimestre.png"
+        />
       </div>
       <section className={styles.right}>
         <Datos className={styles.datos} />

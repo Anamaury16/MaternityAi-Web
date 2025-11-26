@@ -1,10 +1,18 @@
+.headerStyle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .container {
   padding-top: 30px;
   padding-bottom: 30px;
 
   display: flex;
-  font-size: 17px;
+  align-items: center;
   gap: 60px;
+  font-size: 17px;
 }
 
 .home {
@@ -15,4 +23,50 @@
 .nosotros {
   text-decoration: none;
   color: gray;
+}
+
+/* Ajustes para portátiles y pantallas <= 1550px */
+@media (max-width: 1550px) {
+  .container {
+    gap: 40px;
+    font-size: 16px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+}
+
+/* Breakpoints adicionales para mayor responsividad */
+@media (max-width: 1200px) {
+  .container {
+    gap: 28px;
+    font-size: 15px;
+  }
+  
+  .headerStyle {
+    flex-direction: column;
+  }
+
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-wrap: wrap;
+    gap: 16px;
+    font-size: 15px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    justify-content: center;
+  }
+
+  .headerStyle {
+    flex-direction: column;
+  }
+
+
+  .home,
+  .nosotros {
+    width: 100%;
+    text-align: center;
+  }
 }

@@ -4,8 +4,14 @@
 
 body {
   font-family: 'Onest', sans-serif;
-  margin-left: 80px;
+  margin-left: 40px;
   margin-top: 25px;
-  margin-right: 80px;
+  margin-right: 40px;
   padding: 0;
+}
+@media (max-width: 600px) {
+  body {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
 }

@@ -20,3 +20,60 @@
     color: rgb(88, 88, 88);
   }
 }
+
+/* Tablets y pantallas medianas (768px - 1024px) */
+@media (max-width: 1024px) {
+  .contenido {
+    padding: 18px 40px;
+
+    & .video {
+      height: 400px;
+    }
+
+    & h2 {
+      font-size: 24px;
+    }
+  }
+}
+
+/* Tablets pequeñas (481px - 768px) */
+@media (max-width: 768px) {
+  .contenido {
+    padding: 15px 30px;
+    border-radius: 15px;
+
+    & .video {
+      height: 300px;
+      border-radius: 10px;
+    }
+
+    & h2 {
+      font-size: 22px;
+    }
+
+    & p {
+      font-size: 15px;
+    }
+  }
+}
+
+/* Móviles (hasta 480px) */
+@media (max-width: 480px) {
+  .contenido {
+    padding: 12px 15px;
+    border-radius: 12px;
+
+    & .video {
+      height: 220px;
+      border-radius: 8px;
+    }
+
+    & h2 {
+      font-size: 20px;
+    }
+
+    & p {
+      font-size: 14px;
+    }
+  }
+}

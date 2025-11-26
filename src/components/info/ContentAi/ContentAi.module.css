@@ -2,13 +2,65 @@
   display: flex;
   margin-top: 80px;
   height: 80vh;
-
   gap: 40px;
+
   & .historial {
     width: 25%;
   }
 
   & .chat {
     width: 70%;
+  }
+}
+
+/* Tablets y pantallas medianas (768px - 1550px) */
+@media (max-width: 1550px) {
+  .container {
+    margin-top: 60px;
+    gap: 30px;
+
+    & .historial {
+      width: 30%;
+    }
+
+    & .chat {
+      width: 65%;
+    }
+  }
+}
+
+/* Tablets pequeñas (481px - 768px) */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    margin-top: 50px;
+    height: auto;
+    gap: 20px;
+
+    & .historial {
+      width: 100%;
+      height: 300px; /* Altura fija para el historial */
+    }
+
+    & .chat {
+      width: 100%;
+      height: 500px; /* Altura fija para el chat */
+    }
+  }
+}
+
+/* Móviles (hasta 480px) */
+@media (max-width: 480px) {
+  .container {
+    margin-top: 40px;
+    gap: 3rem;
+
+    & .historial {
+      height: 250px;
+    }
+
+    & .chat {
+      height: 1050px;
+    }
   }
 }

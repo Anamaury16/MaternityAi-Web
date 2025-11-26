@@ -3,11 +3,25 @@
   background: linear-gradient(to right, #e7e7e799, #ffffff);
   border-radius: 20px;
   box-shadow: -3px 3px 6px rgb(180, 180, 180);
-  padding: 40px;
-  & P {
+  padding: 30px;
+  & p {
+    display: flex;
+    align-items: center;
     background: linear-gradient(to right, #c26582, #ffbfd3);
     padding: 15px 10px;
     color: white;
     border-radius: 35px;
+  }
+}
+
+/* 💻 Portátiles (<= 1550px): un poco más compacto */
+@media (max-width: 1550px) {
+  .container {
+    padding: 20px;
+    & p {
+      margin-left: 5px;
+      font-size: 14px;
+      padding: 10px 8px;
+    }
   }
 }

@@ -28,7 +28,7 @@ export const FormLogin = () => {
   };
   return (
     <form onSubmit={MostrarData} className={styles.formulario}>
-      <p>Usuario</p>
+      <p>Codigo</p>
       <input
         value={formLogin.name}
         type="text"
@@ -47,16 +47,6 @@ export const FormLogin = () => {
         }
       />
 
-      <p className={styles.confirm}>
-        Aún no tienes cuenta ?
-        <button
-          type="button"
-          className={styles.register}
-          onClick={() => navigate('/register')}
-        >
-          Registrar
-        </button>
-      </p>
       <div className={styles.boton}>
         <button
           type="button"

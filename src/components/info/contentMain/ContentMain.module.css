@@ -1,16 +1,19 @@
 .container {
   margin: 20px 0;
   display: flex;
+  margin-top: 2rem;
   justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 
   & .informacion_usuario {
-    & p {
+    & .mensaje_bienvendida {
       font-size: 22px;
-    }
-
-    & h1 {
-      font-size: 48px;
-      margin: 0;
+  
+      & h1 {
+        font-size: 48px;
+        margin: 0;
+      }
     }
   }
 
@@ -20,6 +23,8 @@
 
   & img {
     padding-left: 100px;
+    max-width: 100%;
+    height: auto;
   }
 
   & .right {
@@ -43,5 +48,114 @@
     & .registros {
       grid-area: registros;
     }
+  }
+}
+
+/* 💻 Portátiles (entre 1024px y 1550px) */
+@media (max-width: 1550px) and (min-width: 1024px) {
+
+  .container {
+    gap: 10px;
+    margin-top: 1rem;
+
+    & .informacion_usuario {
+      & .mensaje_bienvendida {
+        font-size: 18px;
+    
+        & h1 {
+          font-size: 36px;
+          margin: 0;
+        }
+      }
+    } 
+
+    & img {
+      padding-left: 40px; /* antes 100px */
+      max-width: 80%; /* más pequeño */
+    }
+
+    & .right {
+      width: 50%;
+      margin-top: 20px; /* antes 40px */
+      gap: 8px;
+
+      grid-template-rows: auto auto;
+    }
+
+    & .foto {
+      width: 75%;
+    }
+  }
+}
+
+
+/* Tablets pequeñas (481px - 768px) */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+
+    & .informacion_usuario {
+      width: 100%;
+
+      & .mensaje_bienvendida {
+        font-size: 18px;
+    
+        & h1 {
+          font-size: 32px;
+        }
+      }
+    }
+
+    & img {
+      padding-left: 0;
+      align-self: center;
+      max-width: 80%;
+    }
+
+    & .right {
+      width: 100%;
+      margin-top: 20px;
+      grid-template-rows: auto auto;
+    }
+  }
+}
+
+/* Móviles (hasta 480px) */
+@media (max-width: 480px) {
+  .container {
+    margin: 15px 0;
+    margin-top: 1rem;
+    gap: 15px;
+
+    & .informacion_usuario {
+      & .mensaje_bienvendida {
+        font-size: 16px;
+    
+        & h1 {
+          font-size: 26px;
+        }
+      }
+    }
+
+    & img {
+      max-width: 100%;
+    }
+
+    & .right {
+      margin-top: 15px;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+      grid-template-areas:
+        'datos'
+        'consejos'
+        'registros';
+      gap: 12px;
+    }
+  }
+
+  .consejos {
+    margin-top: 2rem;
   }
 }

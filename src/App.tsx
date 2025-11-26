@@ -2,7 +2,6 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { HomePage } from './pages/HomePage';
 import { UsPage } from './pages/UsPage';
 import { Login } from './pages/Login';
-import { Register } from './pages/Register';
 import { UserProfile } from './pages/UserProfile';
 import { Biliboteca } from './pages/Biblioteca';
 import { Actividad } from './pages/Actividad';
@@ -17,7 +16,6 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/nosotros" element={<UsPage />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/userprofile" element={<UserProfile />} />
           <Route path="/biblioteca" element={<Biliboteca />} />
           <Route path="/actividad" element={<Actividad />} />

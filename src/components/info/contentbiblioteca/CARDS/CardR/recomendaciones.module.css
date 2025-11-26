@@ -1,30 +1,37 @@
 .recomendaciones {
   background: linear-gradient(to bottom, #fbeff3, #e799b2, #c57e94);
   border-radius: 20px;
-  padding: 10px 30px 70px 30px;
+  padding: 16px 32px 48px 32px;
   box-shadow: -3px 3px 6px rgb(180, 180, 180);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 480px; /* opcional: limita el ancho para que no se estire demasiado en pantallas grandes */
 
   & h3 {
     color: white;
     font-weight: normal;
-    font-size: 28px;
+    font-size: 26px;
+    margin-bottom: 16px;
   }
 
   & .articulo {
-    border: 1px solid none;
     border-radius: 12px;
     background-color: white;
-    padding: 17px 10px 17px 30px;
+    padding: 14px 16px 14px 24px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 16px;
     font-size: 14px;
-    color: rgb(170, 170, 170);
+    color: rgb(120, 120, 120);
     margin-bottom: 10px;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
 
   & .articulo:hover {
     box-shadow: 3px 3px 6px rgb(124, 124, 124);
     cursor: pointer;
+    transform: translateY(-1px);
   }
 
   & button {
@@ -32,5 +39,72 @@
     border: none;
     color: #f8a2bd;
     font-size: 12px;
+    cursor: pointer;
+    padding: 0;
+  }
+}
+
+/* 💻 Portátiles (<= 1550px): un poco más compacto */
+@media (max-width: 1550px) {
+  .recomendaciones {
+    padding: 14px 24px 40px 24px;
+
+    & h3 {
+      font-size: 20px;
+    }
+
+    & .articulo {
+      font-size: 13px;
+      padding: 12px 14px 12px 20px;
+      gap: 12px;
+    }
+
+    & button {
+      font-size: 11px;
+    }
+  }
+}
+
+/* 📱 Tablets y pantallas medianas */
+@media (max-width: 900px) {
+  .recomendaciones {
+    max-width: 100%;
+    padding: 12px 18px 32px 18px;
+
+    & h3 {
+      font-size: 20px;
+      text-align: center;
+    }
+
+    & .articulo {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 12px 14px;
+    }
+
+    & button {
+      align-self: flex-end;
+      margin-top: 4px;
+    }
+  }
+}
+
+/* 📱 Móviles pequeños */
+@media (max-width: 600px) {
+  .recomendaciones {
+    padding: 10px 14px 24px 14px;
+
+    & h3 {
+      font-size: 18px;
+    }
+
+    & .articulo {
+      font-size: 12px;
+      padding: 10px 12px;
+    }
+
+    & button {
+      font-size: 10px;
+    }
   }
 }

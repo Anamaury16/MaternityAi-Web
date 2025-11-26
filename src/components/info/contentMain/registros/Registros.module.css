@@ -1,6 +1,7 @@
 .container {
   & .cuestionarios {
     display: flex;
+    gap: 0.5rem;
     height: 100%;
     flex-direction: column;
     justify-content: space-between;

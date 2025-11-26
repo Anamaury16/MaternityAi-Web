@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { GradedButton } from '../../gradedbutton/GradedButton';
 import { DegradedText } from '../../gradedcomponents/degradedtext/DegradedText';
 import styles from './header.module.css';
 
@@ -14,7 +13,6 @@ export const Header = () => {
         <Link to={'/nosotros'} className={styles.nosotros}>
           Nosotros
         </Link>
-        <GradedButton textbutton={'registrar'} height="35px" width="110px" />
       </nav>
     </header>
   );

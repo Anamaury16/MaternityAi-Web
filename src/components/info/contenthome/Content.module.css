@@ -1,34 +1,106 @@
 .container {
   display: flex;
+  justify-content: space-between;
+}
 
-  & .left {
-    width: 50rem;
-    display: flex;
+.container .left {
+  width: 50rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.container p {
+  width: 75%;
+  font-size: 30px;
+  color: #b3b3b3;
+}
+
+.container button {
+  display: flex;
+  height: 60px;
+  gap: 1rem;
+  width: fit-content;
+  align-items: center;
+  padding: 0 20px;
+  border-radius: 30px;
+  border: none;
+  font-size: 25px;
+  background-color: #df5d86;
+  color: white;
+  box-shadow: 1px 1px 7px rgb(122, 122, 122);
+}
+
+.foto {
+  width: 45%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container button:hover {
+  box-shadow: 4px 4px 12px rgb(143, 143, 143);
+}
+
+/* Medium screens */
+@media (max-width: 1550px) {
+  .container .left {
+    width: 40rem;
+  }
+  .container p {
+    width: 80%;
+    font-size: 24px;
+  }
+  .container button {
+    height: 56px;
+    font-size: 22px;
+  }
+}
+
+/* Tablets and large phones */
+@media (max-width: 768px) {
+  .container {
+    margin-top: 1rem;
     flex-direction: column;
-    justify-content: center;
-  }
-
-  & p {
-    width: 75%;
-    font-size: 30px;
-    color: #b3b3b3;
-  }
-
-  & button {
-    width: 25%;
-    height: 60px;
-    display: flex;
     align-items: center;
-    padding-left: 20px;
-    border-radius: 30px;
-    border: none;
-    font-size: 25px;
-    background-color: #df5d86;
-    color: white;
-    box-shadow: 1px 1px 7px rgb(122, 122, 122);
+    gap: 2rem;
   }
 
-  & button:hover {
-    box-shadow: 4px 4px 12px rgb(143, 143, 143);
+  .container .left {
+    width: 100%;
+    gap: 1rem;
+    padding: 0 1rem;
+  }
+
+  .container p {
+    width: 100%;
+    font-size: 20px;
+    text-align: center;
+  }
+
+  .container button {
+    width: 100%;
+    justify-content: center;
+    height: 52px;
+    font-size: 20px;
+    padding: 0 16px;
+  }
+
+  .foto {
+    width: 100%;
+  }
+}
+
+/* Small phones */
+@media (max-width: 420px) {
+  .container p {
+    font-size: 18px;
+  }
+
+  .container button {
+    height: 48px;
+    font-size: 18px;
+    padding: 0 12px;
+    border-radius: 24px;
   }
 }

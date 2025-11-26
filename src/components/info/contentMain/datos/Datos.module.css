@@ -1,7 +1,6 @@
 .container {
   display: flex;
   justify-content: space-between;
-
   border: 1px solid rgb(218, 218, 218);
   border-radius: 15px;
   padding: 20px;
@@ -48,6 +47,106 @@
     & h4 {
       margin: 5px 0px;
       color: #973756;
+    }
+  }
+}
+
+/* Tablets y pantallas medianas (768px - 1550px) */
+@media (max-width: 1550px) {
+  .container {
+    padding: 18px;
+    gap: 15px;
+
+    & .mis_datos {
+      padding: 12px 18px;
+    }
+
+    & .datos_bebe {
+      padding: 12px 18px;
+    }
+
+    & .datos {
+      padding: 12px 18px;
+
+      & h4 {
+        font-size: 14px;
+      }   
+
+      & p {
+        font-size: 14px;
+      }
+    }
+  }
+}
+
+/* Tablets pequeñas (481px - 768px) */
+@media (max-width: 768px) {
+  .container {
+    height: 100%;
+    flex-direction: column;
+    padding: 15px;
+    gap: 15px;
+
+    & .tarjeta {
+      gap: 12px;
+    }
+
+    & .mis_datos {
+      flex-direction: column;
+      padding: 12px 15px;
+      gap: 12px;
+    }
+
+    & .datos_bebe {
+      flex-direction: column;
+      padding: 12px 15px;
+      gap: 12px;
+    }
+
+    & .datos {
+      padding: 12px 15px;
+    }
+  }
+}
+
+/* Móviles (hasta 480px) */
+@media (max-width: 480px) {
+  .container {
+    padding: 12px;
+    border-radius: 12px;
+    gap: 12px;
+
+    & .tarjeta {
+      gap: 10px;
+
+      & h3 {
+        font-size: 18px;
+      }
+    }
+
+    & .mis_datos {
+      padding: 10px 12px;
+      border-radius: 12px;
+      gap: 10px;
+    }
+
+    & .datos_bebe {
+      padding: 10px 12px;
+      border-radius: 12px;
+      gap: 10px;
+    }
+
+    & .datos {
+      padding: 10px 12px;
+      border-radius: 12px;
+
+      & h4 {
+        font-size: 16px;
+      }
+
+      & p {
+        font-size: 14px;
+      }
     }
   }
 }

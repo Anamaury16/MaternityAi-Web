@@ -1,64 +1,128 @@
 .container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+  align-items: center;
 
-  & .logo {
+  padding: 12px 40px;
+  background-color: #ffffff;
+}
+
+/* LOGO */
+.logo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* NAV */
+.container nav {
+  display: flex;
+  gap: 40px;
+  background-color: #e2e0e0;
+  padding: 1rem 40px;
+  border-radius: 25px;
+  box-shadow: 4px 4px 6px rgb(143, 143, 143);
+}
+
+.main,
+.link,
+.actividad,
+.ai {
+  text-decoration: none;
+  color: black;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* PERFIL */
+.perfil {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  padding-top: 10px;
+  cursor: pointer;
+}
+
+.foto {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.name {
+  margin: 0;
+}
+
+.desc {
+  margin: 0;
+  font-size: 12px;
+}
+
+/* ESPACIADOR PARA QUE EL CONTENIDO NO QUEDE DEBAJO DEL HEADER */
+.headerSpacer {
+  height: 32px; /* ajusta si tu header queda más alto o más bajo */
+}
+
+/* 💻 Portátiles (no tan grande todo) */
+@media (max-width: 1440px) and (min-width: 900px) {
+  .container {
+    padding: 10px 32px;
+  }
+
+  .container nav {
+    gap: 24px;
+    padding: 0 24px;
+  }
+
+  .desc {
+    font-size: 11px;
+  }
+}
+
+/* 📱 Tablets / móviles */
+@media (max-width: 900px) {
+  .container {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-  }
-
-  & nav {
-    display: flex;
-    gap: 40px;
-    background-color: #e2e0e0;
-    padding: 0 40px;
-    border-radius: 25px;
-    box-shadow: 4px 4px 6px rgb(143, 143, 143);
-
-    & .link {
-      text-decoration: none;
-      color: black;
-      display: flex;
-      align-items: center;
-    }
-
-    & .main {
-      text-decoration: none;
-      color: black;
-      display: flex;
-      align-items: center;
-    }
-
-    & .actividad {
-      text-decoration: none;
-      color: black;
-      display: flex;
-      align-items: center;
-    }
-
-    & .ai {
-      text-decoration: none;
-      color: black;
-      display: flex;
-      align-items: center;
-    }
-  }
-
-  & .perfil {
-    display: flex;
-    flex-direction: row;
+    padding: 8px 16px;
     gap: 12px;
-    padding-top: 10px;
-    cursor: pointer;
+  }
 
-    & .name {
-      margin: 0%;
-    }
-    & .desc {
-      margin: 0;
-      font-size: 12px;
-    }
+  .container nav {
+    gap: 16px;
+    padding: 0 16px;
+    overflow-x: auto; /* si no cabe todo, que pueda hacer scroll horizontal */
+  }
+
+  .perfil {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 8px 12px;
+    gap: 1rem;
+  }
+
+  .container nav {
+    gap: 12px;
+    padding: 0.7rem 1.4rem;
+  }
+
+  .perfil {
+    display: none; /* opcional: esconder el perfil en móviles si no quieres que apriete mucho */
+  }
+
+  .headerSpacer {
+    height: 60px;
   }
 }
