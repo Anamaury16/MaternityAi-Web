@@ -19,8 +19,6 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  scrollbar-width: thin; /* thin | auto | none */
-  scrollbar-color: #e7e7e7 #ffffff;
 
   & p {
     margin: 7px;

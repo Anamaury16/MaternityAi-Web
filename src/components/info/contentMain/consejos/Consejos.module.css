@@ -16,9 +16,19 @@
   & article {
     border: 1px solid rgb(219, 219, 219);
     border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
     margin-bottom: 20px;
     padding: 10px 15px;
     background-color: white;
+
+    & .categoria {
+      width: 36px;
+      height: 36px;
+      border-radius: 9999px;
+      background-color: #e5e5e5;
+    }
     & h4 {
       margin: 0;
       font-weight: normal;

@@ -23,11 +23,16 @@ export const FormLogin = () => {
     }));
   };
 
-  const MostrarData = () => {
+  const onClickIniciarSesion = () => {
     alert(`Felicidades ${formLogin.name} te has registrado exitosamente`);
+    if (formLogin.name.toLocaleLowerCase() === 'admin') {
+      navigate('/admin');
+    } else {
+      navigate('/main');
+    }
   };
   return (
-    <form onSubmit={MostrarData} className={styles.formulario}>
+    <form onSubmit={onClickIniciarSesion} className={styles.formulario}>
       <p>Codigo</p>
       <input
         value={formLogin.name}
@@ -49,11 +54,8 @@ export const FormLogin = () => {
 
       <div className={styles.boton}>
         <button
-          type="button"
-          onClick={() => {
-            MostrarData();
-            navigate('/main');
-          }}
+          type="submit"
+          // onClick={onClickIniciarSesion}
           className={styles.lastbutton}
         >
           Iniciar

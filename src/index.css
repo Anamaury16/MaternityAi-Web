@@ -8,6 +8,8 @@ body {
   margin-top: 25px;
   margin-right: 40px;
   padding: 0;
+  scrollbar-width: thin; /* thin | auto | none */
+  scrollbar-color: #e7e7e7 #ffffff;
 }
 @media (max-width: 600px) {
   body {

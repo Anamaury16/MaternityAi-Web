@@ -7,13 +7,27 @@
   width: 80%;
 
   & .input {
-    margin-top: 6px;
+    margin-top: 10px;
     outline: none;
-    padding: 20px 15px 20px 40px;
+    padding: 14px 20px;
     font-size: 15px;
-    border-radius: 30px;
-    border: 1px solid #ccc;
-    box-shadow: -4px 4px 6px rgb(170, 170, 170);
+    border-radius: 999px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 0.08);
+    transition: all 0.25s ease;
+  }
+
+  /* Hover */
+  & .input:hover {
+    border-color: #c9c9c9;
+    box-shadow: 0 6px 16px rgb(0 0 0 / 0.12);
+  }
+
+  /* Focus (cuando escribes) */
+  & .input:focus {
+    border-color: #973756;
+    box-shadow: 0 0 0 3px rgb(151 55 86 / 0.15);
   }
 
   & .chats {
@@ -46,5 +60,11 @@
   .contenedor1 .chats .Ai {
     max-width: 90%;
     font-size: smaller;
+  }
+
+  .contenedor1 {
+    & .input::placeholder {
+      font-size: 12px; /* más pequeño */
+    }
   }
 }
