@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { HeaderActividad } from '../../components/Headers/HeaderActividad/HeaderActividad'; 
 import styles from '../../components/admin/AdminCitas.module.css';
 
 interface Cita {
@@ -27,10 +27,10 @@ const PACIENTES: Paciente[] = [
 ];
 
 const CITAS: Cita[] = [
-  { id: 1, hora: '09:00 AM', fecha: 'Hoy',    pacienteId: 'XYZ1002', tipo: 'Control Prenatal',      esHoy: true,  dia: 1  },
-  { id: 2, hora: '11:30 AM', fecha: 'Hoy',    pacienteId: 'WSC2001', tipo: 'Ecografía Obstétrica',  esHoy: true,  dia: 8  },
-  { id: 3, hora: '08:15 AM', fecha: '15 Oct', pacienteId: 'JSX0937', tipo: 'Monitoreo Fetal',        esHoy: false, dia: 15 },
-  { id: 4, hora: '14:00 PM', fecha: '27 Oct', pacienteId: 'XSX2362', tipo: 'Consulta Nutricional',   esHoy: false, dia: 27 },
+  { id: 1, hora: '09:00 AM', fecha: 'Hoy',    pacienteId: 'XYZ1002', tipo: 'Control Prenatal',     esHoy: true,  dia: 1  },
+  { id: 2, hora: '11:30 AM', fecha: 'Hoy',    pacienteId: 'WSC2001', tipo: 'Ecografía Obstétrica', esHoy: true,  dia: 8  },
+  { id: 3, hora: '08:15 AM', fecha: '15 Oct', pacienteId: 'JSX0937', tipo: 'Monitoreo Fetal',       esHoy: false, dia: 15 },
+  { id: 4, hora: '14:00 PM', fecha: '27 Oct', pacienteId: 'XSX2362', tipo: 'Consulta Nutricional',  esHoy: false, dia: 27 },
 ];
 
 const DIAS_SEMANA = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
@@ -43,20 +43,12 @@ const SEMANAS = [
   [27, 28, 29, 30, 31,  1,  2],
 ];
 
-const TABS = ['Usuarias', 'OBA', 'Preguntas', 'Citas'] as const;
 
 export const AdminCitas = () => {
-  const navigate = useNavigate();
   const [selPaciente, setSelPaciente] = useState('XYZ1002');
   const [busqueda, setBusqueda]       = useState('');
   const [vista, setVista]             = useState<'Mes' | 'Semana'>('Mes');
   const [diaHoy]                      = useState(10);
-
-  const handleTab = (tab: string) => {
-    if (tab === 'Usuarias')  navigate('/admin/usuarias');
-    if (tab === 'OBA')       navigate('/admin/oba');
-    if (tab === 'Preguntas') navigate('/admin/preguntas');
-  };
 
   const diasConCita = CITAS.map(c => c.dia);
 
@@ -73,32 +65,13 @@ export const AdminCitas = () => {
   return (
     <div className={styles.root}>
 
-      {/* ── TOP NAV ── */}
-      <div className={styles.topNav}>
-        <div className={styles.tabs}>
-          {TABS.map(t => (
-            <button
-              key={t}
-              className={`${styles.tab} ${t === 'Citas' ? styles.tabOn : ''}`}
-              onClick={() => handleTab(t)}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-        <button className={styles.backBtn} onClick={() => navigate(-1)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2"
-            strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
-      </div>
+     
+      <HeaderActividad rol="medico" tabActivo="Citas" />
 
-      {/* ── MAIN GRID ── */}
+     
       <div className={styles.grid}>
 
-        {/* ── PANEL IZQUIERDO: Lista ── */}
+        {/* Lista del planel izq */}
         <div className={styles.panel}>
           <p className={styles.panelTitle}>Lista Maternas</p>
           <div className={styles.searchWrap}>
@@ -132,20 +105,16 @@ export const AdminCitas = () => {
           </div>
         </div>
 
-        {/* ── PANEL DERECHO: Calendario ── */}
+        {/* Panel de citas (el calendarioo) */}
         <div className={styles.panel}>
 
-          {/* Header del panel */}
           <div className={styles.calPanelHeader}>
             <h2 className={styles.calTitulo}>Agendamiento de Citas</h2>
             <button className={styles.newCitaBtn}>+ Nueva Cita</button>
           </div>
 
           <div className={styles.calLayout}>
-            {/* Calendario */}
             <div className={styles.calSection}>
-
-              {/* Nav mes */}
               <div className={styles.calNav}>
                 <div className={styles.calNavLeft}>
                   <button className={styles.navBtn}>‹</button>
@@ -165,30 +134,27 @@ export const AdminCitas = () => {
                 </div>
               </div>
 
-              {/* Grid del calendario */}
               <div className={styles.calGrid}>
-                {/* Encabezado días */}
                 <div className={styles.calDiasHeader}>
                   {DIAS_SEMANA.map(d => (
                     <div key={d} className={styles.calDiaLabel}>{d}</div>
                   ))}
                 </div>
 
-                {/* Semanas */}
                 {SEMANAS.map((sem, si) => (
                   <div key={si} className={styles.calSemana}>
                     {sem.map((dia, di) => {
-                      const fuera    = esFueraDeMes(si, dia);
+                      const fuera     = esFueraDeMes(si, dia);
                       const tieneCita = diasConCita.includes(dia) && !fuera;
-                      const esHoy    = dia === diaHoy && !fuera;
+                      const esHoy     = dia === diaHoy && !fuera;
                       return (
                         <div
                           key={di}
                           className={`
                             ${styles.calCell}
-                            ${fuera    ? styles.calCellFuera : ''}
-                            ${esHoy    ? styles.calCellHoy   : ''}
-                            ${tieneCita && !fuera ? styles.calCellCita : ''}
+                            ${fuera     ? styles.calCellFuera : ''}
+                            ${esHoy     ? styles.calCellHoy   : ''}
+                            ${tieneCita ? styles.calCellCita  : ''}
                           `}
                         >
                           <span className={styles.calNum}>{dia}</span>
@@ -201,7 +167,6 @@ export const AdminCitas = () => {
               </div>
             </div>
 
-            {/* Próximas citas */}
             <div className={styles.proxSection}>
               <h3 className={styles.proxTitulo}>Próximas Citas</h3>
               <div className={styles.proxList}>

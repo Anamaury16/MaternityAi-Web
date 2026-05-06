@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { HeaderActividad } from '../../components/Headers/HeaderActividad/HeaderActividad';
 import styles from '../../components/admin/AdminUsuarias.module.css';
 
 interface Paciente {
@@ -31,55 +31,25 @@ const ANALISIS = [
   'Ags HB',
 ];
 
-const TABS = ['Usuarias', 'OBA', 'Preguntas', 'Citas'] as const;
-
 export const AdminUsuarias = () => {
-  const navigate = useNavigate();
-  const [busqueda, setBusqueda] = useState('');
+  const [busqueda, setBusqueda]     = useState('');
   const [selPaciente, setSelPaciente] = useState('XYZ1002');
   const [selAnalisis, setSelAnalisis] = useState('HEMOGLOBINA');
-  const [tabActivo]  = useState<string>('Usuarias');
 
   const filtrados = PACIENTES.filter(p =>
     p.id.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  const handleTab = (tab: string) => {
-    if (tab === 'Usuarias') navigate('/admin/usuarias');
-    if (tab === 'OBA')       navigate('/admin/oba');
-    if (tab === 'Preguntas') navigate('/admin/preguntas');
-    if (tab === 'Citas')     navigate('/admin/citas');
-  };
-
   return (
     <div className={styles.root}>
 
-      {/* ── TOP NAV ── */}
-      <div className={styles.topNav}>
-        <div className={styles.tabs}>
-          {TABS.map(t => (
-            <button
-              key={t}
-              className={`${styles.tab} ${tabActivo === t ? styles.tabOn : ''}`}
-              onClick={() => handleTab(t)}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-        <button className={styles.backBtn} onClick={() => navigate(-1)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2"
-            strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
-      </div>
+      {/*tabs*/}
+      <HeaderActividad rol="medico" tabActivo="Usuarias" />
 
       {/* ── MAIN GRID ── */}
       <div className={styles.grid}>
 
-        {/* ── PANEL IZQUIERDO: Lista ── */}
+        {/*parte izquierda ls lista*/}
         <div className={styles.panel}>
           <p className={styles.panelTitle}>Lista Maternas</p>
 
@@ -115,7 +85,7 @@ export const AdminUsuarias = () => {
           </div>
         </div>
 
-        {/* ── PANEL CENTRAL: Detalle ── */}
+        {/*parte dentral los detalles*/}
         <div className={`${styles.panel} ${styles.panelScroll}`}>
           <h1 className={styles.nombrePaciente}>{selPaciente}</h1>
           <p className={styles.diagnostico}>
@@ -168,7 +138,7 @@ export const AdminUsuarias = () => {
           </div>
         </div>
 
-        {/* ── PANEL DERECHO: Reporte ── */}
+        {/*reporte diario en panel derecho*/}
         <div className={`${styles.panel} ${styles.reportePanel}`}>
           <h2 className={styles.panelTitle}>Reporte diario</h2>
           <p className={styles.secDesc}>

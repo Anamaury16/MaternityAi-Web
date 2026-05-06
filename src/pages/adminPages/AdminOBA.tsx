@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { HeaderActividad } from '../../components/Headers/HeaderActividad/HeaderActividad';
 import styles from '../../components/admin/AdminOBA.module.css';
 
 interface ContenidoOBA {
@@ -72,18 +72,9 @@ const CONTENIDO_INIT: ContenidoOBA[] = [
   },
 ];
 
-const TABS = ['Usuarias', 'OBA', 'Preguntas', 'Citas'] as const;
-
 export const AdminOBA = () => {
-  const navigate = useNavigate();
   const [catActiva, setCatActiva] = useState('Trimestre 1');
   const [contenido, setContenido] = useState<ContenidoOBA[]>(CONTENIDO_INIT);
-
-  const handleTab = (tab: string) => {
-    if (tab === 'Usuarias')  navigate('/admin');
-    if (tab === 'Preguntas') navigate('/admin/preguntas');
-    if (tab === 'Citas')     navigate('/admin/citas');
-  };
 
   const eliminar = (id: number) => {
     setContenido(contenido.filter(c => c.id !== id));
@@ -94,32 +85,13 @@ export const AdminOBA = () => {
   return (
     <div className={styles.root}>
 
-      {/* ── TOP NAV ── */}
-      <div className={styles.topNav}>
-        <div className={styles.tabs}>
-          {TABS.map(t => (
-            <button
-              key={t}
-              className={`${styles.tab} ${t === 'OBA' ? styles.tabOn : ''}`}
-              onClick={() => handleTab(t)}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-        <button className={styles.backBtn} onClick={() => navigate(-1)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2"
-            strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
-      </div>
+      {/*header con tabs*/}
+      <HeaderActividad rol="medico" tabActivo="OBA" />
 
       {/* ── MAIN GRID ── */}
       <div className={styles.grid}>
 
-        {/* ── PANEL IZQUIERDO: Categorías ── */}
+        {/*categoriass en el panel izquierdo*/}
         <div className={styles.panel}>
           <p className={styles.panelTitle}>Categorías OBA</p>
           <div className={styles.catList}>
@@ -135,7 +107,7 @@ export const AdminOBA = () => {
           </div>
         </div>
 
-        {/* ── PANEL DERECHO: Contenido ── */}
+        {/*contenido en el panel derecho*/}
         <div className={`${styles.panel} ${styles.panelScroll}`}>
           <div className={styles.contentHeader}>
             <h2 className={styles.contentTitle}>Contenido: {catActiva}</h2>

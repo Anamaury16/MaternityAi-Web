@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { HeaderActividad } from '../../components/Headers/HeaderActividad/HeaderActividad';
 import styles from '../../components/admin/AdminPreguntas.module.css';
 
 interface Pregunta {
@@ -11,21 +11,17 @@ interface Pregunta {
 }
 
 const PREGUNTAS_INIT: Pregunta[] = [
-  { id: 1, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Síntomas',    prioridad: 'Alta',  respuesta: '' },
-  { id: 2, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Síntomas',    prioridad: 'Medio', respuesta: '' },
-  { id: 3, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Síntomas',    prioridad: 'Alta',  respuesta: '' },
-  { id: 4, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Síntomas',    prioridad: 'Baja',  respuesta: '' },
-  { id: 5, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Controles',   prioridad: 'Baja',  respuesta: '' },
-  { id: 6, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Controles',   prioridad: 'Medio', respuesta: '' },
-  { id: 7, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Medicamentos',prioridad: 'Alta',  respuesta: '' },
-  { id: 8, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Medicamentos',prioridad: 'Baja',  respuesta: '' },
+  { id: 1, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Síntomas',     prioridad: 'Alta',  respuesta: '' },
+  { id: 2, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Síntomas',     prioridad: 'Medio', respuesta: '' },
+  { id: 3, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Síntomas',     prioridad: 'Alta',  respuesta: '' },
+  { id: 4, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Síntomas',     prioridad: 'Baja',  respuesta: '' },
+  { id: 5, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Controles',    prioridad: 'Baja',  respuesta: '' },
+  { id: 6, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Controles',    prioridad: 'Medio', respuesta: '' },
+  { id: 7, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Medicamentos', prioridad: 'Alta',  respuesta: '' },
+  { id: 8, texto: 'Cual es el protocolo a seguir para pacientes....?', categoria: 'Medicamentos', prioridad: 'Baja',  respuesta: '' },
 ];
 
-const TABS = ['Usuarias', 'OBA', 'Preguntas', 'Citas'] as const;
-
 export const AdminPreguntas = () => {
-  const navigate = useNavigate();
-
   const [preguntas, setPreguntas] = useState<Pregunta[]>(PREGUNTAS_INIT);
   const [form, setForm] = useState({
     descripcion: '',
@@ -33,12 +29,6 @@ export const AdminPreguntas = () => {
     categoria: '',
     respuesta: '',
   });
-
-  const handleTab = (tab: string) => {
-    if (tab === 'Usuarias')  navigate('/admin/usuarias');
-    if (tab === 'OBA')       navigate('/admin/oba');
-    if (tab === 'Citas')     navigate('/admin/citas');
-  };
 
   const guardar = () => {
     if (!form.descripcion || !form.prioridad || !form.categoria) return;
@@ -71,32 +61,13 @@ export const AdminPreguntas = () => {
   return (
     <div className={styles.root}>
 
-      {/* ── TOP NAV ── */}
-      <div className={styles.topNav}>
-        <div className={styles.tabs}>
-          {TABS.map(t => (
-            <button
-              key={t}
-              className={`${styles.tab} ${t === 'Preguntas' ? styles.tabOn : ''}`}
-              onClick={() => handleTab(t)}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-        <button className={styles.backBtn} onClick={() => navigate(-1)}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" strokeWidth="2"
-            strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
-      </div>
+      {/*header con tabs*/}
+      <HeaderActividad rol="medico" tabActivo="Preguntas" />
 
-      {/* ── MAIN GRID ── */}
+      {/*main grid*/}
       <div className={styles.grid}>
 
-        {/* ── COLUMNA IZQUIERDA ── */}
+        {/*column izq*/}
         <div className={styles.leftCol}>
 
           {/* Formulario */}
@@ -210,7 +181,7 @@ export const AdminPreguntas = () => {
 
         </div>
 
-        {/* ── COLUMNA DERECHA: Tabla ── */}
+        {/*colum derecha de preguntas*/}
         <div className={`${styles.panel} ${styles.panelScroll}`}>
           <h2 className={styles.panelTitle}>Preguntas Registradas</h2>
           <p className={styles.secDesc}>Consulta y administra las preguntas ya creadas desde una sola vista.</p>
