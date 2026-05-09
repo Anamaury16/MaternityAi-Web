@@ -77,6 +77,11 @@
     height: 45px;
     border: none;
     box-shadow: 2px 2px 5px rgb(158, 158, 158);
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   }
 }
 

@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import styles from './ContentLogin.module.css';
 import { useState } from 'react';
+import useLogin from '../../../hooks/auth/useLogin';
 
 interface FormLoginState {
   name: string;
@@ -10,6 +11,7 @@ interface FormLoginState {
 
 export const FormLogin = () => {
   const navigate = useNavigate();
+  const { loading, login } = useLogin();
   const [formLogin, setFormLogin] = useState<FormLoginState>({
     name: '',
     password: '',
@@ -23,16 +25,21 @@ export const FormLogin = () => {
     }));
   };
 
-  const onClickIniciarSesion = () => {
-    alert(`Felicidades ${formLogin.name} te has registrado exitosamente`);
-    if (formLogin.name.toLocaleLowerCase() === 'admin') {
-      navigate('/admin');
-    } else {
-      navigate('/main');
-    }
+  const onClickIniciarSesion = async () => {
+    await login({
+      codigo_gmi: '123456',
+      respuesta_seguridad: 'hola',
+    }).then(() => {
+      // alert(`Felicidades ${formLogin.name} te has registrado exitosamente`);
+      if (formLogin.name.toLocaleLowerCase() === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/main');
+      }
+    });
   };
   return (
-    <form onSubmit={onClickIniciarSesion} className={styles.formulario}>
+    <form className={styles.formulario}>
       <p>Codigo</p>
       <input
         value={formLogin.name}
@@ -54,8 +61,9 @@ export const FormLogin = () => {
 
       <div className={styles.boton}>
         <button
-          type="submit"
-          // onClick={onClickIniciarSesion}
+          type="button"
+          disabled={loading}
+          onClick={onClickIniciarSesion}
           className={styles.lastbutton}
         >
           Iniciar
