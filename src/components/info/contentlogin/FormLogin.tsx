@@ -1,71 +1,77 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './ContentLogin.module.css';
-import { loginUser, type AuthError } from '../../../services/authService';
+import { loginUser, loginStaff, type AuthError } from '../../../services/authService';
 
-interface FormLoginState {
+interface GestanteLoginState {
   codigo_gmi: string;
   respuesta_seguridad: string;
+}
+
+interface StaffLoginState {
+  email: string;
+  password: string;
 }
 
 export const FormLogin = () => {
   const navigate = useNavigate();
 
-  const [formLogin, setFormLogin] = useState<FormLoginState>({
+  const [isStaff, setIsStaff] = useState(false);
+  const [gestanteForm, setGestanteForm] = useState<GestanteLoginState>({
     codigo_gmi: '',
     respuesta_seguridad: '',
+  });
+  const [staffForm, setStaffForm] = useState<StaffLoginState>({
+    email: '',
+    password: '',
   });
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handlerForm = (key: keyof FormLoginState, valor: string) => {
-    setFormLogin((prevState) => ({
-      ...prevState,
-      [key]: valor,
-    }));
+  const handleGestanteForm = (key: keyof GestanteLoginState, valor: string) => {
+    setGestanteForm((prev) => ({ ...prev, [key]: valor }));
+    if (errorMessage) setErrorMessage(null);
+  };
+
+  const handleStaffForm = (key: keyof StaffLoginState, valor: string) => {
+    setStaffForm((prev) => ({ ...prev, [key]: valor }));
     if (errorMessage) setErrorMessage(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!formLogin.codigo_gmi.trim() || !formLogin.respuesta_seguridad.trim()) {
-      setErrorMessage('Por favor, completa todos los campos.');
-      return;
-    }
-
     setIsLoading(true);
     setErrorMessage(null);
 
     try {
-      const data = await loginUser({
-        codigo_gmi: formLogin.codigo_gmi,
-        respuesta_seguridad: formLogin.respuesta_seguridad,
-      });
-
-      console.log('Login exitoso. Rol:', data.role);
-
-      // Redirigir según el rol del usuario
-      if (data.role === 'admin') {
+      if (isStaff) {
+        if (!staffForm.email.trim() || !staffForm.password.trim()) {
+          setErrorMessage('Por favor, completa todos los campos.');
+          setIsLoading(false);
+          return;
+        }
+        await loginStaff(staffForm);
         navigate('/admin');
       } else {
+        if (!gestanteForm.codigo_gmi.trim() || !gestanteForm.respuesta_seguridad.trim()) {
+          setErrorMessage('Por favor, completa todos los campos.');
+          setIsLoading(false);
+          return;
+        }
+        await loginUser(gestanteForm);
         navigate('/main');
       }
     } catch (error) {
       const authError = error as AuthError;
       if (authError?.status === 401 || authError?.status === 403) {
-        setErrorMessage('Código GMI o respuesta de seguridad incorrectos.');
+        setErrorMessage('Credenciales incorrectas. Intenta de nuevo.');
       } else if (authError?.status === 422) {
-        setErrorMessage(
-          'Formato de datos incorrecto. Verifica la información ingresada.'
-        );
+        setErrorMessage('Formato de datos incorrecto.');
       } else if (authError?.message) {
         setErrorMessage(authError.message);
       } else {
-        setErrorMessage(
-          'Error de conexión. Verifica que el servidor esté activo.'
-        );
+        setErrorMessage('Error de conexión. Verifica que el servidor esté activo.');
       }
     } finally {
       setIsLoading(false);
@@ -74,42 +80,85 @@ export const FormLogin = () => {
 
   return (
     <form onSubmit={handleSubmit} className={styles.formulario}>
-      <p>Código GMI</p>
-      <input
-        value={formLogin.codigo_gmi}
-        type="text"
-        placeholder="Ej. GMI-12345"
-        disabled={isLoading}
-        onChange={(e) => handlerForm('codigo_gmi', e.target.value)}
-      />
+      
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', gap: '10px' }}>
+        <button
+          type="button"
+          style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #CA436E', background: !isStaff ? '#CA436E' : 'transparent', color: !isStaff ? 'white' : '#CA436E', cursor: 'pointer' }}
+          onClick={() => { setIsStaff(false); setErrorMessage(null); }}
+        >
+          Gestante
+        </button>
+        <button
+          type="button"
+          style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #CA436E', background: isStaff ? '#CA436E' : 'transparent', color: isStaff ? 'white' : '#CA436E', cursor: 'pointer' }}
+          onClick={() => { setIsStaff(true); setErrorMessage(null); }}
+        >
+          Personal Médico
+        </button>
+      </div>
 
-      <p>Respuesta de Seguridad</p>
-      <input
-        value={formLogin.respuesta_seguridad}
-        type="password"
-        placeholder="Tu respuesta secreta"
-        disabled={isLoading}
-        onChange={(e) => handlerForm('respuesta_seguridad', e.target.value)}
-      />
+      {!isStaff ? (
+        <>
+          <p>Código GMI</p>
+          <input
+            value={gestanteForm.codigo_gmi}
+            type="text"
+            placeholder="Ej. GMI-12345"
+            disabled={isLoading}
+            onChange={(e) => handleGestanteForm('codigo_gmi', e.target.value)}
+          />
 
-      {/* Mensaje de error */}
+          <p>Respuesta de Seguridad</p>
+          <input
+            value={gestanteForm.respuesta_seguridad}
+            type="password"
+            placeholder="Tu respuesta secreta"
+            disabled={isLoading}
+            onChange={(e) => handleGestanteForm('respuesta_seguridad', e.target.value)}
+          />
+        </>
+      ) : (
+        <>
+          <p>Correo Electrónico</p>
+          <input
+            value={staffForm.email}
+            type="email"
+            placeholder="correo@ejemplo.com"
+            disabled={isLoading}
+            onChange={(e) => handleStaffForm('email', e.target.value)}
+          />
+
+          <p>Contraseña</p>
+          <input
+            value={staffForm.password}
+            type="password"
+            placeholder="Tu contraseña"
+            disabled={isLoading}
+            onChange={(e) => handleStaffForm('password', e.target.value)}
+          />
+        </>
+      )}
+
       {errorMessage && (
-        <p className={styles.errorMessage || 'error-message'} role="alert">
+        <p className={styles.errorMessage || 'error-message'} role="alert" style={{ color: 'red' }}>
           {errorMessage}
         </p>
       )}
 
-      <p className={styles.confirm}>
-        ¿Aún no tienes cuenta?
-        <button
-          type="button"
-          className={styles.register}
-          onClick={() => navigate('/register')}
-          disabled={isLoading}
-        >
-          Registrar
-        </button>
-      </p>
+      {!isStaff && (
+        <p className={styles.confirm}>
+          ¿Aún no tienes cuenta?
+          <button
+            type="button"
+            className={styles.register}
+            onClick={() => navigate('/register')}
+            disabled={isLoading}
+          >
+            Registrar
+          </button>
+        </p>
+      )}
 
       <div className={styles.boton}>
         <button
@@ -117,7 +166,7 @@ export const FormLogin = () => {
           className={styles.lastbutton}
           disabled={isLoading}
         >
-          {isLoading ? 'Iniciando...' : 'Iniciar'}
+          {isLoading ? 'Iniciando...' : 'Iniciar Sesión'}
         </button>
       </div>
     </form>
