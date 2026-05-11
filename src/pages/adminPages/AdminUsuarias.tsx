@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { HeaderActividad } from '../../components/Headers/HeaderActividad/HeaderActividad';
 import styles from '../../components/admin/AdminUsuarias.module.css';
+import { Modal } from '../../components/Modal';
+import { FormRegister } from '../../components/info/contenteregister/FormRegister';
 
 interface Paciente {
   id: string;
@@ -35,6 +37,7 @@ export const AdminUsuarias = () => {
   const [busqueda, setBusqueda]     = useState('');
   const [selPaciente, setSelPaciente] = useState('XYZ1002');
   const [selAnalisis, setSelAnalisis] = useState('HEMOGLOBINA');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const filtrados = PACIENTES.filter(p =>
     p.id.toLowerCase().includes(busqueda.toLowerCase())
@@ -51,7 +54,15 @@ export const AdminUsuarias = () => {
 
         {/*parte izquierda ls lista*/}
         <div className={styles.panel}>
-          <p className={styles.panelTitle}>Lista Maternas</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <p className={styles.panelTitle}>Lista Maternas</p>
+            <button 
+              className={styles.addPacienteBtn}
+              onClick={() => setIsModalOpen(true)}
+            >
+              + Nueva
+            </button>
+          </div>
 
           <div className={styles.searchWrap}>
             <input
@@ -161,6 +172,14 @@ export const AdminUsuarias = () => {
         </div>
 
       </div>
+
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        title="Registrar Nueva Materna"
+      >
+        <FormRegister />
+      </Modal>
     </div>
   );
 };

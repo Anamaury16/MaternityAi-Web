@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = 'http://localhost:8000';
+export const USE_MOCKS = false; // Cambiar a false para usar el backend real
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -37,11 +38,18 @@ api.interceptors.response.use(
         }
 
         // Llamada directa usando axios sin interceptores para evitar loops
-        const response = await axios.post(`${API_BASE_URL}/api/v1/auth/refresh-token`, {
-          refresh_token: refreshToken
-        });
+        const response = await axios.post(
+          `${API_BASE_URL}/api/v1/auth/refresh-token`,
+          {
+            refresh_token: refreshToken,
+          }
+        );
 
-        const { access_token, refresh_token: new_refresh_token, role } = response.data;
+        const {
+          access_token,
+          refresh_token: new_refresh_token,
+          role,
+        } = response.data;
 
         localStorage.setItem('access_token', access_token);
         localStorage.setItem('refresh_token', new_refresh_token);

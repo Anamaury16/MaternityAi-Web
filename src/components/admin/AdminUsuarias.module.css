@@ -71,13 +71,28 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 7px 8px;
-  border-radius: 10px;
+  padding: 8px 12px;
+  border-radius: 12px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  animation: slideInLeft 0.5s ease-out backwards;
 }
-.pItem:hover { background: #f5f5f5; }
-.pItemSel    { background: #fce8ef; }
+
+@keyframes slideInLeft {
+  from { transform: translateX(-10px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.pItem:hover {
+  background: #fff5f8;
+  transform: translateX(4px);
+  border-color: #fce8ef;
+}
+.pItemSel { 
+  background: #fce8ef;
+  border-color: #f9c0cf;
+}
 .pId         { font-weight: 600; font-size: 12px; color: #CA436E; min-width: 65px; }
 .pDetail     { font-size: 11px; color: #999; }
 
@@ -87,6 +102,22 @@
   font-weight: 700;
   color: #222;
   margin: 0 0 6px;
+}
+.addPacienteBtn {
+  background: #CA436E;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addPacienteBtn:hover {
+  background: #a33255;
+  transform: scale(1.05);
 }
 .diagnostico {
   color: #CA436E;
@@ -166,11 +197,19 @@
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
+
+.analisisBtn:hover {
+  transform: scale(1.05);
+  background: #f0f0f0;
+}
+
 .analisisBtnOn {
   background: #CA436E;
   color: white;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(202, 67, 110, 0.3);
 }
 
 /* ── REPORTE ── */

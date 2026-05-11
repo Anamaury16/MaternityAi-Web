@@ -146,19 +146,7 @@ export const FormLogin = () => {
         </p>
       )}
 
-      {!isStaff && (
-        <p className={styles.confirm}>
-          ¿Aún no tienes cuenta?
-          <button
-            type="button"
-            className={styles.register}
-            onClick={() => navigate('/register')}
-            disabled={isLoading}
-          >
-            Registrar
-          </button>
-        </p>
-      )}
+      {/* Registro oculto del login público según requerimiento */}
 
       <div className={styles.boton}>
         <button
