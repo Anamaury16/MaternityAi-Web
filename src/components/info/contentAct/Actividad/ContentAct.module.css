@@ -3,11 +3,13 @@
   display: flex;
   gap: 50px;
   height: 730px;
+  animation: fadeIn 0.8s ease-out;
 
   & .left {
     width: 50%;
     display: flex;
     flex-direction: column;
+    animation: slideInLeft 0.8s ease-out;
 
     & .notificaciones {
       overflow: auto;
@@ -21,6 +23,7 @@
     align-items: center;
     height: 100%;
     overflow: auto;
+    animation: slideUp 0.8s ease-out 0.2s backwards;
   }
 
   & .sms {
@@ -32,4 +35,19 @@
   & .title_notificaciones {
     color: #ca436e;
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }

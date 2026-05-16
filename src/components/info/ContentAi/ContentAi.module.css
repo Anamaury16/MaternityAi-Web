@@ -2,13 +2,31 @@
   display: flex;
   margin-top: 80px;
   height: 80vh;
-
   gap: 40px;
+  animation: fadeIn 0.8s ease-out;
+
   & .historial {
     width: 25%;
+    animation: slideInLeft 0.8s ease-out;
   }
 
   & .chat {
     width: 70%;
+    animation: slideUp 0.8s ease-out 0.2s backwards;
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }

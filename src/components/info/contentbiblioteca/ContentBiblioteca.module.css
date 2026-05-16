@@ -3,6 +3,7 @@
   margin-top: 70px;
   gap: 20%;
   height: 750px;
+  animation: fadeIn 0.8s ease-out;
 
   & .left {
     width: 20%;
@@ -10,6 +11,7 @@
     flex-direction: column;
     gap: 20px;
     position: fixed;
+    animation: slideInLeft 0.8s ease-out;
   }
 
   & .publicaciones {
@@ -17,5 +19,21 @@
     display: flex;
     height: 100%;
     justify-content: end;
+    animation: slideUp 0.8s ease-out 0.2s backwards;
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInLeft {
+  from { transform: translateX(-30px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }

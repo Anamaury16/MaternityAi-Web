@@ -17,32 +17,32 @@
     border-radius: 25px;
     box-shadow: 4px 4px 6px rgb(143, 143, 143);
 
-    & .link {
+    & .tab {
       text-decoration: none;
       color: black;
       display: flex;
       align-items: center;
+      padding: 8px 16px;
+      border-radius: 20px;
+      transition: all 0.3s ease;
+      font-weight: 500;
+      margin: 8px 0;
     }
 
-    & .main {
-      text-decoration: none;
-      color: black;
-      display: flex;
-      align-items: center;
+    & .activeTab {
+      background-color: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    & .actividad {
-      text-decoration: none;
-      color: black;
-      display: flex;
-      align-items: center;
+    & .tab:not(.activeTab):hover {
+      background-color: rgba(255, 255, 255, 0.6);
+      transform: translateY(-2px);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     }
 
-    & .ai {
-      text-decoration: none;
-      color: black;
-      display: flex;
-      align-items: center;
+    & .activeTab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
   }
 
