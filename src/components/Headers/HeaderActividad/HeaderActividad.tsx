@@ -64,12 +64,8 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
         <div onClick={() => navigate('/userprofile')} className={styles.perfil}>
           <div>
-            <img src="/image/profilepicture.png" className={styles.foto} />
-          </div>
-
-          <div>
-            <p className={styles.name}>Ana Maury</p>
-            <p className={styles.desc}>Paciente</p>
+            <p className={styles.name}>{localStorage.getItem('user_name') || 'Usuario'}</p>
+            <p className={styles.desc}>{rol === 'medico' ? 'Personal Médico' : rol === 'admin' ? 'Administrador' : 'Gestante'}</p>
           </div>
         </div>
         

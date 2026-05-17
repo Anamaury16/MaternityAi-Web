@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './ContentLogin.module.css';
 import { loginUser, loginStaff, getSecurityQuestion, type AuthError } from '../../../services/authService';
 
@@ -15,8 +15,9 @@ interface StaffLoginState {
 
 export const FormLogin = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const [isStaff, setIsStaff] = useState(false);
+  const [isStaff, setIsStaff] = useState(location.state?.isStaff || false);
   
   // Estados para Gestante
   const [gestanteStep, setGestanteStep] = useState<1 | 2>(1);
@@ -86,6 +87,7 @@ export const FormLogin = () => {
           return;
         }
         await loginStaff(staffForm);
+        localStorage.setItem('user_name', staffForm.email);
         setSuccessMessage('Sesión iniciada correctamente.');
         navigate('/admin');
       } else {
@@ -101,6 +103,8 @@ export const FormLogin = () => {
           return;
         }
         await loginUser(gestanteForm);
+        // Guardamos el GMI para mostrarlo dinámicamente en el dashboard
+        localStorage.setItem('user_name', `Gestante ${gestanteForm.codigo_gmi}`);
         setSuccessMessage('Sesión iniciada correctamente.');
         navigate('/main');
       }
@@ -126,7 +130,7 @@ export const FormLogin = () => {
       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', gap: '10px' }}>
         <button
           type="button"
-          style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #CA436E', background: !isStaff ? '#CA436E' : 'transparent', color: !isStaff ? 'white' : '#CA436E', cursor: 'pointer' }}
+          style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #CA436E', background: !isStaff ? '#CA436E' : 'transparent', color: !isStaff ? 'white' : '#CA436E', cursor: 'pointer', transition: 'all 0.3s ease' }}
           onClick={() => { 
             setIsStaff(false); 
             setErrorMessage(null); 
@@ -137,7 +141,7 @@ export const FormLogin = () => {
         </button>
         <button
           type="button"
-          style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #CA436E', background: isStaff ? '#CA436E' : 'transparent', color: isStaff ? 'white' : '#CA436E', cursor: 'pointer' }}
+          style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #CA436E', background: isStaff ? '#CA436E' : 'transparent', color: isStaff ? 'white' : '#CA436E', cursor: 'pointer', transition: 'all 0.3s ease' }}
           onClick={() => { 
             setIsStaff(true); 
             setErrorMessage(null);

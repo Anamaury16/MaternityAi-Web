@@ -5,14 +5,43 @@
   display: flex;
   font-size: 17px;
   gap: 60px;
+  
+  /* Add animation to the header items */
+  animation: fadeInDown 0.8s ease-out forwards;
 }
 
 .home {
   text-decoration: none;
   color: gray;
+  transition: color 0.3s ease;
+}
+
+.logo {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.home:hover {
+  color: #df5d86;
 }
 
 .nosotros {
   text-decoration: none;
   color: gray;
+  transition: color 0.3s ease;
+}
+
+.nosotros:hover {
+  color: #df5d86;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

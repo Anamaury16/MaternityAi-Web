@@ -10,5 +10,38 @@
 
   & h2 {
     color: #ca436e;
+    margin-bottom: 30px;
+  }
+
+  & p {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 10px 0;
+    font-size: 16px;
+    color: #333;
+    margin: 5px 0;
+  }
+
+  & p:hover {
+    color: #ca436e;
+    transform: translateX(5px);
+  }
+
+  & .active {
+    color: #ca436e;
+    font-weight: bold;
+    border-left: 3px solid #ca436e;
+    padding-left: 10px;
+  }
+
+  & .logout {
+    margin-top: 40px;
+    color: #ff4d4d;
+    font-weight: 500;
+  }
+  
+  & .logout:hover {
+    color: #d32f2f;
+    transform: translateX(5px);
   }
 }

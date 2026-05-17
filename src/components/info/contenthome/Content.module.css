@@ -8,6 +8,26 @@
     justify-content: center;
   }
 
+  /* Animating left side elements with a staggered delay */
+  & .left > div,
+  & .left > p,
+  & .left > button {
+    opacity: 0;
+    animation: fadeInUp 0.8s ease-out forwards;
+  }
+
+  & .left > div {
+    animation-delay: 0.1s;
+  }
+  
+  & .left > p {
+    animation-delay: 0.3s;
+  }
+
+  & .left > button {
+    animation-delay: 0.5s;
+  }
+
   & p {
     width: 75%;
     font-size: 30px;
@@ -26,9 +46,40 @@
     background-color: #df5d86;
     color: white;
     box-shadow: 1px 1px 7px rgb(122, 122, 122);
+    cursor: pointer;
+    transition: all 0.3s ease; /* Smooth hover transition */
   }
 
   & button:hover {
-    box-shadow: 4px 4px 12px rgb(143, 143, 143);
+    box-shadow: 4px 4px 15px rgba(223, 93, 134, 0.5); /* Improved box-shadow color */
+    transform: translateY(-2px); /* Slight lift on hover */
+  }
+
+  & .foto {
+    animation: float 6s ease-in-out infinite; /* Gentle floating animation */
+  }
+}
+
+/* Keyframes for animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
   }
 }

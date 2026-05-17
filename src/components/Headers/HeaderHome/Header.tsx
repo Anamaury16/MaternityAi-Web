@@ -7,14 +7,18 @@ export const Header = () => {
   return (
     <header className={styles.headerStyle}>
       <nav className={styles.container}>
-        <DegradedText text={'MaternityAi'} fontSize="20px" />
+        <Link to={'/'} className={styles.logo}>
+          <DegradedText text={'MaternityAi'} fontSize="20px" />
+        </Link>
         <Link to={'/'} className={styles.home}>
           Home
         </Link>
         <Link to={'/nosotros'} className={styles.nosotros}>
           Nosotros
         </Link>
-        <GradedButton textbutton={'registrar'} height="35px" width="110px" />
+        <Link to={'/login'} state={{ isStaff: true }} style={{ textDecoration: 'none' }}>
+          <GradedButton textbutton={'Acceso Médico'} height="35px" width="130px" />
+        </Link>
       </nav>
     </header>
   );

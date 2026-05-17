@@ -8,7 +8,7 @@ export const ContentMain = () => {
     <section className={styles.container}>
       <div className={styles.informacion_usuario}>
         <p className="">
-          Buenas tardes, <h1 className="">Ana Milena</h1>
+          Buenas tardes, <h1 className="">{localStorage.getItem('user_name') || 'Gestante'}</h1>
           <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" />
         </p>
       </div>
