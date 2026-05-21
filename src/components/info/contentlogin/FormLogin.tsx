@@ -2,6 +2,15 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './ContentLogin.module.css';
 import { loginUser, loginStaff, getSecurityQuestion, type AuthError } from '../../../services/authService';
+import { useAuth } from '../../../context/AuthContext';
+
+// Mapa rol → ruta de destino
+const ROLE_HOME: Record<string, string> = {
+  gestante:     '/main',
+  admin:        '/admin',
+  clinico:      '/clinico',
+  investigador: '/investigador',
+};
 
 interface GestanteLoginState {
   codigo_gmi: string;
@@ -16,6 +25,7 @@ interface StaffLoginState {
 export const FormLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { login } = useAuth();
 
   const [isStaff, setIsStaff] = useState(location.state?.isStaff || false);
   
@@ -86,10 +96,13 @@ export const FormLogin = () => {
           setIsLoading(false);
           return;
         }
-        await loginStaff(staffForm);
+        const staffData = await loginStaff(staffForm);
+        login(staffData); // actualiza el AuthContext
         localStorage.setItem('user_name', staffForm.email);
         setSuccessMessage('Sesión iniciada correctamente.');
-        navigate('/admin');
+        // Redirige al dashboard correspondiente al rol
+        const from = location.state?.from?.pathname;
+        navigate(from || ROLE_HOME[staffData.role] || '/admin', { replace: true });
       } else {
         if (gestanteStep === 1) {
           // Fallback por si dan enter en el input en el paso 1
@@ -102,11 +115,11 @@ export const FormLogin = () => {
           setIsLoading(false);
           return;
         }
-        await loginUser(gestanteForm);
-        // Guardamos el GMI para mostrarlo dinámicamente en el dashboard
+        const gestanteData = await loginUser(gestanteForm);
+        login(gestanteData); // actualiza el AuthContext
         localStorage.setItem('user_name', `Gestante ${gestanteForm.codigo_gmi}`);
         setSuccessMessage('Sesión iniciada correctamente.');
-        navigate('/main');
+        navigate('/main', { replace: true });
       }
     } catch (error) {
       const authError = error as AuthError;
@@ -160,7 +173,7 @@ export const FormLogin = () => {
               <input
                 value={gestanteForm.codigo_gmi}
                 type="text"
-                placeholder="Ej. GMI-12345"
+                placeholder="Ej. ID-GMI-2024-001"
                 disabled={isLoading}
                 onChange={(e) => handleGestanteForm('codigo_gmi', e.target.value)}
               />

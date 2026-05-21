@@ -17,7 +17,7 @@
     border-radius: 25px;
     box-shadow: 4px 4px 6px rgb(143, 143, 143);
 
-    & .tab {
+    & .tab, & .link {
       text-decoration: none;
       color: black;
       display: flex;
@@ -34,7 +34,8 @@
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
 
-    & .tab:not(.activeTab):hover {
+    & .tab:not(.activeTab):hover,
+    & .link:hover {
       background-color: rgba(255, 255, 255, 0.6);
       transform: translateY(-2px);
       box-shadow: 0 2px 5px rgba(0,0,0,0.05);

@@ -1,8 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { HeaderActividad } from '../../components/Headers/HeaderActividad/HeaderActividad';
 import styles from '../../components/admin/AdminUsuarias.module.css';
+import modalStyles from './StaffModal.module.css';
 import { Modal } from '../../components/Modal';
 import { FormRegister } from '../../components/info/contenteregister/FormRegister';
+import {
+  createStaffUser,
+  getRoles,
+  type StaffUserCreate,
+  type RoleOption,
+} from '../../services/adminService';
 
 interface Paciente {
   id: string;
@@ -11,8 +18,8 @@ interface Paciente {
 }
 
 const PACIENTES: Paciente[] = [
-  { id: 'WSC2001', semana: 3,  fase: 'Trimestre 1' },
-  { id: 'XYZ1002', semana: 2,  fase: 'Trimestre 1' },
+  { id: 'WSC2001', semana: 3, fase: 'Trimestre 1' },
+  { id: 'XYZ1002', semana: 2, fase: 'Trimestre 1' },
   { id: 'WSX2032', semana: 14, fase: 'Trimestre 2' },
   { id: 'XSX2362', semana: 20, fase: 'Trimestre 2' },
   { id: 'JSX0937', semana: 36, fase: 'Trimestre 3' },
@@ -22,7 +29,7 @@ const PACIENTES: Paciente[] = [
   { id: 'WSX2035', semana: 14, fase: 'Trimestre 2' },
   { id: 'XSX2364', semana: 20, fase: 'Trimestre 2' },
   { id: 'JSX0938', semana: 36, fase: 'Trimestre 3' },
-  { id: 'WSC2002', semana: 3,  fase: 'Trimestre 1' },
+  { id: 'WSC2002', semana: 3, fase: 'Trimestre 1' },
 ];
 
 const ANALISIS = [
@@ -33,11 +40,172 @@ const ANALISIS = [
   'Ags HB',
 ];
 
+// ─── Modal de creación de staff ──────────────────────────────────────────────
+
+const EMPTY_FORM: StaffUserCreate = {
+  nombres: '',
+  apellidos: '',
+  email: '',
+  password: '',
+  rol_id: 2,
+};
+
+const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
+  const [form, setForm] = useState<StaffUserCreate>(EMPTY_FORM);
+  const [roles, setRoles] = useState<RoleOption[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    getRoles()
+      .then((data) => {
+        // Excluir el rol "gestante" (id=1) del selector de staff
+        setRoles(data.filter((r) => r.id !== 1));
+      })
+      .catch(() => {
+        // Fallback con roles estáticos si el backend no responde
+        setRoles([
+          { id: 2, nombre: 'clinico' },
+          { id: 3, nombre: 'admin' },
+          { id: 5, nombre: 'investigador' },
+        ]);
+      });
+  }, []);
+
+  const handleChange = (
+    key: keyof StaffUserCreate,
+    value: string | number | null
+  ) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.nombres.trim() || !form.email.trim() || !form.password.trim()) {
+      setError('Por favor completa todos los campos obligatorios.');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await createStaffUser(form);
+      setSuccess(true);
+      setTimeout(() => {
+        setForm(EMPTY_FORM);
+        setSuccess(false);
+        onClose();
+      }, 1500);
+    } catch {
+      setError('No se pudo crear el usuario. Verifica los datos e intenta de nuevo.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const rolSeleccionado = roles.find((r) => r.id === form.rol_id);
+
+  return (
+    <form onSubmit={handleSubmit} className={modalStyles.form}>
+      {success && (
+        <div className={modalStyles.successBanner}>
+          ✅ Usuario creado exitosamente
+        </div>
+      )}
+
+      <div className={modalStyles.field}>
+        <label className={modalStyles.label}>Nombre completo *</label>
+        <input
+          className={modalStyles.input}
+          type="text"
+          placeholder="Ej. Dra. Ana García"
+          value={form.nombres}
+          onChange={(e) => handleChange('nombres', e.target.value)}
+          disabled={isLoading}
+        />
+      </div>
+
+      <div className={modalStyles.field}>
+        <label className={modalStyles.label}>Correo electrónico *</label>
+        <input
+          className={modalStyles.input}
+          type="email"
+          placeholder="correo@hospital.com"
+          value={form.email}
+          onChange={(e) => handleChange('email', e.target.value)}
+          disabled={isLoading}
+        />
+      </div>
+
+      <div className={modalStyles.field}>
+        <label className={modalStyles.label}>Contraseña *</label>
+        <input
+          className={modalStyles.input}
+          type="password"
+          placeholder="Mínimo 8 caracteres"
+          value={form.password}
+          onChange={(e) => handleChange('password', e.target.value)}
+          disabled={isLoading}
+        />
+      </div>
+
+      <div className={modalStyles.field}>
+        <label className={modalStyles.label}>Rol *</label>
+        <select
+          className={modalStyles.select}
+          value={form.rol_id}
+          onChange={(e) => handleChange('rol_id', Number(e.target.value))}
+          disabled={isLoading}
+        >
+          {roles.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.nombre.charAt(0).toUpperCase() + r.nombre.slice(1)}
+            </option>
+          ))}
+        </select>
+        {rolSeleccionado && (
+          <span className={modalStyles.rolBadge}>
+            {rolSeleccionado.nombre === 'admin' && '🛡️ Administrador del sistema'}
+            {rolSeleccionado.nombre === 'clinico' && '🩺 Profesional de salud'}
+            {rolSeleccionado.nombre === 'investigador' && '🔬 Acceso a datos de investigación'}
+          </span>
+        )}
+      </div>
+
+      {error && (
+        <p className={modalStyles.error}>{error}</p>
+      )}
+
+      <div className={modalStyles.actions}>
+        <button
+          type="button"
+          className={modalStyles.cancelBtn}
+          onClick={onClose}
+          disabled={isLoading}
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          className={modalStyles.submitBtn}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Creando...' : 'Crear Usuario'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+// ─── Página principal ─────────────────────────────────────────────────────────
+
 export const AdminUsuarias = () => {
-  const [busqueda, setBusqueda]     = useState('');
+  const [busqueda, setBusqueda] = useState('');
   const [selPaciente, setSelPaciente] = useState('XYZ1002');
   const [selAnalisis, setSelAnalisis] = useState('HEMOGLOBINA');
-  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Controla qué modal está abierto: 'gestante' | 'staff' | null
+  const [modalOpen, setModalOpen] = useState<'gestante' | 'staff' | null>(null);
 
   const filtrados = PACIENTES.filter(p =>
     p.id.toLowerCase().includes(busqueda.toLowerCase())
@@ -56,12 +224,22 @@ export const AdminUsuarias = () => {
         <div className={styles.panel}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <p className={styles.panelTitle}>Lista Maternas</p>
-            <button 
-              className={styles.addPacienteBtn}
-              onClick={() => setIsModalOpen(true)}
-            >
-              + Nueva
-            </button>
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button
+                className={styles.addPacienteBtn}
+                onClick={() => setModalOpen('gestante')}
+              >
+                + Materna
+              </button>
+              <button
+                className={styles.addPacienteBtn}
+                style={{ background: '#7C3AED' }}
+                onClick={() => setModalOpen('staff')}
+                title="Crear usuario de staff (clínico, admin, investigador)"
+              >
+                + Staff
+              </button>
+            </div>
           </div>
 
           <div className={styles.searchWrap}>
@@ -96,7 +274,7 @@ export const AdminUsuarias = () => {
           </div>
         </div>
 
-        {/*parte dentral los detalles*/}
+        {/*parte central los detalles*/}
         <div className={`${styles.panel} ${styles.panelScroll}`}>
           <h1 className={styles.nombrePaciente}>{selPaciente}</h1>
           <p className={styles.diagnostico}>
@@ -132,7 +310,7 @@ export const AdminUsuarias = () => {
                 strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="16" />
-                <line x1="8"  y1="12" x2="16" y2="12" />
+                <line x1="8" y1="12" x2="16" y2="12" />
               </svg>
             </button>
             <div className={styles.analisisGrid}>
@@ -173,12 +351,22 @@ export const AdminUsuarias = () => {
 
       </div>
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+      {/* Modal: registrar nueva materna */}
+      <Modal
+        isOpen={modalOpen === 'gestante'}
+        onClose={() => setModalOpen(null)}
         title="Registrar Nueva Materna"
       >
         <FormRegister />
+      </Modal>
+
+      {/* Modal: crear usuario staff */}
+      <Modal
+        isOpen={modalOpen === 'staff'}
+        onClose={() => setModalOpen(null)}
+        title="Crear Usuario de Staff"
+      >
+        <StaffCreateModal onClose={() => setModalOpen(null)} />
       </Modal>
     </div>
   );
