@@ -1,10 +1,12 @@
 import api from './api';
 import axios from 'axios';
 
+
 export interface LoginCredentials {
   codigo_gmi: string;
   respuesta_seguridad: string;
 }
+
 
 export interface StaffLoginCredentials {
   email: string;
@@ -27,6 +29,19 @@ export interface AuthError {
   message: string;
   status: number;
 }
+
+// ─── Nuevas interfaces para reset de contraseña ──────────────────────────────
+
+export interface PasswordResetRequestPayload {
+  email: string;
+}
+
+export interface PasswordResetConfirmPayload {
+  token: string;
+  new_password: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const handleAuthError = (err: unknown): never => {
   if (axios.isAxiosError(err)) {
@@ -72,14 +87,12 @@ export const loginStaff = async (
 
 export const logoutUser = async (): Promise<void> => {
   try {
-    // Intentamos cerrar sesión en el backend si hay token
     if (isAuthenticated()) {
       await api.post('/api/v1/auth/logout');
     }
   } catch (err) {
     console.error('Error logging out from server:', err);
   } finally {
-    // Siempre limpiamos el storage local
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('role');
@@ -90,12 +103,40 @@ export const getSecurityQuestion = async (
   codigoGmi: string
 ): Promise<SecurityQuestionResponse> => {
   try {
-    const response = await api.get<SecurityQuestionResponse>(`/api/v1/auth/security-question/${codigoGmi}`);
+    const response = await api.get<SecurityQuestionResponse>(
+      `/api/v1/auth/security-question/${codigoGmi}`
+    );
     return response.data;
   } catch (err) {
     return handleAuthError(err);
   }
 };
+
+// ─── Reset de contraseña ─────────────────────────────────────────────────────
+
+// Paso 1: solicitar el reset — el backend envía el token por email
+export const requestPasswordReset = async (
+  payload: PasswordResetRequestPayload
+): Promise<void> => {
+  try {
+    await api.post('/api/v1/auth/password/reset-request', payload);
+  } catch (err) {
+    return handleAuthError(err);
+  }
+};
+
+// Paso 2: confirmar con token + nueva contraseña
+export const confirmPasswordReset = async (
+  payload: PasswordResetConfirmPayload
+): Promise<void> => {
+  try {
+    await api.post('/api/v1/auth/password/reset', payload);
+  } catch (err) {
+    return handleAuthError(err);
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const getAccessToken = (): string | null => {
   return localStorage.getItem('access_token');

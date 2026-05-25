@@ -17,7 +17,7 @@ export const Header = () => {
           Nosotros
         </Link>
         <Link to={'/login'} state={{ isStaff: true }} style={{ textDecoration: 'none' }}>
-          <GradedButton textbutton={'Acceso Médico'} height="35px" width="130px" />
+          <GradedButton textbutton={'Acceso Staff'} height="35px" width="130px" />
         </Link>
       </nav>
     </header>
