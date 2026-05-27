@@ -13,8 +13,7 @@ import { AdminOBA } from './pages/adminPages/AdminOBA';
 import { AdminPreguntas } from './pages/adminPages/AdminPreguntas';
 import { AdminCitas } from './pages/adminPages/AdminCitas';
 import { AdminCargas } from './pages/adminPages/AdminCargas';
-import { ClinicoHome } from './pages/clinicoPages/ClinicoHome';
-import { InvestigadorHome } from './pages/investigadorPages/InvestigadorHome';
+
 import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
@@ -49,7 +48,7 @@ function App() {
 
           {/* ── Rutas para clínico (también puede acceder a vistas admin) ── */}
           <Route element={<ProtectedRoute requiredRoles="clinico" />}>
-            <Route path="/clinico" element={<ClinicoHome />} />
+            <Route path="/clinico" element={<Navigate to="/clinico/usuarias" replace />} />
             {/* El clínico reutiliza las vistas admin para gestionar pacientes */}
             <Route path="/clinico/usuarias" element={<AdminUsuarias />} />
             <Route path="/clinico/citas" element={<AdminCitas />} />
@@ -57,13 +56,6 @@ function App() {
             <Route path="/clinico/preguntas" element={<AdminPreguntas />} />
           </Route>
 
-          {/* ── Rutas para investigador ── */}
-          <Route element={<ProtectedRoute requiredRoles="investigador" />}>
-            <Route path="/investigador" element={<InvestigadorHome />} />
-            <Route path="/investigador/oba" element={<AdminOBA />} />
-            <Route path="/investigador/cargas" element={<AdminCargas />} />
-            <Route path="/investigador/preguntas" element={<AdminPreguntas />} />
-          </Route>
 
           {/* ── Fallback ── */}
           <Route path="*" element={<Navigate to="/login" replace />} />

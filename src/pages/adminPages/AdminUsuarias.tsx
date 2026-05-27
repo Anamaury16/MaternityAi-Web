@@ -4,10 +4,12 @@ import styles from '../../components/admin/AdminUsuarias.module.css';
 import modalStyles from './StaffModal.module.css';
 import { Modal } from '../../components/Modal';
 import { FormRegister } from '../../components/info/contenteregister/FormRegister';
+import { useAuth } from '../../context/AuthContext';
 import {
   createStaffUser,
   getRoles,
-  type StaffUserCreate,
+  getStaffUsers,
+  updateStaffStatus,
   type RoleOption,
 } from '../../services/adminService';
 
@@ -42,16 +44,15 @@ const ANALISIS = [
 
 // ─── Modal de creación de staff ──────────────────────────────────────────────
 
-const EMPTY_FORM: StaffUserCreate = {
-  nombres: '',
-  apellidos: '',
+const EMPTY_FORM: any = {
+  nombre: '',
   email: '',
   password: '',
   rol_id: 2,
 };
 
 const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
-  const [form, setForm] = useState<StaffUserCreate>(EMPTY_FORM);
+  const [form, setForm] = useState<any>(EMPTY_FORM);
   const [roles, setRoles] = useState<RoleOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,16 +75,16 @@ const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
   }, []);
 
   const handleChange = (
-    key: keyof StaffUserCreate,
+    key: string,
     value: string | number | null
   ) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev: any) => ({ ...prev, [key]: value }));
     setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.nombres.trim() || !form.email.trim() || !form.password.trim()) {
+    if (!form.nombre.trim() || !form.email.trim() || !form.password.trim()) {
       setError('Por favor completa todos los campos obligatorios.');
       return;
     }
@@ -96,8 +97,9 @@ const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
         setSuccess(false);
         onClose();
       }, 1500);
-    } catch {
-      setError('No se pudo crear el usuario. Verifica los datos e intenta de nuevo.');
+    } catch (err: any) {
+      const backendError = err.response?.data?.detail;
+      setError(typeof backendError === 'string' ? backendError : 'No se pudo crear el usuario. Verifica los datos e intenta de nuevo.');
     } finally {
       setIsLoading(false);
     }
@@ -119,8 +121,8 @@ const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
           className={modalStyles.input}
           type="text"
           placeholder="Ej. Dra. Ana García"
-          value={form.nombres}
-          onChange={(e) => handleChange('nombres', e.target.value)}
+          value={form.nombre}
+          onChange={(e) => handleChange('nombre', e.target.value)}
           disabled={isLoading}
         />
       </div>
@@ -200,6 +202,9 @@ const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
 // ─── Página principal ─────────────────────────────────────────────────────────
 
 export const AdminUsuarias = () => {
+  const { user } = useAuth();
+  const isAdmin = user.role === 'admin';
+
   const [busqueda, setBusqueda] = useState('');
   const [selPaciente, setSelPaciente] = useState('XYZ1002');
   const [selAnalisis, setSelAnalisis] = useState('HEMOGLOBINA');
@@ -207,8 +212,30 @@ export const AdminUsuarias = () => {
   // Controla qué modal está abierto: 'gestante' | 'staff' | null
   const [modalOpen, setModalOpen] = useState<'gestante' | 'staff' | null>(null);
 
+  const [activeList, setActiveList] = useState<'maternas' | 'staff'>('maternas');
+  const [staffUsers, setStaffUsers] = useState<any[]>([]);
+  const [selStaff, setSelStaff] = useState<any>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setStatusError(null);
+  }, [selStaff]);
+
+  useEffect(() => {
+    if (activeList === 'staff' && isAdmin) {
+      getStaffUsers().then(data => {
+        setStaffUsers(data);
+      }).catch(console.error);
+    }
+  }, [activeList, isAdmin]);
+
   const filtrados = PACIENTES.filter(p =>
     p.id.toLowerCase().includes(busqueda.toLowerCase())
+  );
+
+  const staffFiltrados = staffUsers.filter(u => 
+    (u.nombre || u.nombres || '').toLowerCase().includes(busqueda.toLowerCase()) ||
+    (u.email || '').toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
@@ -222,30 +249,51 @@ export const AdminUsuarias = () => {
 
         {/*parte izquierda ls lista*/}
         <div className={styles.panel}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <p className={styles.panelTitle}>Lista Maternas</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <p className={styles.panelTitle} style={{ margin: 0 }}>Lista</p>
             <div style={{ display: 'flex', gap: '6px' }}>
-              <button
-                className={styles.addPacienteBtn}
-                onClick={() => setModalOpen('gestante')}
-              >
-                + Materna
-              </button>
-              <button
-                className={styles.addPacienteBtn}
-                style={{ background: '#7C3AED' }}
-                onClick={() => setModalOpen('staff')}
-                title="Crear usuario de staff (clínico, admin, investigador)"
-              >
-                + Staff
-              </button>
+              {isAdmin && (
+                <button
+                  className={styles.addPacienteBtn}
+                  onClick={() => setModalOpen('gestante')}
+                >
+                  + Materna
+                </button>
+              )}
+              {isAdmin && (
+                <button
+                  className={styles.addPacienteBtn}
+                  style={{ background: '#7C3AED' }}
+                  onClick={() => setModalOpen('staff')}
+                  title="Crear usuario de staff (clínico, admin, investigador)"
+                >
+                  + Staff
+                </button>
+              )}
             </div>
           </div>
+
+          {isAdmin && (
+            <div className={styles.tabContainer}>
+              <button 
+                className={`${styles.tabBtn} ${activeList === 'maternas' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveList('maternas')}
+              >
+                Maternas
+              </button>
+              <button 
+                className={`${styles.tabBtn} ${activeList === 'staff' ? styles.tabBtnActive : ''}`}
+                onClick={() => setActiveList('staff')}
+              >
+                Staff
+              </button>
+            </div>
+          )}
 
           <div className={styles.searchWrap}>
             <input
               className={styles.searchInput}
-              placeholder="Buscar por codigo"
+              placeholder={activeList === 'maternas' ? "Buscar por codigo" : "Buscar por nombre o email"}
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
             />
@@ -258,24 +306,62 @@ export const AdminUsuarias = () => {
           </div>
 
           <div className={styles.pList}>
-            {filtrados.map((p, i) => (
-              <div
-                key={i}
-                className={`${styles.pItem} ${p.id === selPaciente ? styles.pItemSel : ''}`}
-                onClick={() => setSelPaciente(p.id)}
-              >
-                <span className={styles.pId}>{p.id}</span>
-                <div>
-                  <div className={styles.pDetail}>Nro Semana · {p.semana}</div>
-                  <div className={styles.pDetail}>Fase · {p.fase}</div>
+            {activeList === 'maternas' ? (
+              filtrados.map((p, i) => (
+                <div
+                  key={i}
+                  className={`${styles.pItem} ${p.id === selPaciente ? styles.pItemSel : ''}`}
+                  onClick={() => setSelPaciente(p.id)}
+                >
+                  <span className={styles.pId}>{p.id}</span>
+                  <div>
+                    <div className={styles.pDetail}>Nro Semana · {p.semana}</div>
+                    <div className={styles.pDetail}>Fase · {p.fase}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              staffFiltrados.map((u, i) => (
+                <div
+                  key={u.id || i}
+                  className={`${styles.pItem} ${selStaff?.id === u.id ? styles.pItemSel : ''}`}
+                  onClick={() => setSelStaff(u)}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 600, fontSize: '13px', color: '#333' }}>{u.nombre || u.nombres}</span>
+                      <span style={{
+                        fontSize: '10px',
+                        padding: '2px 6px',
+                        borderRadius: '10px',
+                        background: u.activo ? '#d1fae5' : '#fee2e2',
+                        color: u.activo ? '#065f46' : '#991b1b'
+                      }}>
+                        {u.activo ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>{u.email}</span>
+                    <span style={{
+                      fontSize: '10px',
+                      marginTop: '4px',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      alignSelf: 'flex-start',
+                      background: u.rol_id === 3 || u.rol_id === '3' ? '#fce8ef' : '#e0f2fe',
+                      color: u.rol_id === 3 || u.rol_id === '3' ? '#CA436E' : '#0284c7'
+                    }}>
+                      {u.rol_id === 3 || u.rol_id === '3' ? 'Admin' : 'Clínico'}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
         {/*parte central los detalles*/}
-        <div className={`${styles.panel} ${styles.panelScroll}`}>
+        {activeList === 'maternas' ? (
+          <div className={`${styles.panel} ${styles.panelScroll}`}>
           <h1 className={styles.nombrePaciente}>{selPaciente}</h1>
           <p className={styles.diagnostico}>
             EMBARAZO DE ALTO RIESGO SIN OTRA ESPECIFICACION
@@ -326,9 +412,66 @@ export const AdminUsuarias = () => {
             </div>
           </div>
         </div>
+        ) : (
+          <div className={`${styles.panel} ${styles.panelScroll}`}>
+            {selStaff ? (
+              <>
+                <h1 className={styles.nombrePaciente}>{selStaff.nombre || selStaff.nombres}</h1>
+                <p className={styles.diagnostico}>
+                  {selStaff.rol_id === 3 || selStaff.rol_id === '3' ? 'Administrador' : 'Personal Clínico'}
+                </p>
+                
+                <div style={{ marginTop: '20px' }}>
+                  <p className={styles.infoRow}><strong>Email:</strong> {selStaff.email}</p>
+                  <p className={styles.infoRow}><strong>Fecha de creación:</strong> {selStaff.created_at ? new Date(selStaff.created_at).toLocaleDateString() : 'N/A'}</p>
+                </div>
+                
+                <div style={{ marginTop: '30px', padding: '16px', background: '#f9f9f9', borderRadius: '12px', border: '1px solid #eee' }}>
+                  <h3 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#333' }}>Estado del Usuario</h3>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '13px', color: '#555' }}>
+                      El usuario actualmente está <strong>{selStaff.activo ? 'Activo' : 'Inactivo'}</strong>.
+                    </span>
+                    <button
+                      onClick={async () => {
+                        try {
+                          setStatusError(null);
+                          const updated = await updateStaffStatus(selStaff.id, !selStaff.activo);
+                          setStaffUsers(prev => prev.map(u => u.id === selStaff.id ? { ...u, activo: updated.activo ?? !u.activo } : u));
+                          setSelStaff((prev: any) => ({ ...prev, activo: updated.activo ?? !prev.activo }));
+                        } catch (err: any) {
+                          const errorMsg = err.response?.data?.detail || 'Error al actualizar el estado';
+                          setStatusError(typeof errorMsg === 'string' ? errorMsg : 'Error al actualizar el estado');
+                        }
+                      }}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        background: selStaff.activo ? '#fee2e2' : '#d1fae5',
+                        color: selStaff.activo ? '#991b1b' : '#065f46',
+                        marginLeft: 'auto'
+                      }}
+                    >
+                      {selStaff.activo ? 'Desactivar' : 'Activar'}
+                    </button>
+                  </div>
+                  {statusError && <p style={{ color: '#dc2626', fontSize: '12px', margin: '10px 0 0 0' }}>{statusError}</p>}
+                </div>
+              </>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#999', fontSize: '14px' }}>
+                Seleccione un usuario de staff para ver sus detalles
+              </div>
+            )}
+          </div>
+        )}
 
         {/*reporte diario en panel derecho*/}
-        <div className={`${styles.panel} ${styles.reportePanel}`}>
+        {activeList === 'maternas' ? (
+          <div className={`${styles.panel} ${styles.reportePanel}`}>
           <h2 className={styles.panelTitle}>Reporte diario</h2>
           <p className={styles.secDesc}>
             En el siguiente recuadro aparecerán los reportes diario
@@ -348,6 +491,9 @@ export const AdminUsuarias = () => {
 
           <input className={styles.reporteInput} placeholder="Click para escribir" />
         </div>
+        ) : (
+          <div className={styles.panel} style={{ background: 'transparent', boxShadow: 'none' }}></div>
+        )}
 
       </div>
 

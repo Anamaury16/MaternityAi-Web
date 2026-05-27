@@ -261,3 +261,27 @@
   box-sizing: border-box;
   font-family: inherit;
 }
+
+/* ── TABS ── */
+.tabContainer {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.tabBtn {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #e0e0e0;
+  background: #f9f9f9;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tabBtnActive {
+  background: #CA436E;
+  color: white;
+  border-color: #CA436E;
+}
