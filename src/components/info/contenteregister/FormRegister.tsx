@@ -1,14 +1,24 @@
 import { useNavigate } from 'react-router-dom';
-import styles from './RegisterContent.module.css';
-import { useState } from 'react';
+import modalStyles from '../../../pages/adminPages/StaffModal.module.css';
+import { useState, useEffect } from 'react';
 import { registerGestante } from '../../../services/m0Service';
 import type { GestanteRegisterRequest } from '../../../services/m0Service';
+import { getCatalogos } from '../../../services/adminService';
+import type { Catalogos } from '../../../services/adminService';
+import { CatalogField } from './CatalogField';
 
 export const FormRegister = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+  const [success, setSuccess] = useState(false);
+  const [catalogos, setCatalogos] = useState<Catalogos>({
+    nacionalidades: [],
+    eapbs: [],
+    pertenencias_etnicas: [],
+    grupos_poblacionales: [],
+  });
+
   const [formData, setFormData] = useState<GestanteRegisterRequest>({
     fecha_nacimiento: '',
     fecha_ultima_menstruacion: '',
@@ -17,7 +27,16 @@ export const FormRegister = () => {
     respuesta_seguridad: '',
   });
 
-  const handleChange = (key: keyof GestanteRegisterRequest, value: string | number) => {
+  useEffect(() => {
+    getCatalogos()
+      .then(setCatalogos)
+      .catch(() => {
+        // Si falla el catálogo, no bloquear el formulario
+        console.warn('No se pudieron cargar los catálogos');
+      });
+  }, []);
+
+  const handleChange = (key: keyof GestanteRegisterRequest, value: string | number | undefined) => {
     setFormData((prev) => ({
       ...prev,
       [key]: value,
@@ -28,13 +47,16 @@ export const FormRegister = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await registerGestante(formData);
-      alert(`${response.mensaje}. Tu código GMI es: ${response.codigo_gmi}`);
-      // Guardamos el código GMI para el login posterior si es necesario
+      setSuccess(true);
+      // Guardamos el código GMI para el login posterior
       localStorage.setItem('temp_gmi', response.codigo_gmi);
-      navigate('/login');
+      setTimeout(() => {
+        alert(`${response.mensaje}. Tu código GMI es: ${response.codigo_gmi}`);
+        navigate('/login');
+      }, 1500);
     } catch (err: any) {
       setError(err.message || 'Error al registrar. Inténtalo de nuevo.');
     } finally {
@@ -43,37 +65,90 @@ export const FormRegister = () => {
   };
 
   return (
-    <form className={styles.formulario} onSubmit={handleSubmit}>
-      <h3 className={styles.formTitle}>Registro de Gestante</h3>
-      
-      {error && <div className={styles.errorMessage}>{error}</div>}
+    <form className={modalStyles.form} onSubmit={handleSubmit}>
+      {success && (
+        <div className={modalStyles.successBanner}>
+          ✅ Gestante registrada exitosamente
+        </div>
+      )}
 
-      <div className={styles.inputGroup}>
-        <p>Fecha de Nacimiento</p>
+      {error && (
+        <p className={modalStyles.error}>{error}</p>
+      )}
+
+      <div className={modalStyles.field}>
+        <label className={modalStyles.label}>Fecha de Nacimiento *</label>
         <input
+          className={modalStyles.input}
           required
           value={formData.fecha_nacimiento}
           type="date"
           onChange={(e) => handleChange('fecha_nacimiento', e.target.value)}
+          disabled={loading}
         />
       </div>
 
-      <div className={styles.inputGroup}>
-        <p>Fecha de Última Menstruación (FUM)</p>
+      <div className={modalStyles.field}>
+        <label className={modalStyles.label}>Fecha de Última Menstruación (FUM) *</label>
         <input
+          className={modalStyles.input}
           required
           value={formData.fecha_ultima_menstruacion}
           type="date"
           onChange={(e) => handleChange('fecha_ultima_menstruacion', e.target.value)}
+          disabled={loading}
         />
       </div>
 
-      <div className={styles.inputGroup}>
-        <p>Pregunta de Seguridad</p>
-        <select 
-          className={styles.selectInput}
+      {/* ── Catálogos con modo libre ── */}
+      <CatalogField
+        label="Nacionalidad"
+        items={catalogos.nacionalidades}
+        selectedId={formData.nacionalidad_id}
+        textoLibre={formData.nacionalidad_texto ?? ''}
+        onSelectId={(id) => handleChange('nacionalidad_id', id)}
+        onTextoLibre={(val) => handleChange('nacionalidad_texto', val)}
+        disabled={loading}
+      />
+
+      <CatalogField
+        label="EAPB / EPS"
+        items={catalogos.eapbs}
+        selectedId={formData.eapb_id}
+        textoLibre={formData.eapb_texto ?? ''}
+        onSelectId={(id) => handleChange('eapb_id', id)}
+        onTextoLibre={(val) => handleChange('eapb_texto', val)}
+        disabled={loading}
+      />
+
+      <CatalogField
+        label="Pertenencia Étnica"
+        items={catalogos.pertenencias_etnicas}
+        selectedId={formData.pertenencia_etnica_id}
+        textoLibre={formData.pertenencia_etnica_texto ?? ''}
+        onSelectId={(id) => handleChange('pertenencia_etnica_id', id)}
+        onTextoLibre={(val) => handleChange('pertenencia_etnica_texto', val)}
+        disabled={loading}
+      />
+
+      <CatalogField
+        label="Grupo Poblacional"
+        items={catalogos.grupos_poblacionales}
+        selectedId={formData.grupo_poblacional_id}
+        textoLibre={formData.grupo_poblacional_texto ?? ''}
+        onSelectId={(id) => handleChange('grupo_poblacional_id', id)}
+        onTextoLibre={(val) => handleChange('grupo_poblacional_texto', val)}
+        disabled={loading}
+      />
+
+      {/* ── Pregunta de seguridad ── */}
+      <div className={modalStyles.field}>
+        <label className={modalStyles.label}>Pregunta de Seguridad</label>
+        <select
+          className={modalStyles.select}
           value={formData.pregunta_seguridad}
           onChange={(e) => handleChange('pregunta_seguridad', e.target.value)}
+          disabled={loading}
         >
           <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu primera mascota?</option>
           <option value="¿Cuál es el nombre de tu ciudad natal?">¿Cuál es el nombre de tu ciudad natal?</option>
@@ -81,35 +156,26 @@ export const FormRegister = () => {
         </select>
       </div>
 
-      <div className={styles.inputGroup}>
-        <p>Respuesta de Seguridad</p>
+      <div className={modalStyles.field}>
+        <label className={modalStyles.label}>Respuesta de Seguridad *</label>
         <input
+          className={modalStyles.input}
           required
           value={formData.respuesta_seguridad}
           type="text"
           placeholder="Tu respuesta"
           onChange={(e) => handleChange('respuesta_seguridad', e.target.value)}
+          disabled={loading}
         />
       </div>
 
-      <p className={styles.confirm}>
-        ¿Ya tienes cuenta? 
-        <button
-          type="button"
-          className={styles.iniciar}
-          onClick={() => navigate('/login')}
-        >
-          Iniciar Sesión
-        </button>
-      </p>
-
-      <div className={styles.boton}>
+      <div className={modalStyles.actions}>
         <button
           type="submit"
+          className={modalStyles.submitBtn}
           disabled={loading}
-          className={styles.register}
         >
-          {loading ? 'Registrando...' : 'Registrar'}
+          {loading ? 'Registrando...' : 'Registrar Materna'}
         </button>
       </div>
     </form>

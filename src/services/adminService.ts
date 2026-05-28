@@ -1,5 +1,38 @@
 import api from './api';
 
+// ─── Catálogos ───────────────────────────────────────────────────────────────
+
+export interface CatalogoItem {
+  id: string;
+  codigo: string;
+  nombre: string;
+  descripcion?: string | null;
+  activo: boolean;
+}
+
+export interface Catalogos {
+  nacionalidades: CatalogoItem[];
+  eapbs: CatalogoItem[];
+  pertenencias_etnicas: CatalogoItem[];
+  grupos_poblacionales: CatalogoItem[];
+}
+
+export const getCatalogos = async (): Promise<Catalogos> => {
+  const [nac, eapb, etnica, grupo] = await Promise.all([
+    api.get<CatalogoItem[]>('/api/v1/admin/catalogs/nacionalidades'),
+    api.get<CatalogoItem[]>('/api/v1/admin/catalogs/eapbs'),
+    api.get<CatalogoItem[]>('/api/v1/admin/catalogs/pertenencias-etnicas'),
+    api.get<CatalogoItem[]>('/api/v1/admin/catalogs/grupos-poblacionales'),
+  ]);
+  return {
+    nacionalidades:       nac.data,
+    eapbs:                eapb.data,
+    pertenencias_etnicas: etnica.data,
+    grupos_poblacionales: grupo.data,
+  };
+};
+
+
 export interface CargaDetalleResponse {
   fila_numero: number;
   hoja: string;
@@ -26,23 +59,20 @@ export interface CargaExcelDetalleResponse extends CargaExcelResponse {
 
 export interface StaffUserCreate {
   email: string;
-  nombres: string;       // ← separado ahora
-  apellidos: string;     // ← nuevo campo
+  nombre: string;
   rol_id: number;
   password: string;
 }
 
 export interface StaffUserUpdate {
-  nombres: string;
-  apellidos: string;
+  nombre: string;
   rol_id: number;
 }
 
 export interface StaffUserResponse {
   id: string;
   email: string;
-  nombres: string;
-  apellidos: string;
+  nombre: string;
   rol_id: string;
   activo: boolean;
   created_at: string | null;
@@ -108,7 +138,7 @@ export const uploadExcel = async (file: File): Promise<CargaExcelResponse> => {
   const formData = new FormData();
   formData.append('file', file);
   const response = await api.post<CargaExcelResponse>(
-    '/api/v1/admin/upload',
+    '/api/v1/admin/upload/gestantes',
     formData,
     { headers: { 'Content-Type': 'multipart/form-data' } }
   );
@@ -116,7 +146,7 @@ export const uploadExcel = async (file: File): Promise<CargaExcelResponse> => {
 };
 
 export const getHistorialCargas = async (): Promise<CargaExcelResponse[]> => {
-  const response = await api.get<CargaExcelResponse[]>('/api/v1/admin/');
+  const response = await api.get('/api/v1/admin/upload/gestantes/history');
   return response.data;
 };
 
@@ -124,7 +154,7 @@ export const getDetalleCarga = async (
   cargaId: string
 ): Promise<CargaExcelDetalleResponse> => {
   const response = await api.get<CargaExcelDetalleResponse>(
-    `/api/v1/admin/${cargaId}`
+    `/api/v1/admin/upload/gestantes/${cargaId}/detail`
   );
   return response.data;
 };

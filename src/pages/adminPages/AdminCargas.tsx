@@ -161,23 +161,34 @@ export const AdminCargas = () => {
                 </div>
               </div>
 
-              {selectedCarga.detalles && selectedCarga.detalles.length > 0 && (
-                <>
-                  <h3 className={styles.errorsTitle}>Registro de Problemas</h3>
-                  <div className={styles.errorList}>
-                    {selectedCarga.detalles.map((detalle, idx) => (
-                      <div key={idx} className={styles.errorItem}>
-                        <div className={styles.errorLocation}>
-                          {detalle.hoja} - Fila {detalle.fila_numero}
-                        </div>
-                        <div className={detalle.estado === 'error' ? styles.errorMessage : ''}>
-                          {detalle.mensaje_error || detalle.estado}
-                        </div>
+              {selectedCarga.detalles && (() => {
+                const filasConError = selectedCarga.detalles.filter(
+                  d => d.estado !== 'ok' && d.mensaje_error
+                );
+                return (
+                  <>
+                    <h3 className={styles.errorsTitle}>Registro de Problemas</h3>
+                    {filasConError.length === 0 ? (
+                      <p style={{ color: '#2e7d32', fontWeight: '500', marginTop: '8px' }}>
+                        ✅ Todas las filas se procesaron correctamente, sin errores.
+                      </p>
+                    ) : (
+                      <div className={styles.errorList}>
+                        {filasConError.map((detalle, idx) => (
+                          <div key={idx} className={styles.errorItem}>
+                            <div className={styles.errorLocation}>
+                              {detalle.hoja} - Fila {detalle.fila_numero}
+                            </div>
+                            <div className={styles.errorMessage}>
+                              {detalle.mensaje_error}
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </>
-              )}
+                    )}
+                  </>
+                );
+              })()}
             </>
           ) : (
             <div className={styles.emptyState}>

@@ -9,8 +9,16 @@ export interface GestanteRegisterRequest {
   pregunta_seguridad: string;
   respuesta_seguridad: string;
   tipo_regimen?: string;
-  nacionalidad_id?: number;
-  eapb_id?: number;
+  // Catálogo — modo selector (ID)
+  nacionalidad_id?: string;
+  eapb_id?: string;
+  pertenencia_etnica_id?: string;
+  grupo_poblacional_id?: string;
+  // Catálogo — modo texto libre
+  nacionalidad_texto?: string;
+  eapb_texto?: string;
+  pertenencia_etnica_texto?: string;
+  grupo_poblacional_texto?: string;
 }
 
 export interface ClinicalProfile {
