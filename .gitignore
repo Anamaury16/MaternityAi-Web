@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 # Agregar a .gitignore
 dev-dist/
+
+# Agents
+.agents/

@@ -100,14 +100,12 @@ export const FormRegister = () => {
         />
       </div>
 
-      {/* ── Catálogos con modo libre ── */}
+      {/* ── Catálogos estandarizados ── */}
       <CatalogField
         label="Nacionalidad"
         items={catalogos.nacionalidades}
         selectedId={formData.nacionalidad_id}
-        textoLibre={formData.nacionalidad_texto ?? ''}
         onSelectId={(id) => handleChange('nacionalidad_id', id)}
-        onTextoLibre={(val) => handleChange('nacionalidad_texto', val)}
         disabled={loading}
       />
 
@@ -115,9 +113,7 @@ export const FormRegister = () => {
         label="EAPB / EPS"
         items={catalogos.eapbs}
         selectedId={formData.eapb_id}
-        textoLibre={formData.eapb_texto ?? ''}
         onSelectId={(id) => handleChange('eapb_id', id)}
-        onTextoLibre={(val) => handleChange('eapb_texto', val)}
         disabled={loading}
       />
 
@@ -125,9 +121,7 @@ export const FormRegister = () => {
         label="Pertenencia Étnica"
         items={catalogos.pertenencias_etnicas}
         selectedId={formData.pertenencia_etnica_id}
-        textoLibre={formData.pertenencia_etnica_texto ?? ''}
         onSelectId={(id) => handleChange('pertenencia_etnica_id', id)}
-        onTextoLibre={(val) => handleChange('pertenencia_etnica_texto', val)}
         disabled={loading}
       />
 
@@ -135,9 +129,7 @@ export const FormRegister = () => {
         label="Grupo Poblacional"
         items={catalogos.grupos_poblacionales}
         selectedId={formData.grupo_poblacional_id}
-        textoLibre={formData.grupo_poblacional_texto ?? ''}
         onSelectId={(id) => handleChange('grupo_poblacional_id', id)}
-        onTextoLibre={(val) => handleChange('grupo_poblacional_texto', val)}
         disabled={loading}
       />
 

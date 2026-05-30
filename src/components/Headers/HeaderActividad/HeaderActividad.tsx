@@ -15,6 +15,11 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
   const location = useLocation();
   const currentPath = location.pathname;
 
+  const rawRole = localStorage.getItem('role') || rol;
+  const activeRole: 'paciente' | 'medico' | 'admin' = 
+    rawRole === 'admin' ? 'admin' :
+    (rawRole === 'clinico' || rawRole === 'medico') ? 'medico' : 'paciente';
+
   const handleLogout = async () => {
     await logoutUser();
     navigate('/login');
@@ -31,7 +36,7 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
       </div>
 
       <nav>        
-        {(rol === 'paciente' || !rol) && (
+        {activeRole === 'paciente' && (
           <>
             <Link to={'/main'} className={getTabClass('/main')}>Principal</Link>
             <Link to={'/biblioteca'} className={getTabClass('/biblioteca')}>Biblioteca</Link>
@@ -40,8 +45,8 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
           </>
         )}
 
-        {/* link hacia los roles medico */}
-        {rol === 'medico' && (
+        {/* link hacia los roles medico y admin */}
+        {(activeRole === 'medico' || activeRole === 'admin') && (
           <>
             <Link to={'/admin/usuarias'} className={styles.link}>Usuarias</Link>
             <Link to={'/admin/oba'} className={styles.link}>OBA</Link>
@@ -50,22 +55,13 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
             <Link to={'/admin/cargas'} className={styles.link}>Cargas</Link>
           </>
         )}
-
-        {/* link hacia los roles admin */}
-        {rol === 'admin' && (
-          <>
-            <Link to={'/admin/oba'} className={styles.link}>OBA</Link>
-            <Link to={'/admin/preguntas'} className={styles.link}>Preguntas</Link>
-            <Link to={'/admin/cargas'} className={styles.link}>Cargas</Link>
-          </>
-        )}
-    </nav>
+      </nav>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
         <div onClick={() => navigate('/userprofile')} className={styles.perfil}>
           <div>
             <p className={styles.name}>{localStorage.getItem('user_name') || 'Usuario'}</p>
-            <p className={styles.desc}>{rol === 'medico' ? 'Personal Médico' : rol === 'admin' ? 'Administrador' : 'Gestante'}</p>
+            <p className={styles.desc}>{activeRole === 'medico' ? 'Personal Médico' : activeRole === 'admin' ? 'Administrador' : 'Gestante'}</p>
           </div>
         </div>
         

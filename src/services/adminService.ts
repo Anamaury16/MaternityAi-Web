@@ -19,10 +19,10 @@ export interface Catalogos {
 
 export const getCatalogos = async (): Promise<Catalogos> => {
   const [nac, eapb, etnica, grupo] = await Promise.all([
-    api.get<CatalogoItem[]>('/api/v1/admin/catalogs/nacionalidades'),
-    api.get<CatalogoItem[]>('/api/v1/admin/catalogs/eapbs'),
-    api.get<CatalogoItem[]>('/api/v1/admin/catalogs/pertenencias-etnicas'),
-    api.get<CatalogoItem[]>('/api/v1/admin/catalogs/grupos-poblacionales'),
+    api.get<CatalogoItem[]>('/api/v1/admin/catalogs/nacionalidad', { params: { size: 100 } }),
+    api.get<CatalogoItem[]>('/api/v1/admin/catalogs/eapb', { params: { size: 100 } }),
+    api.get<CatalogoItem[]>('/api/v1/admin/catalogs/pertenencia-etnica', { params: { size: 100 } }),
+    api.get<CatalogoItem[]>('/api/v1/admin/catalogs/grupo-poblacional', { params: { size: 100 } }),
   ]);
   return {
     nacionalidades:       nac.data,
@@ -155,6 +155,67 @@ export const getDetalleCarga = async (
 ): Promise<CargaExcelDetalleResponse> => {
   const response = await api.get<CargaExcelDetalleResponse>(
     `/api/v1/admin/upload/gestantes/${cargaId}/detail`
+  );
+  return response.data;
+};
+
+// ─── Catálogos CRUD ───────────────────────────────────────────────────────────
+
+export interface CatalogItemCreate {
+  codigo?: string;
+  nombre: string;
+  descripcion?: string | null;
+  activo?: boolean;
+}
+
+export interface CatalogItemUpdate {
+  codigo?: string;
+  nombre?: string;
+  descripcion?: string | null;
+}
+
+export const getCatalogItems = async (
+  catalogName: string,
+  params: { page?: number; size?: number } = {}
+): Promise<CatalogoItem[]> => {
+  const response = await api.get<CatalogoItem[]>(
+    `/api/v1/admin/catalogs/${catalogName}`,
+    { params: { page: 1, size: 100, ...params } }
+  );
+  return response.data;
+};
+
+export const createCatalogItem = async (
+  catalogName: string,
+  data: CatalogItemCreate
+): Promise<CatalogoItem> => {
+  const response = await api.post<CatalogoItem>(
+    `/api/v1/admin/catalogs/${catalogName}`,
+    data
+  );
+  return response.data;
+};
+
+export const updateCatalogItem = async (
+  catalogName: string,
+  id: string | number,
+  data: CatalogItemUpdate
+): Promise<CatalogoItem> => {
+  const response = await api.put<CatalogoItem>(
+    `/api/v1/admin/catalogs/${catalogName}/${id}`,
+    data
+  );
+  return response.data;
+};
+
+export const updateCatalogStatus = async (
+  catalogName: string,
+  id: string | number,
+  activo: boolean
+): Promise<CatalogoItem> => {
+  const response = await api.patch<CatalogoItem>(
+    `/api/v1/admin/catalogs/${catalogName}/${id}/status`,
+    { activo }
   );
   return response.data;
 };
