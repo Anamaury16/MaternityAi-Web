@@ -7,20 +7,10 @@ export const ContentMain = () => {
   return (
     <section className={styles.container}>
       <div className={styles.informacion_usuario}>
-        <div className={styles.mensaje_bienvendida}>
-          Buenas tardes! <h1 className="">34bff32 👋</h1>
-        </div>
-        <article className={styles.articulo_semanas}>
-          <img
-            alt="foto trimestre"
-            className={styles.foto}
-            src="./image/etapas/primertrimestre.png"
-          />
-          <div className={styles.weeks}>
-            <h3>17/24</h3>
-            <p>Semanas</p>
-          </div>
-        </article>
+        <p className="">
+          Buenas tardes, <h1 className="">{localStorage.getItem('user_name') || 'Gestante'}</h1>
+          <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" />
+        </p>
       </div>
       <section className={styles.right}>
         <Datos className={styles.datos} />

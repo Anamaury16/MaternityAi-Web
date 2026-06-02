@@ -1,73 +1,184 @@
-# React + TypeScript + Vite
+<div align="center">
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# MaternityAI 🤰
 
-Currently, two official plugins are available:
+**Plataforma de salud materna inteligente con IA**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
+![pnpm](https://img.shields.io/badge/pnpm-10-F69220?logo=pnpm&logoColor=white)
+![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?logo=pwa&logoColor=white)
 
-## React Compiler
+</div>
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+---
 
-## Expanding the ESLint configuration
+## Requisitos
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Herramienta | Versión | Verificar |
+|:-----------:|:-------:|:---------:|
+| **Node.js** | >= 20   | `node -v` |
+| **pnpm**    | >= 10   | `pnpm -v` |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+> **⚠️ Este proyecto usa pnpm exclusivamente. No uses npm ni yarn.**
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+<details>
+<summary>📥 ¿No tienes pnpm? Click aquí para instalarlo</summary>
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+# Opción A — Una sola vez con npm
+npm install -g pnpm
+
+# Opción B — Con Corepack (recomendado, viene con Node.js >= 16)
+corepack enable
+corepack prepare pnpm@latest --activate
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+</details>
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+---
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Instalación
+
+```bash
+# Clonar el repositorio
+git clone https://github.com/Anamaury16/MaternityAi-Web.git
+cd MaternityAi-Web
+
+# Instalar dependencias
+pnpm install
+
+# Iniciar servidor de desarrollo
+pnpm dev
 ```
+
+> La app estará en **http://localhost:5173**
+
+---
+
+## Scripts
+
+| Comando | Qué hace |
+|---------|----------|
+| `pnpm dev` | Servidor de desarrollo con HMR |
+| `pnpm build` | Build de producción |
+| `pnpm preview` | Preview del build |
+| `pnpm lint` | Análisis con ESLint |
+
+---
+
+## Estructura
+
+```
+src/
+├── components/           ← Componentes reutilizables
+│   ├── Headers/          Navegación por sección
+│   ├── Icons/            Íconos SVG
+│   ├── Modal.tsx         Modal genérico
+│   ├── ProtectedRoute.tsx Guard de rutas por rol
+│   ├── admin/            Panel administrativo
+│   ├── buttons/          Botones
+│   ├── info/             Secciones informativas
+│   └── profile/          Perfil de usuario
+│
+├── context/
+│   └── AuthContext.tsx    ← Autenticación global
+│
+├── pages/                ← Vistas
+│   ├── HomePage.tsx      Inicio (pública)
+│   ├── Login.tsx         Inicio de sesión
+│   ├── Register.tsx      Registro
+│   ├── Main.tsx          Dashboard gestante
+│   ├── Ai.tsx            Chat con IA
+│   ├── Biblioteca.tsx    Recursos educativos
+│   ├── Actividad.tsx     Actividades
+│   ├── adminPages/       Panel admin
+│   └── clinicoPages/     Panel clínico
+│
+├── services/             ← Llamadas API
+│   ├── api.ts            Config base Axios
+│   ├── authService.ts    Auth (login, registro)
+│   ├── adminService.ts   Endpoints admin
+│   └── m0Service.ts      Servicio M0
+│
+├── App.tsx               ← Enrutamiento
+├── main.tsx              ← Entry point
+└── index.css             ← Estilos globales
+```
+
+---
+
+## Roles y rutas
+
+| Rol | Rutas |
+|-----|-------|
+| 🌐 **Pública** | `/` · `/nosotros` · `/login` · `/register` |
+| 🤰 **Gestante** | `/main` · `/ai` · `/biblioteca` · `/actividad` · `/userprofile` |
+| 🔧 **Admin** | `/admin/usuarias` · `/admin/citas` · `/admin/oba` · `/admin/preguntas` · `/admin/cargas` |
+| 🩺 **Clínico** | `/clinico/usuarias` · `/clinico/citas` · `/clinico/oba` · `/clinico/preguntas` |
+
+---
+
+## Stack
+
+| | Tecnología | Uso |
+|---|-----------|-----|
+| ⚛️ | React 19 | UI |
+| 🔷 | TypeScript 5.8 | Tipado |
+| ⚡ | Vite 7 + SWC | Bundler |
+| 🧭 | React Router 7 | Rutas SPA |
+| 📡 | Axios | HTTP Client |
+| 📱 | Vite PWA | App instalable |
+| 🧹 | ESLint + Prettier | Calidad de código |
+
+---
+
+## Reglas del equipo
+
+| ✅ Hacer | ❌ No hacer |
+|----------|-------------|
+| `pnpm install` | `npm install` |
+| `pnpm add axios` | `npm i axios` |
+| `pnpm dev` | `npm run dev` |
+| Commitear `pnpm-lock.yaml` | Editar el lockfile manualmente |
+
+---
+
+## Troubleshooting
+
+<details>
+<summary>💥 "only-allow: npm is not allowed"</summary>
+
+Intentaste usar npm. Usa `pnpm` en su lugar.
+</details>
+
+<details>
+<summary>💥 "Cannot find module" después de pull</summary>
+
+```bash
+pnpm install
+```
+</details>
+
+<details>
+<summary>💥 La PWA no se actualiza</summary>
+
+DevTools → Application → Service Workers → **Unregister**
+</details>
+
+<details>
+<summary>💥 Error de versión de pnpm</summary>
+
+```bash
+corepack prepare pnpm@latest --activate
+```
+</details>
+
+---
+
+<div align="center">
+
+**MaternityAI** · Proyecto privado · Todos los derechos reservados
+
+</div>

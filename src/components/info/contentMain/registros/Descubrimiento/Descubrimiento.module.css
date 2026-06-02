@@ -3,15 +3,10 @@
   color: white;
   border-radius: 20px;
   border: 1px solid rgb(218, 218, 218);
-  padding: 15px 20px;
-
+  padding: 10px;
+  height: 90px;
   & h3 {
-    font-size: 22px;
-    margin: 0px;
-  }
-
-  & p {
-    font-size: 14px;
-    margin: 0px;
+    margin-bottom: 0px;
+    margin-top: 0px;
   }
 }

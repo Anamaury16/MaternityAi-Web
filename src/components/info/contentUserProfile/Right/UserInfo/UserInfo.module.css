@@ -10,14 +10,20 @@
   border-bottom-right-radius: 20px;
   box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
   background-color: rgba(223, 223, 223, 0.1);
+  animation: fadeIn 0.8s ease-out;
 
   & h2 {
     color: #ca436e;
     font-size: 40px;
+    animation: slideUp 0.6s ease-out backwards;
+    animation-delay: 0.1s;
   }
 
   & .data {
     width: 50vh;
+    animation: slideUp 0.6s ease-out backwards;
+    animation-delay: 0.4s;
+    
     & p {
       color: #ca436e;
     }
@@ -28,6 +34,12 @@
       border-radius: 20px;
       padding: 9px 15px;
       background-color: white;
+      transition: all 0.3s ease;
+    }
+    
+    & span:hover {
+      border-color: #ca436e;
+      transform: translateX(5px);
     }
   }
 
@@ -35,16 +47,42 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    animation: slideUp 0.6s ease-out backwards;
+    animation-delay: 0.2s;
 
     & img {
       width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid #ca436e;
+    }
+
+    & .initialAvatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background-color: #ca436e;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
     }
 
     & button {
       border: none;
       background-color: transparent;
       margin-top: 10px;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
     }
+    
+    & button:hover {
+      opacity: 0.7;
+    }
+    
     & .color {
       color: red;
     }
@@ -53,4 +91,14 @@
       color: #ca436e;
     }
   }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
