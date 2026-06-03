@@ -8,11 +8,7 @@ export const Content = () => {
   return (
     <section className={styles.container}>
       <div className={styles.left}>
-        <div
-          style={{
-            width: '30%',
-          }}
-        >
+        <div className={styles.titleWrapper}>
           <DegradedText text="MaternityAi" fontSize="60px" />
         </div>
         <p>
@@ -21,11 +17,18 @@ export const Content = () => {
           consejos de autocuidado y recursos confiables para el bienestar físico
           y mental de la madre y su bebé.
         </p>
-        <button onClick={() => navigate('/login')}>
+        
+        <div className={styles.mobileImageContainer}>
+          <img className={styles.fotoMobile} src="/image/home.jpg" alt="Home" />
+        </div>
+
+        <button onClick={() => navigate('/login')} className={styles.comenzarBtn}>
           Comenzar <SvgArrowRight />
         </button>
       </div>
-      <img className={styles.foto} src="/image/home.jpg" alt="Home" />
+      <div className={styles.desktopImageContainer}>
+        <img className={styles.foto} src="/image/home.jpg" alt="Home" />
+      </div>
     </section>
   );
 };

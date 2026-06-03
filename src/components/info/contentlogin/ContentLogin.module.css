@@ -126,3 +126,43 @@
   from { transform: translateX(30px); opacity: 0; }
   to { transform: translateX(0); opacity: 1; }
 }
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+  }
+
+  .container img {
+    padding-left: 0;
+    width: 90%;
+    max-width: 350px;
+    margin-top: 20px;
+  }
+
+  .container .comenzar {
+    width: 100%;
+    padding: 0 15px;
+    box-sizing: border-box;
+  }
+  
+  .container h2 {
+    font-size: 36px;
+    margin-top: 10px;
+  }
+  
+  .container .parrafo {
+    padding: 0;
+    font-size: 14px;
+    margin-top: 8px;
+  }
+  
+  .container .formulario {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .hideOnMobile {
+    display: none !important;
+  }
+}

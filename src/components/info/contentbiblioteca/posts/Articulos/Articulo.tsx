@@ -4,7 +4,7 @@ export const Articulo = () => {
     <article className={styles.articulo}>
       <img src="./image/posts/pastilla.png" />
       <div className={styles.contenido}>
-        <h2 className={styles.title}>Lorem ipsum dolor sit</h2>
+        <h2 className={styles.title}>Todo sobre el embarazo</h2>
         <p>
           Lorem ipsum dolor sit amet consectetur adipiscing elit aptent eget
           eros, dui dictumst vestibulum sociosqu conubia habitasse curae metus

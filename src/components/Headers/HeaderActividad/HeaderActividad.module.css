@@ -82,3 +82,34 @@
     }
   }
 }
+
+.mobileNavWrapper {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileNavWrapper {
+    display: block;
+  }
+  
+  .container nav {
+    display: none; /* Hide pill nav */
+  }
+  
+  .container .perfil {
+    display: none; /* Hide profile in header */
+  }
+  
+  .container button {
+    display: none; /* Hide logout button in header */
+  }
+  
+  .container {
+    justify-content: center; /* Center logo */
+    margin-bottom: 20px;
+  }
+
+  .hideOnMobileMain {
+    display: none !important;
+  }
+}

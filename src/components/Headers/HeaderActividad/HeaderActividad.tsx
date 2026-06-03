@@ -2,6 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { DegradedText } from '../../gradedcomponents/degradedtext/DegradedText';
 import { logoutUser } from '../../../services/authService';
 import styles from './HeaderActividad.module.css';
+import { MobileBottomNav } from '../MobileBottomNav';
 
 {/* interface para los roles */}
 interface HeaderActividadProps {
@@ -30,7 +31,8 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
   };
 
   return (
-    <header className={styles.container}>
+    <>
+    <header className={`${styles.container} ${currentPath === '/main' || currentPath === '/biblioteca' || currentPath === '/userprofile' ? styles.hideOnMobileMain : ''}`}>
       <div className={styles.logo}>
         <DegradedText text="MaternityAi" fontSize="23px" />
       </div>
@@ -79,9 +81,14 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
             boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
           }}
         >
-          Cerrar Sesión
+          Cerrar sesión
         </button>
       </div>
     </header>
+    
+    <div className={styles.mobileNavWrapper}>
+      <MobileBottomNav />
+    </div>
+    </>
   );
 };
