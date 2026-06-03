@@ -186,7 +186,7 @@ export const FormLogin = () => {
   return (
     <form onSubmit={handleSubmit} className={styles.formulario}>
 
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', gap: '10px' }}>
+      <div className={styles.hideOnMobile} style={{ display: 'flex', justifyContent: 'center', marginBottom: '20px', gap: '10px' }}>
         <button
           type="button"
           style={{ padding: '8px 16px', borderRadius: '20px', border: '1px solid #CA436E', background: !isStaff ? '#CA436E' : 'transparent', color: !isStaff ? 'white' : '#CA436E', cursor: 'pointer', transition: 'all 0.3s ease' }}

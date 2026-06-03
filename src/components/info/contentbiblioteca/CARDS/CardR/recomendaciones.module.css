@@ -34,3 +34,48 @@
     font-size: 12px;
   }
 }
+
+@media (max-width: 768px) {
+  .recomendaciones {
+    background: transparent;
+    box-shadow: none;
+    padding: 0 0 10px 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .recomendaciones h3 {
+    display: block;
+    color: #E24C6C;
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 15px;
+    margin-top: 0;
+  }
+
+  .carousel {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 15px;
+    scrollbar-width: none; /* Firefox */
+  }
+
+  .carousel::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+  }
+
+  .articulo {
+    min-width: 250px;
+    margin-bottom: 0;
+    flex-direction: column;
+    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    border: 1px solid #f9f9f9;
+  }
+
+  .articulo button {
+    margin-top: 10px;
+    align-self: flex-start;
+  }
+}

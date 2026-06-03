@@ -15,3 +15,9 @@
     color: #ca436e;
   }
 }
+
+@media (max-width: 768px) {
+  .mensaje h2 {
+    display: none;
+  }
+}

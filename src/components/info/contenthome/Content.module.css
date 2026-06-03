@@ -72,6 +72,18 @@
   }
 }
 
+.titleWrapper {
+  width: 30%;
+}
+
+.mobileImageContainer {
+  display: none;
+}
+
+.desktopImageContainer {
+  display: block;
+}
+
 @keyframes float {
   0% {
     transform: translateY(0px);
@@ -81,5 +93,66 @@
   }
   100% {
     transform: translateY(0px);
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    align-items: center;
+    padding: 0 15px;
+  }
+
+  .left {
+    width: 100% !important;
+    align-items: center;
+    text-align: center;
+  }
+
+  .titleWrapper {
+    width: 100% !important;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+    transform: scale(0.7); /* Scale down the DegradedText component since it might not be easily resizable without touching it */
+    transform-origin: center;
+  }
+
+  .container p {
+    width: 100%;
+    font-size: 16px;
+    color: #999;
+    margin-bottom: 20px;
+  }
+
+  .desktopImageContainer {
+    display: none;
+  }
+
+  .mobileImageContainer {
+    display: block;
+    width: 100%;
+    max-width: 350px;
+    position: relative;
+    margin: 0 auto 20px auto;
+  }
+
+  .fotoMobile {
+    width: 100%;
+    height: auto;
+    display: block;
+    /* Difuminado en la parte de abajo */
+    mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 95%);
+    -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 95%);
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .container button {
+    width: auto;
+    padding: 0 30px;
+    height: 50px;
+    font-size: 18px;
+    margin: 0 auto;
+    border-radius: 25px;
   }
 }

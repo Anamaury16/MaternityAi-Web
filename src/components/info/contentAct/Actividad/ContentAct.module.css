@@ -51,3 +51,65 @@
   from { transform: translateY(30px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
+
+.desktopView {
+  display: contents;
+}
+
+.mobileView {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mainWrapper {
+    background-color: #fffafb;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .desktopView {
+    display: none;
+  }
+
+  .mobileView {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 100vh;
+    padding-bottom: 80px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  .mobileHeader {
+    padding: 20px;
+  }
+
+  .mobileSectionTitle {
+    color: #903c54;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 10px 20px;
+  }
+
+  .cuestionariosCarousel {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 15px;
+    padding: 10px 20px;
+    scrollbar-width: none;
+  }
+  
+  .cuestionariosCarousel::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobileSms {
+    display: flex;
+    flex-direction: column;
+    padding: 0 20px 20px 20px;
+    gap: 10px;
+  }
+}

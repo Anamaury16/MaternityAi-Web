@@ -2,7 +2,7 @@ import styles from './Videos.module.css';
 export const Videos = () => {
   return (
     <div className={styles.contenido}>
-      <h2>Titulo del video</h2>
+      <h2>Primeras semanas del embarazo</h2>
       <p>
         adipiscing elit aptent eget eros, dui dictumst vestibulum sociosqu m
         quam duis ligula ultricies sapien. Laoreet, cursus primis metus quis
