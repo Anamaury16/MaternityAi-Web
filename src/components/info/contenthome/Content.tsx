@@ -9,7 +9,7 @@ export const Content = () => {
     <section className={styles.container}>
       <div className={styles.left}>
         <div className={styles.titleWrapper}>
-          <DegradedText text="MaternityAi" fontSize="60px" />
+          <DegradedText text="MaternityAi" fontSize="clamp(36px, 5vw, 60px)" />
         </div>
         <p>
           Impulsada por inteligencia artificial, nuestra asistente virtual

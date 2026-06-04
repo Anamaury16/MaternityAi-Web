@@ -9,7 +9,7 @@
 /* ── GRID ── */
 .grid {
   display: grid;
-  grid-template-columns: 230px 1fr 250px;
+  grid-template-columns: 280px 1fr 250px;
   gap: 14px;
   padding: 20px 28px;
   align-items: start;
@@ -93,7 +93,7 @@
   background: #fce8ef;
   border-color: #f9c0cf;
 }
-.pId         { font-weight: 600; font-size: 12px; color: #CA436E; min-width: 65px; }
+.pId         { font-weight: 600; font-size: 12px; color: #CA436E; min-width: 105px; }
 .pDetail     { font-size: 11px; color: #999; }
 
 /* ── CENTER DETAIL ── */

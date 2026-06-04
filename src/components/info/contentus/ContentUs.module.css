@@ -1,49 +1,201 @@
 .container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  padding: 4rem 0;
+  grid-template-columns: 1.1fr 0.9fr;
+  grid-template-areas: 
+    "text ai"
+    "text biblioteca"
+    "text control";
+  padding: 4rem 2rem;
+  gap: 2rem;
+  align-items: center;
+}
 
-  & .text_information {
-    display: flex;
-    margin: 0 2rem;
-    flex-direction: column;
-    align-items: start;
-    justify-content: center;
+.text_information {
+  grid-area: text;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  justify-content: center;
+  padding-right: 2rem;
+}
 
-    & h1 {
-      background-color: linea;
-      color: transparent;
-    }
+.titleWrapper {
+  width: 100%;
+  margin-bottom: 1.5rem;
+  line-height: 4.5rem;
+}
 
-    & p {
-      color: #b3b3b3;
-      font-size: 26px;
-    }
+.text_information p {
+  color: #b3b3b3;
+  font-size: clamp(16px, 1.8vw, 24px);
+  line-height: 1.7;
+}
+
+.inlineBrand {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* AI Badge Area */
+.aiBadge {
+  grid-area: ai;
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 5rem;
+}
+
+.first {
+  font-size: 30px;
+  color: #973756;
+  font-weight: 500;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.firstLine {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Biblioteca Card Area */
+.bibliotecaCard {
+  grid-area: biblioteca;
+  margin-left: 5rem;
+}
+
+.bibliotecaCard h3 {
+  font-size: 30px;
+  color: #973756;
+  font-weight: 500;
+  margin: 0 0 0.8rem 0;
+}
+
+.bibliotecaCard img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+/* Control Diario Card Area */
+.controlCard {
+  grid-area: control;
+  display: flex;
+  justify-content: flex-end;
+  padding-right: 5rem;
+}
+
+.controlWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.controlCard h3 {
+  font-size: 30px;
+  color: #973756;
+  font-weight: 500;
+  margin: 0 0 0.8rem 0;
+}
+
+.controlCard img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+/* ── RESPONSIVE MOBILE VIEW (Image 1 alignment) ── */
+@media (max-width: 768px) {
+  .container {
+    grid-template-columns: 1fr;
+    grid-template-areas: 
+      "ai"
+      "text"
+      "biblioteca"
+      "control";
+    padding: 2rem 1.5rem;
+    gap: 2.5rem;
+    text-align: center;
+    align-items: center;
   }
 
-  & .articles {
-    & .first {
-      width: 60%;
-      display: flex;
-      flex-direction: column;
-      align-items: end;
-    }
-    & .article_end {
-      display: flex;
-      flex-direction: column;
-      align-items: end;
-      margin-right: 5rem;
-    }
+  .text_information {
+    align-items: center;
+    padding-right: 0;
+    margin: 0;
+  }
 
-    & .article_medium {
-      margin-left: 5rem;
-    }
+  .titleWrapper {
+    display: flex;
+    justify-content: center;
+    line-height: normal;
+    margin-bottom: 1rem;
+  }
 
-    & h3 {
-      font-size: 30px;
-      color: #973756;
-      font-weight: 500;
-      margin-bottom: 0.8rem;
-    }
+  .text_information p {
+    font-size: 16px;
+    width: 100%;
+    margin: 0 auto;
+    color: #888;
+  }
+
+  /* AI Badge centered and boxed as shown in Image 1 */
+  .aiBadge {
+    justify-content: center;
+    padding-right: 0;
+    margin: 0 auto;
+  }
+
+  .first {
+    align-items: center;
+    background: #fce8ef;
+    border: 1.5px solid #CA436E;
+    border-radius: 16px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 700;
+    box-shadow: 0 4px 10px rgba(202, 67, 110, 0.1);
+  }
+
+  .firstLine {
+    flex-direction: row-reverse; /* Put icon on top or side */
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  /* Biblioteca Card */
+  .bibliotecaCard {
+    margin-left: 0;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .bibliotecaCard h3 {
+    font-size: 22px;
+    margin-bottom: 0.5rem;
+    text-align: left;
+  }
+
+  /* Control Diario Card */
+  .controlCard {
+    justify-content: center;
+    padding-right: 0;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+
+  .controlWrapper {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .controlCard h3 {
+    font-size: 22px;
+    margin-bottom: 0.5rem;
+    text-align: left;
   }
 }

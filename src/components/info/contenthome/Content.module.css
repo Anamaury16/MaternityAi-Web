@@ -29,20 +29,25 @@
   }
 
   & p {
-    width: 75%;
-    font-size: 30px;
+    width: 85%;
+    font-size: clamp(16px, 2.2vw, 24px);
     color: #b3b3b3;
+    line-height: 1.6;
+    margin: 20px 0;
   }
 
   & button {
-    width: 25%;
-    height: 60px;
+    width: fit-content;
+    min-width: 180px;
+    height: 54px;
     display: flex;
     align-items: center;
-    padding-left: 20px;
-    border-radius: 30px;
+    justify-content: center;
+    gap: 12px;
+    padding: 0 28px;
+    border-radius: 27px;
     border: none;
-    font-size: 25px;
+    font-size: clamp(15px, 1.8vw, 19px);
     background-color: #df5d86;
     color: white;
     box-shadow: 1px 1px 7px rgb(122, 122, 122);
@@ -73,7 +78,7 @@
 }
 
 .titleWrapper {
-  width: 30%;
+  width: 100%;
 }
 
 .mobileImageContainer {

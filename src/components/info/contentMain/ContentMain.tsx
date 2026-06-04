@@ -15,7 +15,7 @@ export const ContentMain = () => {
         <div className={styles.informacion_usuario}>
           <div className="">
             Buenas tardes, <h1 className="">{userName}</h1>
-            <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" />
+            <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" loading="lazy" decoding="async" />
           </div>
         </div>
         <section className={styles.right}>

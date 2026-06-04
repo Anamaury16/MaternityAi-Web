@@ -1,8 +1,10 @@
+import React from 'react';
 import styles from './Articulo.module.css';
-export const Articulo = () => {
+
+export const Articulo = React.memo(() => {
   return (
     <article className={styles.articulo}>
-      <img src="./image/posts/pastilla.png" />
+      <img src="./image/posts/pastilla.png" loading="lazy" decoding="async" />
       <div className={styles.contenido}>
         <h2 className={styles.title}>Todo sobre el embarazo</h2>
         <p>
@@ -18,4 +20,4 @@ export const Articulo = () => {
       </div>
     </article>
   );
-};
+});

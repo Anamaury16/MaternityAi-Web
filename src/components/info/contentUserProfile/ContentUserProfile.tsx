@@ -86,7 +86,7 @@ export const ContentUserProfile = () => {
         </div>
 
         <div className={styles.fetusImageContainer}>
-          <img src="./image/etapas/primertrimestre.png" alt="Feto" className={styles.fetusImage} />
+          <img src="./image/etapas/primertrimestre.png" alt="Feto" className={styles.fetusImage} loading="lazy" decoding="async" />
         </div>
 
         <div className={styles.bottomSection}>
