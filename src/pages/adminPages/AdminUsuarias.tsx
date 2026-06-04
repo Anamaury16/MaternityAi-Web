@@ -11,29 +11,10 @@ import {
   getStaffUsers,
   updateStaffStatus,
   updateStaffUser,
+  getGestantes,
+  type GestanteResponse,
   type RoleOption,
 } from '../../services/adminService';
-
-interface Paciente {
-  id: string;
-  semana: number;
-  fase: string;
-}
-
-const PACIENTES: Paciente[] = [
-  { id: 'WSC2001', semana: 3, fase: 'Trimestre 1' },
-  { id: 'XYZ1002', semana: 2, fase: 'Trimestre 1' },
-  { id: 'WSX2032', semana: 14, fase: 'Trimestre 2' },
-  { id: 'XSX2362', semana: 20, fase: 'Trimestre 2' },
-  { id: 'JSX0937', semana: 36, fase: 'Trimestre 3' },
-  { id: 'WSX2033', semana: 14, fase: 'Trimestre 2' },
-  { id: 'XSX2363', semana: 20, fase: 'Trimestre 2' },
-  { id: 'WSX2034', semana: 14, fase: 'Trimestre 2' },
-  { id: 'WSX2035', semana: 14, fase: 'Trimestre 2' },
-  { id: 'XSX2364', semana: 20, fase: 'Trimestre 2' },
-  { id: 'JSX0938', semana: 36, fase: 'Trimestre 3' },
-  { id: 'WSC2002', semana: 3, fase: 'Trimestre 1' },
-];
 
 const ANALISIS = [
   'HEMOGLOBINA', 'HEMATOCRITO',
@@ -251,17 +232,28 @@ export const AdminUsuarias = () => {
     }
   }, [selStaff]);
 
+  const [gestantes, setGestantes] = useState<GestanteResponse[]>([]);
+
   useEffect(() => {
-    if (activeList === 'staff' && isAdmin) {
+    if (activeList === 'maternas') {
+      getGestantes().then(data => {
+        setGestantes(data);
+        if (data.length > 0 && selPaciente === 'XYZ1002') {
+          setSelPaciente(data[0].codigo_gmi);
+        }
+      }).catch(console.error);
+    } else if (activeList === 'staff' && isAdmin) {
       getStaffUsers().then(data => {
         setStaffUsers(data);
       }).catch(console.error);
     }
   }, [activeList, isAdmin]);
 
-  const filtrados = PACIENTES.filter(p =>
-    p.id.toLowerCase().includes(busqueda.toLowerCase())
+  const filtrados = gestantes.filter(p =>
+    (p.codigo_gmi || p.id).toLowerCase().includes(busqueda.toLowerCase())
   );
+
+  const gestanteSeleccionada = gestantes.find(g => g.codigo_gmi === selPaciente);
 
   const staffFiltrados = staffUsers.filter(u =>
     (u.nombre || '').toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -339,19 +331,26 @@ export const AdminUsuarias = () => {
 
           <div className={styles.pList}>
             {activeList === 'maternas' ? (
-              filtrados.map((p, i) => (
+              filtrados.map((p, i) => {
+                const getTrimestre = (semanas?: number | null) => {
+                  if (!semanas) return 'N/A';
+                  if (semanas <= 13) return 'Trimestre 1';
+                  if (semanas <= 27) return 'Trimestre 2';
+                  return 'Trimestre 3';
+                };
+                return (
                 <div
-                  key={i}
-                  className={`${styles.pItem} ${p.id === selPaciente ? styles.pItemSel : ''}`}
-                  onClick={() => setSelPaciente(p.id)}
+                  key={p.id || i}
+                  className={`${styles.pItem} ${p.codigo_gmi === selPaciente ? styles.pItemSel : ''}`}
+                  onClick={() => setSelPaciente(p.codigo_gmi)}
                 >
-                  <span className={styles.pId}>{p.id}</span>
+                  <span className={styles.pId}>{p.codigo_gmi}</span>
                   <div>
-                    <div className={styles.pDetail}>Nro Semana · {p.semana}</div>
-                    <div className={styles.pDetail}>Fase · {p.fase}</div>
+                    <div className={styles.pDetail}>Nro Semana · {p.semanas_eg_ingreso || 0}</div>
+                    <div className={styles.pDetail}>Fase · {getTrimestre(p.semanas_eg_ingreso)}</div>
                   </div>
                 </div>
-              ))
+              )})
             ) : (
               staffFiltrados.map((u, i) => (
                 <div
@@ -399,12 +398,12 @@ export const AdminUsuarias = () => {
               EMBARAZO DE ALTO RIESGO SIN OTRA ESPECIFICACION
             </p>
 
-            <p className={styles.infoRow}><strong>Nro Semana</strong> · 2</p>
-            <p className={styles.infoRow}><strong>Fecha posible parto</strong>  2025-12-10</p>
-            <p className={styles.infoRow}><strong>Ultima menstruacion</strong>  2025-10-02</p>
+            <p className={styles.infoRow}><strong>Nro Semana</strong> · {gestanteSeleccionada?.semanas_eg_ingreso || 'N/A'}</p>
+            <p className={styles.infoRow}><strong>Fecha posible parto</strong>  {gestanteSeleccionada?.fecha_probable_parto || 'N/A'}</p>
+            <p className={styles.infoRow}><strong>Ultima menstruacion</strong>  {gestanteSeleccionada?.fecha_ultima_menstruacion || 'N/A'}</p>
             <p className={styles.infoRow}>
-              <strong>Estado nutricional</strong>
-              &nbsp;<span className={styles.sobrepeso}>SOBREPESO</span>
+              <strong>Nivel de riesgo</strong>
+              &nbsp;<span className={styles.sobrepeso}>{gestanteSeleccionada?.nivel_riesgo?.toUpperCase() || 'N/A'}</span>
             </p>
 
             <p className={styles.ipsText}>

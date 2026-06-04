@@ -1,5 +1,7 @@
+import React from 'react';
 import styles from './recomendaciones.module.css';
-export const Recomendaciones = () => {
+
+export const Recomendaciones = React.memo(() => {
   return (
     <section className={styles.recomendaciones}>
       <h3>RECOMENDACIONES PARA HOY</h3>
@@ -23,4 +25,4 @@ export const Recomendaciones = () => {
       </div>
     </section>
   );
-};
+});

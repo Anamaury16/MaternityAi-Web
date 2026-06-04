@@ -1,5 +1,7 @@
+import React from 'react';
 import styles from './Notificacion.module.css';
-export const Notificacion = () => {
+
+export const Notificacion = React.memo(() => {
   return (
     <section className={styles.container}>
       <div>
@@ -15,7 +17,7 @@ export const Notificacion = () => {
         </div>
       </div>
 
-      <img src="./image/notificaciones.png" />
+      <img src="./image/notificaciones.png" loading="lazy" decoding="async" />
     </section>
   );
-};
+});

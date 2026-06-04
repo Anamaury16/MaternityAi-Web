@@ -132,6 +132,37 @@ export const updateStaffStatus = async (
   return response.data;
 };
 
+// ─── Gestantes ───────────────────────────────────────────────────────────────
+
+export interface GestanteResponse {
+  id: string;
+  codigo_gmi: string;
+  fecha_nacimiento?: string | null;
+  fecha_ultima_menstruacion?: string | null;
+  fecha_probable_parto?: string | null;
+  semanas_eg_ingreso?: number | null;
+  modulo_activo_id?: number | null;
+  activa: boolean;
+  anio_ingreso?: number | null;
+  created_at: string | null;
+  ultimo_acceso?: string | null;
+  ultima_pregunta_respondida?: string | null;
+  ultima_respuesta_fecha?: string | null;
+  ultimo_estado_alerta?: string | null;
+  ultima_prioridad_alerta_id?: number | null;
+  nivel_riesgo?: string | null;
+  clasificacion_ia?: string | null;
+}
+
+export const getGestantes = async (
+  params: { page?: number; size?: number; sort?: string } = {}
+): Promise<GestanteResponse[]> => {
+  const response = await api.get<GestanteResponse[]>('/api/v1/admin/gestantes', {
+    params: { page: 1, size: 100, sort: 'fecha_desc', ...params },
+  });
+  return response.data;
+};
+
 // ─── Cargas ──────────────────────────────────────────────────────────────────
 
 export const uploadExcel = async (file: File): Promise<CargaExcelResponse> => {
@@ -215,6 +246,137 @@ export const updateCatalogStatus = async (
 ): Promise<CatalogoItem> => {
   const response = await api.patch<CatalogoItem>(
     `/api/v1/admin/catalogs/${catalogName}/${id}/status`,
+    { activo }
+  );
+  return response.data;
+};
+
+// ─── Contenido Educativo y Categorías ────────────────────────────────────────
+
+export interface EducationalCategoryCreate {
+  nombre: string;
+  descripcion?: string | null;
+  icono?: string | null;
+  orden?: number | null;
+}
+
+export interface EducationalCategoryUpdate {
+  nombre?: string;
+  descripcion?: string | null;
+  icono?: string | null;
+  orden?: number | null;
+}
+
+export interface EducationalCategoryResponse {
+  id: number;
+  nombre: string;
+  descripcion?: string | null;
+  icono?: string | null;
+  orden?: number | null;
+  activo: boolean;
+}
+
+export interface EducationalContentCreate {
+  categoria_id?: number | null;
+  titulo: string;
+  descripcion?: string | null;
+  tipo_contenido?: string | null; // e.g. 'VIDEO' o 'ARTICULO' or 'ARTÍCULO'
+  cuerpo_texto?: string | null;
+  url_recurso?: string | null;
+  url_imagen?: string | null;
+  modulo_id?: number | null;
+  semana_eg_inicio?: number | null;
+  semana_eg_fin?: number | null;
+  duracion_minutos?: number | null;
+  orden?: number | null;
+}
+
+export interface EducationalContentUpdate {
+  categoria_id?: number | null;
+  titulo?: string;
+  descripcion?: string | null;
+  tipo_contenido?: string | null;
+  cuerpo_texto?: string | null;
+  url_recurso?: string | null;
+  url_imagen?: string | null;
+  modulo_id?: number | null;
+  semana_eg_inicio?: number | null;
+  semana_eg_fin?: number | null;
+  duracion_minutos?: number | null;
+  orden?: number | null;
+}
+
+export interface EducationalContentResponse {
+  id: number;
+  categoria_id?: number | null;
+  titulo: string;
+  descripcion?: string | null;
+  tipo_contenido?: string | null;
+  cuerpo_texto?: string | null;
+  url_recurso?: string | null;
+  url_imagen?: string | null;
+  modulo_id?: number | null;
+  semana_eg_inicio?: number | null;
+  semana_eg_fin?: number | null;
+  duracion_minutos?: number | null;
+  orden?: number | null;
+  activo: boolean;
+}
+
+export const getEducationalCategories = async (
+  params: { page?: number; size?: number; sort?: string } = {}
+): Promise<EducationalCategoryResponse[]> => {
+  const response = await api.get<EducationalCategoryResponse[]>('/api/v1/admin/educational-categories', {
+    params: { page: 1, size: 100, sort: 'orden_asc', ...params },
+  });
+  return response.data;
+};
+
+export const createEducationalCategory = async (
+  data: EducationalCategoryCreate
+): Promise<EducationalCategoryResponse> => {
+  const response = await api.post<EducationalCategoryResponse>('/api/v1/admin/educational-categories', data);
+  return response.data;
+};
+
+export const updateEducationalCategory = async (
+  id: number,
+  data: EducationalCategoryUpdate
+): Promise<EducationalCategoryResponse> => {
+  const response = await api.put<EducationalCategoryResponse>(`/api/v1/admin/educational-categories/${id}`, data);
+  return response.data;
+};
+
+export const getEducationalContents = async (
+  params: { page?: number; size?: number; sort?: string } = {}
+): Promise<EducationalContentResponse[]> => {
+  const response = await api.get<EducationalContentResponse[]>('/api/v1/admin/educational-content', {
+    params: { page: 1, size: 100, sort: 'orden_asc', ...params },
+  });
+  return response.data;
+};
+
+export const createEducationalContent = async (
+  data: EducationalContentCreate
+): Promise<EducationalContentResponse> => {
+  const response = await api.post<EducationalContentResponse>('/api/v1/admin/educational-content', data);
+  return response.data;
+};
+
+export const updateEducationalContent = async (
+  id: number,
+  data: EducationalContentUpdate
+): Promise<EducationalContentResponse> => {
+  const response = await api.put<EducationalContentResponse>(`/api/v1/admin/educational-content/${id}`, data);
+  return response.data;
+};
+
+export const updateEducationalContentStatus = async (
+  id: number,
+  activo: boolean
+): Promise<EducationalContentResponse> => {
+  const response = await api.patch<EducationalContentResponse>(
+    `/api/v1/admin/educational-content/${id}/status`,
     { activo }
   );
   return response.data;
