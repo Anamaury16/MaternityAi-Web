@@ -26,19 +26,27 @@ export const UserInfo = () => {
     <section className={styles.containerInfo}>
       <h2>Mi información</h2>
       <div className={styles.foto}>
-        <p className={styles.fotoperfil}>Foto de perfil</p>
+        <span className={styles.fotoperfil}>Foto de perfil</span>
         <div className={styles.initialAvatar}>{initial}</div>
-        <button>Cargar nueva foto</button>
-        <button className={styles.color}>Eliminar</button>
+        <div className={styles.photoButtons}>
+          <button className={styles.uploadBtn}>Cargar nueva foto</button>
+          <button className={styles.deleteBtn}>Eliminar</button>
+        </div>
       </div>
 
       <div className={styles.data}>
-        <p>Nombre</p>
-        <span>{nombre}</span>
-        <p>Apellidos</p>
-        <span>{apellidos}</span>
-        <p>Usuario</p>
-        <span>{usuario}</span>
+        <div className={styles.infoField}>
+          <label>Nombre</label>
+          <span>{nombre}</span>
+        </div>
+        <div className={styles.infoField}>
+          <label>Apellidos</label>
+          <span>{apellidos}</span>
+        </div>
+        <div className={styles.infoField}>
+          <label>Usuario</label>
+          <span>{usuario}</span>
+        </div>
       </div>
     </section>
   );

@@ -5,6 +5,8 @@ import { Left } from './left/Left';
 import { UserInfo } from './Right/UserInfo/UserInfo';
 import { ClinicalProfile } from '../../profile/ClinicalProfile';
 import { ObstetricFormula } from '../../profile/ObstetricFormula';
+import { PathologicalHistory } from '../../profile/PathologicalHistory';
+import { GestationalAge } from '../../profile/GestationalAge';
 import { Terms } from './Right/Terms/Terms';
 import { SvgGear } from '../../Icons/IconsSystem';
 import { logoutUser } from '../../../services/authService';
@@ -44,6 +46,8 @@ export const ContentUserProfile = () => {
                 <div className={styles.medicalInfo}>
                   <ObstetricFormula />
                   <ClinicalProfile />
+                  <PathologicalHistory />
+                  <GestationalAge />
                 </div>
               </>
             ) : (
@@ -107,6 +111,13 @@ export const ContentUserProfile = () => {
             <div className={styles.emptyCard}></div>
             <div className={styles.emptyCard}></div>
             <div className={styles.emptyCard}></div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '10px' }}>
+            <ObstetricFormula />
+            <ClinicalProfile />
+            <PathologicalHistory />
+            <GestationalAge />
           </div>
         </div>
       </div>

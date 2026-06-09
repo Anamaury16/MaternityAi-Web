@@ -1,47 +1,70 @@
 .container {
-  padding-top: 20vh;
-  border: 1px solid #eeeeee;
-  border-top-left-radius: 20px;
-  border-bottom-left-radius: 20px;
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
-  padding-left: 40px;
-  padding-right: 70px;
-  background-color: rgba(172, 172, 172, 0.1);
+  padding: 40px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(223, 93, 134, 0.08);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(10px);
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
 
-  & h2 {
-    color: #ca436e;
-    margin-bottom: 30px;
-  }
+.container:hover {
+  box-shadow: 0 12px 40px rgba(223, 93, 134, 0.12);
+}
 
-  & p {
-    cursor: pointer;
-    transition: all 0.3s ease;
-    padding: 10px 0;
-    font-size: 16px;
-    color: #333;
-    margin: 5px 0;
-  }
+.container h2 {
+  color: #df5d86;
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 24px;
+  font-weight: 700;
+}
 
-  & p:hover {
-    color: #ca436e;
-    transform: translateX(5px);
-  }
+.container p {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 12px 16px;
+  font-size: 15px;
+  color: #444;
+  margin: 6px 0;
+  border-radius: 12px;
+  font-weight: 500;
+  box-sizing: border-box;
+}
 
-  & .active {
-    color: #ca436e;
-    font-weight: bold;
-    border-left: 3px solid #ca436e;
-    padding-left: 10px;
-  }
+.container p:hover {
+  color: #df5d86;
+  background-color: rgba(223, 93, 134, 0.05);
+  transform: translateX(4px);
+}
 
-  & .logout {
-    margin-top: 40px;
-    color: #ff4d4d;
-    font-weight: 500;
-  }
-  
-  & .logout:hover {
-    color: #d32f2f;
-    transform: translateX(5px);
-  }
+.active {
+  color: #df5d86 !important;
+  background-color: rgba(223, 93, 134, 0.08);
+  font-weight: 600 !important;
+  border-left: 4px solid #df5d86;
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+
+.logout {
+  margin-top: auto;
+  color: #ff4d4d !important;
+  font-weight: 600 !important;
+  border: 1px solid #ffcdd2;
+  text-align: center;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.logout:hover {
+  background-color: #ffebee !important;
+  border-color: #ff4d4d;
+  color: #d32f2f !important;
+  transform: scale(1.02) !important;
 }
