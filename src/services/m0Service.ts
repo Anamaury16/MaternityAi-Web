@@ -164,18 +164,61 @@ export const getGestationalAge = async () => {
   }
 };
 
+export interface ModuleHistory {
+  id: string;
+  modulo_anterior: string | null;
+  modulo_nuevo: string;
+  motivo: string;
+  origen: string;
+  created_at: string;
+}
+
+const MOCK_MODULE_HISTORY: ModuleHistory[] = [
+  {
+    id: "4918ddbb-e79b-4904-8ff2-a6a85b565ee9",
+    modulo_anterior: null,
+    modulo_nuevo: "M4",
+    motivo: "Avance de edad gestacional",
+    origen: "sistema",
+    created_at: "2026-06-09 12:45:33"
+  }
+];
+
 export const getActiveModule = async () => {
   if (USE_MOCKS) {
     await mockDelay();
     return {
-      modulo_id: 1,
-      codigo: "M0",
-      nombre: "Registro y Perfil",
-      semana_gestacion_actual: 12
+      modulo_id: 4,
+      codigo: "M4",
+      nombre: "Puerperio",
+      semana_gestacion_actual: 161
     };
   }
-  const response = await api.get('/api/v1/m0/active-module');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m0/active-module');
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
+};
+
+export const getModuleHistory = async (): Promise<ModuleHistory[]> => {
+  if (USE_MOCKS) {
+    await mockDelay();
+    return MOCK_MODULE_HISTORY;
+  }
+  try {
+    const response = await api.get('/api/v1/m0/module-history');
+    return response.data;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return [];
+    }
+    throw error;
+  }
 };
 
 export const getPathologicalHistory = async (): Promise<PathologicalHistory[]> => {
@@ -193,4 +236,31 @@ export const getPathologicalHistory = async (): Promise<PathologicalHistory[]> =
     throw error;
   }
 };
+
+export interface SecurityQuestionUpdatePayload {
+  pregunta: string;
+  workspace?: string;
+  respuesta: string;
+}
+
+export const updateSecurityQuestion = async (data: SecurityQuestionUpdatePayload) => {
+  if (USE_MOCKS) {
+    await mockDelay();
+    return { mensaje: "Pregunta de seguridad actualizada exitosamente (MOCK)" };
+  }
+  const response = await api.put('/api/v1/m0/security-question', data);
+  return response.data;
+};
+
+export const deleteAccount = async () => {
+  if (USE_MOCKS) {
+    await mockDelay();
+    return { mensaje: "Cuenta y datos eliminados exitosamente (MOCK)" };
+  }
+  const response = await api.delete('/api/v1/m0/account');
+  return response.data;
+};
+
+
+
 

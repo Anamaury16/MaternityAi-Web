@@ -3,8 +3,8 @@ import { logoutUser } from '../../../../services/authService';
 import styles from './Left.module.css';
 
 interface LeftProps {
-  activeTab: 'perfil' | 'privacidad';
-  setActiveTab: (tab: 'perfil' | 'privacidad') => void;
+  activeTab: 'perfil' | 'seguridad' | 'privacidad' | 'eliminar_cuenta';
+  setActiveTab: (tab: 'perfil' | 'seguridad' | 'privacidad' | 'eliminar_cuenta') => void;
 }
 
 export const Left = ({ activeTab, setActiveTab }: LeftProps) => {
@@ -25,10 +25,23 @@ export const Left = ({ activeTab, setActiveTab }: LeftProps) => {
         Mi perfil
       </p>
       <p 
+        className={activeTab === 'seguridad' ? styles.active : ''} 
+        onClick={() => setActiveTab('seguridad')}
+      >
+        Pregunta de seguridad
+      </p>
+      <p 
         className={activeTab === 'privacidad' ? styles.active : ''} 
         onClick={() => setActiveTab('privacidad')}
       >
         Políticas y privacidad
+      </p>
+      <p 
+        className={activeTab === 'eliminar_cuenta' ? styles.active : ''} 
+        onClick={() => setActiveTab('eliminar_cuenta')}
+        style={{ color: '#e32636' }}
+      >
+        Eliminar cuenta
       </p>
       <p onClick={handleLogout} className={styles.logout}>
         Cerrar sesión
