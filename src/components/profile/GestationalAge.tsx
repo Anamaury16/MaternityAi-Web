@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { getGestationalAge } from '../../services/m0Service';
+import {
+  getGestationalAge,
+  type GestationalAge as GestationalAgeState,
+} from '../../services/m0Service';
 import styles from './Profile.module.css';
 
-interface GestationalAgeData {
-  semanas: number;
-  dias: number;
-  descripcion: string;
-  fecha_ultima_menstruacion: string;
-  fecha_probable_parto: string;
-}
-
 export const GestationalAge: React.FC = () => {
-  const [data, setData] = useState<GestationalAgeData | null>(null);
+  const [data, setData] = useState<GestationalAgeState | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,7 +15,7 @@ export const GestationalAge: React.FC = () => {
         const responseData = await getGestationalAge();
         setData(responseData);
       } catch (error) {
-        console.error("Error fetching gestational age:", error);
+        console.error('Error fetching gestational age:', error);
       } finally {
         setLoading(false);
       }
@@ -36,7 +31,9 @@ export const GestationalAge: React.FC = () => {
     return (
       <div className={styles.card}>
         <h3>Edad Gestacional</h3>
-        <p className={styles.noData}>No se pudo calcular la edad gestacional.</p>
+        <p className={styles.noData}>
+          No se pudo calcular la edad gestacional.
+        </p>
       </div>
     );
   }
@@ -55,18 +52,21 @@ export const GestationalAge: React.FC = () => {
           <div className={styles.ageCircle}>
             <span className={styles.weeksCount}>{data.semanas}</span>
             <span className={styles.daysCount}>
-              {data.semanas === 1 ? 'Semana' : 'Semanas'} y {data.dias} {data.dias === 1 ? 'Día' : 'Días'}
+              {data.semanas === 1 ? 'Semana' : 'Semanas'} y {data.dias}{' '}
+              {data.dias === 1 ? 'Día' : 'Días'}
             </span>
           </div>
 
           <div className={styles.progressContainer}>
             <div className={styles.progressLabel}>
               <span>Progreso de gestación</span>
-              <span>{progressPercent}% (Semana {data.semanas}/40)</span>
+              <span>
+                {progressPercent}% (Semana {data.semanas}/40)
+              </span>
             </div>
             <div className={styles.progressBarBg}>
-              <div 
-                className={styles.progressBarFill} 
+              <div
+                className={styles.progressBarFill}
                 style={{ width: `${progressPercent}%` }}
               ></div>
             </div>
@@ -75,11 +75,15 @@ export const GestationalAge: React.FC = () => {
           <div className={styles.datesGrid}>
             <div className={styles.dateItem}>
               <label>FUR / FUM</label>
-              <span className={styles.dateValue}>{data.fecha_ultima_menstruacion || 'No especificada'}</span>
+              <span className={styles.dateValue}>
+                {data.fecha_ultima_menstruacion || 'No especificada'}
+              </span>
             </div>
             <div className={styles.dateItem}>
               <label>FPP (Probable)</label>
-              <span className={styles.dateValue}>{data.fecha_probable_parto || 'No especificada'}</span>
+              <span className={styles.dateValue}>
+                {data.fecha_probable_parto || 'No especificada'}
+              </span>
             </div>
           </div>
         </div>

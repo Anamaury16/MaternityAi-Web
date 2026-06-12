@@ -3,10 +3,26 @@ import styles from './ContentMain.module.css';
 import { Datos } from './datos/Datos';
 import { Registros } from './registros/Registros';
 import { SvgBell, SvgSparkle } from '../../Icons/IconsSystem';
+import { useGestationalAge } from '../../../hooks/m0/useM0';
 
 export const ContentMain = () => {
   const userName = localStorage.getItem('user_name') || 'Gestante';
   const displayId = userName.replace('Gestante ', '');
+  const {data} = useGestationalAge();
+
+  const mensajeTiempo = () => {
+    const hora = new Date().getHours();
+    if (hora < 12) return 'Buenos días';
+    if (hora < 18) return 'Buenas tardes';
+    return 'Buenas noches';
+  }
+
+  const calcularTrimestre = (semanas: number | undefined) => {
+    if (semanas === undefined) return 1;
+    if (semanas <= 12) return 2;
+    if (semanas <= 24) return 3;
+    return 4;
+  }
 
   return (
     <section className={styles.container}>
@@ -14,8 +30,15 @@ export const ContentMain = () => {
       <div className={styles.desktopView}>
         <div className={styles.informacion_usuario}>
           <div className="">
-            Buenas tardes, <h1 className="">{userName}</h1>
-            <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" loading="lazy" decoding="async" />
+            <p style={{margin: 0}}>{mensajeTiempo()}, </p>
+            <h1 className="">{userName} 👋</h1>
+            <div className={styles.seccion_informacion}>
+              <div className={styles.semanas}>
+                <h2>{data?.semanas || '--'}/{calcularTrimestre(data?.semanas)*12}</h2>
+                <p>Semanas de embarazo</p>
+              </div>
+              <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" loading="lazy" decoding="async" />
+            </div>
           </div>
         </div>
         <section className={styles.right}>

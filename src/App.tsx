@@ -32,13 +32,13 @@ function App() {
             <Route path="/register" element={<Register />} />
 
             {/* ── Rutas exclusivas de gestante ── */}
-            <Route element={<ProtectedRoute requiredRoles="gestante" />}>
+            {/* <Route element={<ProtectedRoute requiredRoles="gestante" />}> */}
               <Route path="/userprofile" element={<UserProfile />} />
               <Route path="/biblioteca" element={<Biliboteca />} />
               <Route path="/actividad" element={<Actividad />} />
               <Route path="/ai" element={<Ai />} />
               <Route path="/main" element={<Main />} />
-            </Route>
+            {/* </Route> */}
 
             {/* ── Rutas exclusivas de admin ── */}
             <Route element={<ProtectedRoute requiredRoles="admin" />}>
