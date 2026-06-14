@@ -11,10 +11,10 @@
 
   & nav {
     display: flex;
-    gap: 40px;
+    gap: 10px;
     background-color: #e2e0e0;
-    padding: 0 40px;
-    border-radius: 25px;
+    padding: 0;
+    border-radius: 40px;
     box-shadow: 4px 4px 6px rgb(143, 143, 143);
 
     & .tab, & .link {
@@ -22,11 +22,10 @@
       color: black;
       display: flex;
       align-items: center;
-      padding: 8px 16px;
-      border-radius: 20px;
+      padding: 8px 25px;
+      border-radius: 40px;
       transition: all 0.3s ease;
       font-weight: 500;
-      margin: 8px 0;
     }
 
     & .activeTab {

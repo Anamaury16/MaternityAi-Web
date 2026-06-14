@@ -6,6 +6,7 @@
 
   & .posts {
     display: flex;
+    padding: 10px;
     flex-direction: column;
     gap: 20px;
     overflow: auto;
@@ -16,4 +17,13 @@
   .container {
     width: 100%;
   }
+}
+
+.error {
+  color: red;
+  background-color: #ffe5e5;
+  padding: 10px;
+  border: 1px solid red;
+  border-radius: 5px;
+
 }

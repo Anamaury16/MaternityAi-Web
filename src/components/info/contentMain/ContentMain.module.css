@@ -6,6 +6,7 @@
 
   & .informacion_usuario {
     animation: slideInLeft 0.8s ease-out;
+
     & p {
       font-size: 22px;
     }
@@ -22,7 +23,6 @@
 
   & img {
     padding-left: 100px;
-    animation: float 3s ease-in-out infinite;
   }
 
   & .right {
@@ -30,17 +30,21 @@
     display: grid;
     gap: 15px;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 25% 71.5%;
+    grid-template-rows: 25% 74.5%;
     grid-template-areas:
       'datos datos'
       'consejos registros';
 
-    & .datos, & .consejos, & .registros {
+    & .datos,
+    & .consejos,
+    & .registros {
       transition: all 0.3s ease;
       animation: slideUp 0.8s ease-out backwards;
     }
-    
-    & .datos:hover, & .consejos:hover, & .registros:hover {
+
+    & .datos:hover,
+    & .consejos:hover,
+    & .registros:hover {
       transform: translateY(-5px);
       box-shadow: 0 8px 15px rgba(202, 67, 110, 0.15);
     }
@@ -63,24 +67,51 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideInLeft {
-  from { transform: translateX(-30px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .desktopView {
@@ -103,7 +134,7 @@
   .desktopView {
     display: none;
   }
-  
+
   .mobileView {
     display: flex;
     flex-direction: column;
@@ -124,7 +155,7 @@
     padding: 30px 20px 60px 20px;
     width: 100%;
   }
-  
+
   .mobileHeaderContent {
     display: flex;
     justify-content: space-between;
@@ -136,7 +167,7 @@
     color: white;
     font-weight: 300;
   }
-  
+
   .mobileGreeting strong {
     font-size: 24px;
     font-weight: 600;
@@ -252,148 +283,31 @@
   }
 }
 
-.activeModuleCard {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
-  padding: 24px;
-  margin-top: 30px;
-  box-shadow: 0 8px 32px rgba(223, 93, 134, 0.06);
-  max-width: 480px;
-  animation: slideUp 0.8s ease-out backwards;
-  animation-delay: 0.3s;
-  box-sizing: border-box;
+
+.seccion_informacion {
+  position: relative;
+  animation: float 3s ease-in-out infinite;
+
+  & .semanas {
+    padding-left: 100px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    bottom: 9%;
+
+    & h2 {
+      color: #9C4460;
+      font-size: 46px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    & p {
+      color: #DE7093;
+      font-size: 18px;
+      margin: 0;
+      font-weight: 500;
+    }
+  }
 }
-
-.activeModuleHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.activeModuleHeader h3 {
-  color: #df5d86;
-  font-size: 0.95rem;
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-}
-
-.moduleBadge {
-  background: #fce4ec;
-  color: #c2185b;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.activeModuleTitle {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #333;
-  margin: 8px 0;
-  line-height: 1.2;
-  text-align: left;
-}
-
-.activeModuleMeta {
-  color: #666;
-  font-size: 0.9rem;
-  margin: 0;
-  font-weight: 500;
-  text-align: left;
-}
-
-.historyCard {
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 24px;
-  margin-top: 20px;
-  box-shadow: 0 8px 32px rgba(223, 93, 134, 0.03);
-  max-width: 480px;
-  animation: slideUp 0.8s ease-out backwards;
-  animation-delay: 0.5s;
-  box-sizing: border-box;
-}
-
-.historyCard h3 {
-  color: #888;
-  font-size: 0.85rem;
-  margin-top: 0;
-  margin-bottom: 16px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
-  text-align: left;
-}
-
-.historyList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-height: 200px;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.historyItem {
-  display: flex;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 12px;
-  background: white;
-  border: 1px solid rgba(0,0,0,0.02);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.01);
-  box-sizing: border-box;
-}
-
-.historyPills {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: center;
-  justify-content: center;
-}
-
-.pillNew {
-  background: #e8f5e9;
-  color: #2e7d32;
-  font-size: 0.75rem;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: 8px;
-}
-
-.pillOld {
-  font-size: 0.75rem;
-  color: #999;
-  text-decoration: line-through;
-}
-
-.historyDetails {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  text-align: left;
-}
-
-.historyDetails p {
-  margin: 0;
-  font-size: 0.85rem;
-  color: #444;
-  font-weight: 500;
-}
-
-.historyDetails span {
-  font-size: 0.75rem;
-  color: #999;
-}
-
-

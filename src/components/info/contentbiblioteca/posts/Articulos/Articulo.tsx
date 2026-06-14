@@ -1,21 +1,24 @@
 import React from 'react';
 import styles from './Articulo.module.css';
+import type { ContenidoEducativoResponse } from '../../../../../services/m5Service';
 
-export const Articulo = React.memo(() => {
+interface ArticuloProps {
+  post: ContenidoEducativoResponse;
+}
+
+export const Articulo = React.memo(({ post: {titulo, descripcion, url_imagen, url_recurso} }: ArticuloProps) => {
   return (
     <article className={styles.articulo}>
-      <img src="./image/posts/pastilla.png" loading="lazy" decoding="async" />
+      {url_imagen  && <img src={url_imagen} loading="lazy" decoding="async" />}
       <div className={styles.contenido}>
-        <h2 className={styles.title}>Todo sobre el embarazo</h2>
-        <p>
-          Lorem ipsum dolor sit amet consectetur adipiscing elit aptent eget
-          eros, dui dictumst vestibulum sociosqu conubia habitasse curae metus
-          suscipit, tellus vulputate enim di am quam duis ligula ultricies
-          sapien. Laoreet habitant facilisis risus bibendum volut
-        </p>
+        <h2 className={styles.title}>{titulo}</h2>
+        <p>{descripcion}</p>
         <div className={styles.detalles}>
-          <p>08-06-2025</p>
-          <button className={styles.boton}>Ver mas</button>
+          {url_recurso && (
+            <button className={styles.boton} onClick={() => window.open(url_recurso, '_blank')}>
+              Ver más
+            </button>
+          )}
         </div>
       </div>
     </article>

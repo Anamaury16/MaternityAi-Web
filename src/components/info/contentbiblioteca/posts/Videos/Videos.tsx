@@ -1,17 +1,18 @@
+import type { ContenidoEducativoResponse } from '../../../../../services/m5Service';
 import styles from './Videos.module.css';
-export const Videos = () => {
+interface VideosProps {
+  post: ContenidoEducativoResponse;
+}
+
+export const Videos = ({ post: {url_recurso, descripcion, titulo, duracion_minutos} }: VideosProps) => {
   return (
     <div className={styles.contenido}>
-      <h2>Primeras semanas del embarazo</h2>
-      <p>
-        adipiscing elit aptent eget eros, dui dictumst vestibulum sociosqu m
-        quam duis ligula ultricies sapien. Laoreet, cursus primis metus quis
-        augue fermentum egestas urna, hendrerit sociis est facilisi litora
-        pharetra etiam.
-      </p>
-      <p>08-06-2025</p>
-
-      <video className={styles.video} controls />
+      <h2>{titulo}</h2>
+      <p>{descripcion}</p>
+      <video className={styles.video} controls autoPlay>
+        {url_recurso && <source src={url_recurso} type="video/mp4" />}
+      </video>
+      <p>{duracion_minutos} minutos</p>
     </div>
   );
 };

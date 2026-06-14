@@ -104,7 +104,7 @@ export const FormRegister = () => {
       <CatalogField
         label="Nacionalidad"
         items={catalogos.nacionalidades}
-        selectedId={formData.nacionalidad_id}
+        selectedId={formData.nacionalidad_id  != null ? String(formData.nacionalidad_id) : undefined}
         onSelectId={(id) => handleChange('nacionalidad_id', id)}
         disabled={loading}
       />
@@ -112,7 +112,7 @@ export const FormRegister = () => {
       <CatalogField
         label="EAPB / EPS"
         items={catalogos.eapbs}
-        selectedId={formData.eapb_id}
+        selectedId={formData.eapb_id != null ? String(formData.eapb_id) : undefined}
         onSelectId={(id) => handleChange('eapb_id', id)}
         disabled={loading}
       />
@@ -120,7 +120,7 @@ export const FormRegister = () => {
       <CatalogField
         label="Pertenencia Étnica"
         items={catalogos.pertenencias_etnicas}
-        selectedId={formData.pertenencia_etnica_id}
+        selectedId={formData.pertenencia_etnica_id != null ? String(formData.pertenencia_etnica_id) : undefined}
         onSelectId={(id) => handleChange('pertenencia_etnica_id', id)}
         disabled={loading}
       />
@@ -128,7 +128,7 @@ export const FormRegister = () => {
       <CatalogField
         label="Grupo Poblacional"
         items={catalogos.grupos_poblacionales}
-        selectedId={formData.grupo_poblacional_id}
+        selectedId={formData.grupo_poblacional_id != null ? String(formData.grupo_poblacional_id) : undefined}
         onSelectId={(id) => handleChange('grupo_poblacional_id', id)}
         disabled={loading}
       />

@@ -5,7 +5,6 @@ import { Datos } from './datos/Datos';
 import { Registros } from './registros/Registros';
 import { SvgBell, SvgSparkle } from '../../Icons/IconsSystem';
 import { getActiveModule, getModuleHistory, type ModuleHistory } from '../../../services/m0Service';
-import { ProgressChecklist } from './progressChecklist/ProgressChecklist';
 
 export const ContentMain = () => {
   const userName = localStorage.getItem('user_name') || 'Gestante';
@@ -58,14 +57,6 @@ export const ContentMain = () => {
             </div>
           )}
 
-          {/* Checklist de Progreso */}
-          {activeModule && (
-            <ProgressChecklist
-              moduloId={activeModule.modulo_id}
-              moduloCodigo={activeModule.codigo}
-            />
-          )}
-
           {/* Module Changes History */}
           {historyList.length > 0 && (
             <div className={styles.historyCard}>
@@ -110,7 +101,7 @@ export const ContentMain = () => {
             </div>
           </div>
         </div>
-        
+
         <div className={styles.mobileCard}>
           <div className={styles.weeksCounter}>
             <span className={styles.weekSide}>27</span>
@@ -119,17 +110,17 @@ export const ContentMain = () => {
             <span className={styles.weekSide}>30</span>
           </div>
           <div className={styles.weeksLabel}>Semanas</div>
-          
+
           <button className={styles.sintomasBtn}>
             Sintomas criticos
             <div className={styles.sintomasIcon}>
               <SvgSparkle width={18} height={18} fill="white" />
             </div>
           </button>
-          
+
           <div className={styles.preparacionSeccion}>
             <h4>Preparacion para el parto</h4>
-            
+
             <div className={styles.prepItem}>
               <span className={styles.prepLabel}>Actividad fisica</span>
               <div className={styles.prepCard}></div>
@@ -151,15 +142,6 @@ export const ContentMain = () => {
               <h2 className={styles.activeModuleTitle} style={{ fontSize: '1.6rem' }}>{activeModule.nombre}</h2>
               <p className={styles.activeModuleMeta}>Semana de gestación actual: {activeModule.semana_gestacion_actual}</p>
             </div>
-          )}
-
-          {/* Checklist de Progreso Mobile */}
-          {activeModule && (
-            <ProgressChecklist
-              moduloId={activeModule.modulo_id}
-              moduloCodigo={activeModule.codigo}
-              style={{ width: '100%', maxWidth: 'none', margin: '15px 0 0 0' }}
-            />
           )}
 
           {/* Module Changes History Mobile */}
