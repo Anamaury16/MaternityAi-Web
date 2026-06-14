@@ -55,6 +55,7 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
             <Link to={'/admin/preguntas'} className={styles.link}>Preguntas</Link>
             <Link to={'/admin/citas'} className={styles.link}>Citas</Link>
             <Link to={'/admin/cargas'} className={styles.link}>Cargas</Link>
+            <Link to={'/admin/checklist'} className={styles.link}>Checklist</Link>
           </>
         )}
       </nav>
