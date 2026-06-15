@@ -449,4 +449,155 @@ export const updateFollowUpQuestionStatus = async (
     { activo }
   );
   return response.data;
+};
+
+// ─── Citas Médicas (Agendamiento) ─────────────────────────────────────────────
+
+export interface CitaAdminResponse {
+  id: string;
+  gestante_id: string;
+  codigo_gmi: string;
+  ips_id?: number | null;
+  ips_nombre?: string | null;
+  fecha_hora: string;
+  tipo_cita?: string | null;
+  estado: string;
+  created_at?: string | null;
+}
+
+export interface CitaAdminCreate {
+  gestante_id: string;
+  ips_id?: number | null;
+  fecha_hora: string;
+  tipo_cita?: string | null;
+}
+
+export interface CitaAdminUpdate {
+  fecha_hora: string;
+}
+
+export const getAppointments = async (
+  params: { from?: string; to?: string; gestante_id?: string } = {}
+): Promise<CitaAdminResponse[]> => {
+  const response = await api.get<CitaAdminResponse[]>('/api/v1/admin/appointments', { params });
+  return response.data;
+};
+
+export const createAppointment = async (
+  data: CitaAdminCreate
+): Promise<CitaAdminResponse> => {
+  const response = await api.post<CitaAdminResponse>('/api/v1/admin/appointments', data);
+  return response.data;
+};
+
+export const reprogramarAppointment = async (
+  id: string,
+  data: CitaAdminUpdate
+): Promise<CitaAdminResponse> => {
+  const response = await api.patch<CitaAdminResponse>(`/api/v1/admin/appointments/${id}`, data);
+  return response.data;
+};
+
+export const confirmarAppointment = async (id: string): Promise<CitaAdminResponse> => {
+  const response = await api.post<CitaAdminResponse>(`/api/v1/admin/appointments/${id}/confirm`);
+  return response.data;
+};
+
+export const cancelarAppointment = async (id: string): Promise<CitaAdminResponse> => {
+  const response = await api.post<CitaAdminResponse>(`/api/v1/admin/appointments/${id}/cancel`);
+  return response.data;
+};
+
+// ─── Panel Médico (detalle de gestante) ───────────────────────────────────────
+
+export interface ExamenResponse {
+  id: string;
+  tipo_examen_id: number;
+  tipo_examen_nombre?: string | null;
+  fecha_toma: string;
+  resultado: string;
+  resultado_numerico?: number | null;
+  unidad?: string | null;
+  trimestre?: number | null;
+  semana_gestacion?: number | null;
+  observaciones?: string | null;
+  created_at?: string | null;
+}
+
+export interface AlertaAdminResponse {
+  id: string;
+  descripcion?: string | null;
+  estado: string;
+  modulo_origen?: string | null;
+  tipo_alerta?: string | null;
+  prioridad?: string | null;
+  created_at?: string | null;
+}
+
+export interface RespuestaConPreguntaResponse {
+  id: string;
+  pregunta_id: number;
+  pregunta_texto: string;
+  tipo_respuesta: string;
+  respuesta_texto?: string | null;
+  respuesta_booleana?: boolean | null;
+  respuesta_numerica?: number | null;
+  opcion_id?: number | null;
+  semana_gestacion?: number | null;
+  alerta_id?: string | null;
+  created_at?: string | null;
+}
+
+export interface LlamadaEmergenciaResponse {
+  id: string;
+  motivo?: string | null;
+  destino?: string | null;
+  duracion_seg?: number | null;
+  resultado?: string | null;
+  created_at?: string | null;
+}
+
+export interface LlamadaEmergenciaCreate {
+  motivo?: string | null;
+  destino?: string | null;
+  resultado?: string | null;
+}
+
+export const getGestanteExams = async (gestanteId: string): Promise<ExamenResponse[]> => {
+  const response = await api.get<ExamenResponse[]>(`/api/v1/admin/gestantes/${gestanteId}/exams`);
+  return response.data;
+};
+
+export const getGestanteAlarmSigns = async (gestanteId: string): Promise<AlertaAdminResponse[]> => {
+  const response = await api.get<AlertaAdminResponse[]>(`/api/v1/admin/gestantes/${gestanteId}/alarm-signs`);
+  return response.data;
+};
+
+export const getGestanteDailyQuestionsHistory = async (
+  gestanteId: string
+): Promise<RespuestaConPreguntaResponse[]> => {
+  const response = await api.get<RespuestaConPreguntaResponse[]>(
+    `/api/v1/admin/gestantes/${gestanteId}/daily-questions/history`
+  );
+  return response.data;
+};
+
+export const getGestanteEmergencyCallHistory = async (
+  gestanteId: string
+): Promise<LlamadaEmergenciaResponse[]> => {
+  const response = await api.get<LlamadaEmergenciaResponse[]>(
+    `/api/v1/admin/gestantes/${gestanteId}/emergency-call/history`
+  );
+  return response.data;
+};
+
+export const createGestanteEmergencyCall = async (
+  gestanteId: string,
+  data: LlamadaEmergenciaCreate
+): Promise<LlamadaEmergenciaResponse> => {
+  const response = await api.post<LlamadaEmergenciaResponse>(
+    `/api/v1/admin/gestantes/${gestanteId}/emergency-call`,
+    data
+  );
+  return response.data;
 };

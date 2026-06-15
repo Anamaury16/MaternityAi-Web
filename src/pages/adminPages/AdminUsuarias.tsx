@@ -12,17 +12,17 @@ import {
   updateStaffStatus,
   updateStaffUser,
   getGestantes,
+  getGestanteExams,
+  getGestanteAlarmSigns,
+  getGestanteDailyQuestionsHistory,
+  createGestanteEmergencyCall,
   type GestanteResponse,
   type RoleOption,
+  type ExamenResponse,
+  type AlertaAdminResponse,
+  type RespuestaConPreguntaResponse,
+  type LlamadaEmergenciaCreate,
 } from '../../services/adminService';
-
-const ANALISIS = [
-  'HEMOGLOBINA', 'HEMATOCRITO',
-  'PARCIAL ORINA', 'UROCULTIVO',
-  'GLICEMA', 'CITOLOGÍA',
-  'TOXO IgG', 'Ags HB',
-  'Ags HB',
-];
 
 // ─── Modal de creación de staff ──────────────────────────────────────────────
 
@@ -188,10 +188,22 @@ export const AdminUsuarias = () => {
 
   const [busqueda, setBusqueda] = useState('');
   const [selPaciente, setSelPaciente] = useState('XYZ1002');
-  const [selAnalisis, setSelAnalisis] = useState('HEMOGLOBINA');
 
   // Controla qué modal está abierto: 'gestante' | 'staff' | null
   const [modalOpen, setModalOpen] = useState<'gestante' | 'staff' | null>(null);
+
+  // ── Panel médico (exámenes, alertas, cuestionario, emergencia) ──
+  const [exams, setExams] = useState<ExamenResponse[]>([]);
+  const [alarmSigns, setAlarmSigns] = useState<AlertaAdminResponse[]>([]);
+  const [dailyHistory, setDailyHistory] = useState<RespuestaConPreguntaResponse[]>([]);
+  const [selectedExam, setSelectedExam] = useState<ExamenResponse | null>(null);
+  const [showAlertas, setShowAlertas] = useState(false);
+  const [showCuestionario, setShowCuestionario] = useState(false);
+  const [showEmergencia, setShowEmergencia] = useState(false);
+  const [emergenciaForm, setEmergenciaForm] = useState<LlamadaEmergenciaCreate>({ motivo: '', destino: '', resultado: '' });
+  const [emergenciaLoading, setEmergenciaLoading] = useState(false);
+  const [emergenciaError, setEmergenciaError] = useState<string | null>(null);
+  const [emergenciaSuccess, setEmergenciaSuccess] = useState(false);
 
   const [activeList, setActiveList] = useState<'maternas' | 'staff'>('maternas');
   const [staffUsers, setStaffUsers] = useState<any[]>([]);
@@ -254,6 +266,55 @@ export const AdminUsuarias = () => {
   );
 
   const gestanteSeleccionada = gestantes.find(g => g.codigo_gmi === selPaciente);
+
+  useEffect(() => {
+    if (!gestanteSeleccionada?.id) {
+      setExams([]);
+      setAlarmSigns([]);
+      setDailyHistory([]);
+      return;
+    }
+    const gestanteId = gestanteSeleccionada.id;
+    setSelectedExam(null);
+    getGestanteExams(gestanteId).then(setExams).catch(() => setExams([]));
+    getGestanteAlarmSigns(gestanteId).then(setAlarmSigns).catch(() => setAlarmSigns([]));
+    getGestanteDailyQuestionsHistory(gestanteId).then(setDailyHistory).catch(() => setDailyHistory([]));
+  }, [gestanteSeleccionada?.id]);
+
+  const abrirEmergencia = () => {
+    setEmergenciaForm({ motivo: '', destino: '', resultado: '' });
+    setEmergenciaError(null);
+    setEmergenciaSuccess(false);
+    setShowEmergencia(true);
+  };
+
+  const enviarEmergencia = async () => {
+    if (!gestanteSeleccionada?.id) return;
+    setEmergenciaLoading(true);
+    setEmergenciaError(null);
+    try {
+      await createGestanteEmergencyCall(gestanteSeleccionada.id, emergenciaForm);
+      setEmergenciaSuccess(true);
+      setTimeout(() => setShowEmergencia(false), 1500);
+    } catch (err: any) {
+      const backendError = err.response?.data?.detail;
+      setEmergenciaError(typeof backendError === 'string' ? backendError : 'No se pudo registrar la llamada de emergencia.');
+    } finally {
+      setEmergenciaLoading(false);
+    }
+  };
+
+  const formatFecha = (iso?: string | null) => {
+    if (!iso) return 'N/A';
+    return new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
+  const formatRespuesta = (r: RespuestaConPreguntaResponse) => {
+    if (r.respuesta_texto != null) return r.respuesta_texto;
+    if (r.respuesta_booleana != null) return r.respuesta_booleana ? 'Sí' : 'No';
+    if (r.respuesta_numerica != null) return String(r.respuesta_numerica);
+    return 'Sin respuesta';
+  };
 
   const staffFiltrados = staffUsers.filter(u =>
     (u.nombre || '').toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -409,7 +470,7 @@ export const AdminUsuarias = () => {
             <p className={styles.ipsText}>
               IPS DE ATENCION <strong>Ese hospital de Puerto Colombia</strong>
             </p>
-            <button className={styles.emergenciaBtn}>
+            <button className={styles.emergenciaBtn} onClick={abrirEmergencia}>
               Generar llamada de emergencia
             </button>
 
@@ -430,17 +491,23 @@ export const AdminUsuarias = () => {
                   <line x1="8" y1="12" x2="16" y2="12" />
                 </svg>
               </button>
-              <div className={styles.analisisGrid}>
-                {ANALISIS.map((a, i) => (
-                  <button
-                    key={i}
-                    className={`${styles.analisisBtn} ${selAnalisis === a ? styles.analisisBtnOn : ''}`}
-                    onClick={() => setSelAnalisis(a)}
-                  >
-                    {a}
-                  </button>
-                ))}
-              </div>
+              {exams.length === 0 ? (
+                <p className={styles.secDesc} style={{ margin: 0 }}>
+                  Sin análisis registrados para esta paciente.
+                </p>
+              ) : (
+                <div className={styles.analisisGrid}>
+                  {exams.map((e) => (
+                    <button
+                      key={e.id}
+                      className={`${styles.analisisBtn} ${selectedExam?.id === e.id ? styles.analisisBtnOn : ''}`}
+                      onClick={() => setSelectedExam(e)}
+                    >
+                      {(e.tipo_examen_nombre || `Examen #${e.tipo_examen_id}`).toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -602,8 +669,12 @@ export const AdminUsuarias = () => {
               que de la paciente, dar click a cada uno para ver el detalle
             </p>
 
-            <button className={styles.alertaBtn}>Signos de alerta ⚠️</button>
-            <button className={styles.cuestionarioBtn}>Revisar cuestionario diario</button>
+            <button className={styles.alertaBtn} onClick={() => setShowAlertas(true)}>
+              Signos de alerta ⚠️ {alarmSigns.length > 0 ? `(${alarmSigns.length})` : ''}
+            </button>
+            <button className={styles.cuestionarioBtn} onClick={() => setShowCuestionario(true)}>
+              Revisar cuestionario diario
+            </button>
 
             <div className={styles.reporteCards}>
               <div className={styles.rcard} style={{ width: '75%', background: '#f9c0cf' }} />
@@ -637,6 +708,161 @@ export const AdminUsuarias = () => {
         title="Crear Usuario de Staff"
       >
         <StaffCreateModal onClose={() => setModalOpen(null)} />
+      </Modal>
+
+      {/* Modal: detalle de examen/análisis */}
+      <Modal
+        isOpen={!!selectedExam}
+        onClose={() => setSelectedExam(null)}
+        title={selectedExam?.tipo_examen_nombre?.toUpperCase() || 'Detalle del Análisis'}
+      >
+        {selectedExam && (
+          <div className={modalStyles.form}>
+            <p className={styles.infoRow}><strong>Fecha de toma</strong> · {formatFecha(selectedExam.fecha_toma)}</p>
+            <p className={styles.infoRow}><strong>Resultado</strong> · {selectedExam.resultado}</p>
+            {selectedExam.resultado_numerico != null && (
+              <p className={styles.infoRow}>
+                <strong>Valor</strong> · {selectedExam.resultado_numerico} {selectedExam.unidad || ''}
+              </p>
+            )}
+            {selectedExam.semana_gestacion != null && (
+              <p className={styles.infoRow}><strong>Semana de gestación</strong> · {selectedExam.semana_gestacion}</p>
+            )}
+            {selectedExam.trimestre != null && (
+              <p className={styles.infoRow}><strong>Trimestre</strong> · {selectedExam.trimestre}</p>
+            )}
+            {selectedExam.observaciones && (
+              <p className={styles.infoRow}><strong>Observaciones</strong> · {selectedExam.observaciones}</p>
+            )}
+            <p className={styles.infoRow}><strong>Registrado</strong> · {formatFecha(selectedExam.created_at)}</p>
+          </div>
+        )}
+      </Modal>
+
+      {/* Modal: signos de alerta */}
+      <Modal
+        isOpen={showAlertas}
+        onClose={() => setShowAlertas(false)}
+        title="Signos de Alerta"
+      >
+        <div className={modalStyles.form}>
+          {alarmSigns.length === 0 ? (
+            <p className={styles.secDesc} style={{ margin: 0 }}>
+              No hay signos de alerta activos para esta paciente.
+            </p>
+          ) : (
+            alarmSigns.map((a) => (
+              <div key={a.id} style={{ padding: '12px', background: '#fdeded', borderRadius: '12px', border: '1px solid #f9c0cf' }}>
+                <p className={styles.infoRow} style={{ margin: 0 }}><strong>{a.descripcion || 'Sin descripción'}</strong></p>
+                <p className={styles.infoRow}><strong>Estado</strong> · {a.estado}</p>
+                {a.tipo_alerta && <p className={styles.infoRow}><strong>Tipo</strong> · {a.tipo_alerta}</p>}
+                {a.prioridad && <p className={styles.infoRow}><strong>Prioridad</strong> · {a.prioridad}</p>}
+                {a.modulo_origen && <p className={styles.infoRow}><strong>Módulo</strong> · {a.modulo_origen}</p>}
+                <p className={styles.infoRow}><strong>Fecha</strong> · {formatFecha(a.created_at)}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </Modal>
+
+      {/* Modal: historial de cuestionario diario */}
+      <Modal
+        isOpen={showCuestionario}
+        onClose={() => setShowCuestionario(false)}
+        title="Cuestionario Diario"
+      >
+        <div className={modalStyles.form}>
+          {dailyHistory.length === 0 ? (
+            <p className={styles.secDesc} style={{ margin: 0 }}>
+              No hay respuestas registradas para esta paciente.
+            </p>
+          ) : (
+            dailyHistory.map((r) => (
+              <div key={r.id} style={{ padding: '12px', background: '#f9f9f9', borderRadius: '12px', border: '1px solid #eee' }}>
+                <p className={styles.infoRow} style={{ margin: 0 }}><strong>{r.pregunta_texto}</strong></p>
+                <p className={styles.infoRow}><strong>Respuesta</strong> · {formatRespuesta(r)}</p>
+                {r.semana_gestacion != null && (
+                  <p className={styles.infoRow}><strong>Semana</strong> · {r.semana_gestacion}</p>
+                )}
+                <p className={styles.infoRow}><strong>Fecha</strong> · {formatFecha(r.created_at)}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </Modal>
+
+      {/* Modal: generar llamada de emergencia */}
+      <Modal
+        isOpen={showEmergencia}
+        onClose={() => setShowEmergencia(false)}
+        title="Generar Llamada de Emergencia"
+      >
+        <div className={modalStyles.form}>
+          {emergenciaSuccess && (
+            <div className={modalStyles.successBanner}>
+              ✅ Llamada de emergencia registrada
+            </div>
+          )}
+
+          <div className={modalStyles.field}>
+            <label className={modalStyles.label}>Motivo</label>
+            <input
+              className={modalStyles.input}
+              type="text"
+              placeholder="Ej. Sangrado abundante"
+              value={emergenciaForm.motivo || ''}
+              onChange={(e) => setEmergenciaForm(prev => ({ ...prev, motivo: e.target.value }))}
+              disabled={emergenciaLoading}
+            />
+          </div>
+
+          <div className={modalStyles.field}>
+            <label className={modalStyles.label}>Destino</label>
+            <input
+              className={modalStyles.input}
+              type="text"
+              placeholder="Ej. Hospital de Puerto Colombia"
+              value={emergenciaForm.destino || ''}
+              onChange={(e) => setEmergenciaForm(prev => ({ ...prev, destino: e.target.value }))}
+              disabled={emergenciaLoading}
+            />
+          </div>
+
+          <div className={modalStyles.field}>
+            <label className={modalStyles.label}>Resultado</label>
+            <input
+              className={modalStyles.input}
+              type="text"
+              placeholder="Ej. Atendida, en camino..."
+              value={emergenciaForm.resultado || ''}
+              onChange={(e) => setEmergenciaForm(prev => ({ ...prev, resultado: e.target.value }))}
+              disabled={emergenciaLoading}
+            />
+          </div>
+
+          {emergenciaError && (
+            <p className={modalStyles.error}>{emergenciaError}</p>
+          )}
+
+          <div className={modalStyles.actions}>
+            <button
+              type="button"
+              className={modalStyles.cancelBtn}
+              onClick={() => setShowEmergencia(false)}
+              disabled={emergenciaLoading}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className={modalStyles.submitBtn}
+              onClick={enviarEmergencia}
+              disabled={emergenciaLoading}
+            >
+              {emergenciaLoading ? 'Enviando...' : 'Generar llamada'}
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );
