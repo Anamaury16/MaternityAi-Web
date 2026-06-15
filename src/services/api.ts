@@ -14,6 +14,17 @@ api.interceptors.request.use(
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
+
+    // Inyectar automáticamente gestante_id si el usuario es de staff y hay un paciente seleccionado
+    const role = localStorage.getItem('role');
+    const selectedGestante = localStorage.getItem('selected_gestante_gmi');
+    if ((role === 'clinico' || role === 'admin') && selectedGestante) {
+      config.params = {
+        ...config.params,
+        gestante_id: selectedGestante,
+      };
+    }
+
     return config;
   },
   (error) => {

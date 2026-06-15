@@ -4,16 +4,16 @@
   height: 80vh;
   gap: 40px;
   animation: fadeIn 0.8s ease-out;
+}
 
-  & .historial {
-    width: 25%;
-    animation: slideInLeft 0.8s ease-out;
-  }
+.historial {
+  width: 25%;
+  animation: slideInLeft 0.8s ease-out;
+}
 
-  & .chat {
-    width: 70%;
-    animation: slideUp 0.8s ease-out 0.2s backwards;
-  }
+.chat {
+  width: 70%;
+  animation: slideUp 0.8s ease-out 0.2s backwards;
 }
 
 @keyframes fadeIn {
@@ -29,4 +29,23 @@
 @keyframes slideUp {
   from { transform: translateY(30px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    margin-top: 20px;
+    height: calc(100vh - 150px);
+    gap: 0;
+    padding: 0 12px;
+  }
+
+  .historial {
+    display: none !important;
+  }
+
+  .chat {
+    width: 100% !important;
+    height: 100% !important;
+  }
 }

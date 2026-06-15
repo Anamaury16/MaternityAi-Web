@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { HeaderActividad } from '../../components/Headers/HeaderActividad/HeaderActividad'; 
 import styles from '../../components/admin/AdminCitas.module.css';
 
@@ -45,7 +45,15 @@ const SEMANAS = [
 
 
 export const AdminCitas = () => {
-  const [selPaciente, setSelPaciente] = useState('XYZ1002');
+  const [selPaciente, setSelPaciente] = useState(() => {
+    return localStorage.getItem('selected_gestante_gmi') || 'XYZ1002';
+  });
+
+  useEffect(() => {
+    if (selPaciente && selPaciente !== 'XYZ1002') {
+      localStorage.setItem('selected_gestante_gmi', selPaciente);
+    }
+  }, [selPaciente]);
   const [busqueda, setBusqueda]       = useState('');
   const [vista, setVista]             = useState<'Mes' | 'Semana'>('Mes');
   const [diaHoy]                      = useState(10);

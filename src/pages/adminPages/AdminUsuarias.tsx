@@ -15,6 +15,16 @@ import {
   type GestanteResponse,
   type RoleOption,
 } from '../../services/adminService';
+import {
+  getObstetricFormula,
+  updateObstetricFormula,
+  getPathologicalHistory,
+  createPathologicalHistory,
+  updatePathologicalHistory,
+  deletePathologicalHistory,
+  type ObstetricFormula as IObstetricFormula,
+  type PathologicalHistory as IPathologicalHistory,
+} from '../../services/m0Service';
 
 const ANALISIS = [
   'HEMOGLOBINA', 'HEMATOCRITO',
@@ -187,13 +197,119 @@ export const AdminUsuarias = () => {
   const isAdmin = user.role === 'admin';
 
   const [busqueda, setBusqueda] = useState('');
-  const [selPaciente, setSelPaciente] = useState('XYZ1002');
+  const [selPaciente, setSelPaciente] = useState(() => {
+    return localStorage.getItem('selected_gestante_gmi') || 'XYZ1002';
+  });
+
+  useEffect(() => {
+    if (selPaciente && selPaciente !== 'XYZ1002') {
+      localStorage.setItem('selected_gestante_gmi', selPaciente);
+    }
+  }, [selPaciente]);
   const [selAnalisis, setSelAnalisis] = useState('HEMOGLOBINA');
+  const [activeList, setActiveList] = useState<'maternas' | 'staff'>('maternas');
+
+  // --- Estados de Fórmula Obstétrica ---
+  const [formula, setFormula] = useState<IObstetricFormula | null>(null);
+  const [editingFormula, setEditingFormula] = useState(false);
+  const [formulaForm, setFormulaForm] = useState<IObstetricFormula>({
+    gestaciones: 0,
+    partos: 0,
+    cesareas: 0,
+    abortos: 0,
+    vivos: 0,
+    mortinatos: 0
+  });
+
+  // --- Estados de Antecedentes Patológicos ---
+  const [antecedentes, setAntecedentes] = useState<IPathologicalHistory[]>([]);
+  const [loadingClinico, setLoadingClinico] = useState(false);
+  const [editingAntecedenteId, setEditingAntecedenteId] = useState<string | null>(null);
+  const [antecedenteForm, setAntecedenteForm] = useState({
+    tipo_condicion: '',
+    descripcion: '',
+    fecha_diagnostico: '',
+    controlada: true,
+    tratamiento_actual: ''
+  });
+
+  // --- Efecto para Cargar Datos Clínicos ---
+  useEffect(() => {
+    if (activeList === 'maternas' && selPaciente && selPaciente !== 'XYZ1002') {
+      const fetchClinicalData = async () => {
+        setLoadingClinico(true);
+        try {
+          const [formulaData, antecedentesData] = await Promise.all([
+            getObstetricFormula(),
+            getPathologicalHistory()
+          ]);
+          setFormula(formulaData);
+          setAntecedentes(antecedentesData);
+        } catch (error) {
+          console.error("Error fetching clinical patient details:", error);
+          setFormula(null);
+          setAntecedentes([]);
+        } finally {
+          setLoadingClinico(false);
+        }
+      };
+      fetchClinicalData();
+    }
+  }, [selPaciente, activeList]);
+
+  // --- Handlers de Acciones ---
+  const handleSaveFormula = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const updated = await updateObstetricFormula(formulaForm);
+      setFormula(updated);
+      setEditingFormula(false);
+    } catch (error: any) {
+      alert(error.response?.data?.detail || "Error al actualizar la fórmula obstétrica");
+    }
+  };
+
+  const handleSaveAntecedente = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editingAntecedenteId === 'new') {
+        const nuevo = await createPathologicalHistory({
+          tipo_condicion: antecedenteForm.tipo_condicion,
+          descripcion: antecedenteForm.descripcion || null,
+          fecha_diagnostico: antecedenteForm.fecha_diagnostico || null,
+          controlada: antecedenteForm.controlada,
+          tratamiento_actual: antecedenteForm.tratamiento_actual || null
+        });
+        setAntecedentes(prev => [...prev, nuevo]);
+      } else if (editingAntecedenteId) {
+        const modificado = await updatePathologicalHistory(editingAntecedenteId, {
+          tipo_condicion: antecedenteForm.tipo_condicion,
+          descripcion: antecedenteForm.descripcion || null,
+          fecha_diagnostico: antecedenteForm.fecha_diagnostico || null,
+          controlada: antecedenteForm.controlada,
+          tratamiento_actual: antecedenteForm.tratamiento_actual || null
+        });
+        setAntecedentes(prev => prev.map(a => a.id === editingAntecedenteId ? modificado : a));
+      }
+      setEditingAntecedenteId(null);
+    } catch (error: any) {
+      alert(error.response?.data?.detail || "Error al guardar el antecedente patológico");
+    }
+  };
+
+  const handleDeleteAntecedente = async (id: string) => {
+    if (!window.confirm("¿Está seguro de que desea eliminar este antecedente patológico?")) return;
+    try {
+      await deletePathologicalHistory(id);
+      setAntecedentes(prev => prev.filter(a => a.id !== id));
+    } catch (error: any) {
+      alert(error.response?.data?.detail || "Error al eliminar el antecedente");
+    }
+  };
 
   // Controla qué modal está abierto: 'gestante' | 'staff' | null
   const [modalOpen, setModalOpen] = useState<'gestante' | 'staff' | null>(null);
 
-  const [activeList, setActiveList] = useState<'maternas' | 'staff'>('maternas');
   const [staffUsers, setStaffUsers] = useState<any[]>([]);
   const [selStaff, setSelStaff] = useState<any>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -412,6 +528,242 @@ export const AdminUsuarias = () => {
             <button className={styles.emergenciaBtn}>
               Generar llamada de emergencia
             </button>
+
+            {/* --- FÓRMULA OBSTÉTRICA --- */}
+            <div className={styles.formulaContainer}>
+              <div className={styles.formulaHeader}>
+                <h3>Fórmula Obstétrica</h3>
+                {!editingFormula && (
+                  <button 
+                    className={styles.editBtn}
+                    onClick={() => {
+                      setFormulaForm(formula || { gestaciones: 0, partos: 0, cesareas: 0, abortos: 0, vivos: 0, mortinatos: 0 });
+                      setEditingFormula(true);
+                    }}
+                  >
+                    ✏️ Editar
+                  </button>
+                )}
+              </div>
+
+              {editingFormula ? (
+                <form onSubmit={handleSaveFormula} className={styles.inlineForm}>
+                  <div className={styles.formGrid}>
+                    <div className={styles.formField}>
+                      <label>Gestaciones (G)</label>
+                      <input 
+                        type="number" min="0" required
+                        value={formulaForm.gestaciones}
+                        onChange={e => setFormulaForm({...formulaForm, gestaciones: parseInt(e.target.value) || 0})}
+                      />
+                    </div>
+                    <div className={styles.formField}>
+                      <label>Partos (P)</label>
+                      <input 
+                        type="number" min="0" required
+                        value={formulaForm.partos}
+                        onChange={e => setFormulaForm({...formulaForm, partos: parseInt(e.target.value) || 0})}
+                      />
+                    </div>
+                    <div className={styles.formField}>
+                      <label>Cesáreas (C)</label>
+                      <input 
+                        type="number" min="0" required
+                        value={formulaForm.cesareas}
+                        onChange={e => setFormulaForm({...formulaForm, cesareas: parseInt(e.target.value) || 0})}
+                      />
+                    </div>
+                    <div className={styles.formField}>
+                      <label>Abortos (A)</label>
+                      <input 
+                        type="number" min="0" required
+                        value={formulaForm.abortos}
+                        onChange={e => setFormulaForm({...formulaForm, abortos: parseInt(e.target.value) || 0})}
+                      />
+                    </div>
+                    <div className={styles.formField}>
+                      <label>Vivos (V)</label>
+                      <input 
+                        type="number" min="0" required
+                        value={formulaForm.vivos}
+                        onChange={e => setFormulaForm({...formulaForm, vivos: parseInt(e.target.value) || 0})}
+                      />
+                    </div>
+                    <div className={styles.formField}>
+                      <label>Mortinatos (M)</label>
+                      <input 
+                        type="number" min="0" required
+                        value={formulaForm.mortinatos}
+                        onChange={e => setFormulaForm({...formulaForm, mortinatos: parseInt(e.target.value) || 0})}
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.formActions}>
+                    <button type="button" className={styles.btnCancel} onClick={() => setEditingFormula(false)}>Cancelar</button>
+                    <button type="submit" className={styles.btnSave}>Guardar</button>
+                  </div>
+                </form>
+              ) : (
+                <div className={styles.formulaGrid}>
+                  <div className={styles.formulaItem}>
+                    <span className={styles.formulaCount}>{formula?.gestaciones ?? 0}</span>
+                    <span className={styles.formulaLabel}>G</span>
+                  </div>
+                  <div className={styles.formulaItem}>
+                    <span className={styles.formulaCount}>{formula?.partos ?? 0}</span>
+                    <span className={styles.formulaLabel}>P</span>
+                  </div>
+                  <div className={styles.formulaItem}>
+                    <span className={styles.formulaCount}>{formula?.cesareas ?? 0}</span>
+                    <span className={styles.formulaLabel}>C</span>
+                  </div>
+                  <div className={styles.formulaItem}>
+                    <span className={styles.formulaCount}>{formula?.abortos ?? 0}</span>
+                    <span className={styles.formulaLabel}>A</span>
+                  </div>
+                  <div className={styles.formulaItem}>
+                    <span className={styles.formulaCount}>{formula?.vivos ?? 0}</span>
+                    <span className={styles.formulaLabel}>V</span>
+                  </div>
+                  <div className={styles.formulaItem}>
+                    <span className={styles.formulaCount}>{formula?.mortinatos ?? 0}</span>
+                    <span className={styles.formulaLabel}>M</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* --- ANTECEDENTES PATOLÓGICOS --- */}
+            <div className={styles.antecedentesContainer}>
+              <div className={styles.antecedentesHeader}>
+                <h3>Antecedentes Patológicos</h3>
+                {!editingAntecedenteId && (
+                  <button 
+                    className={styles.editBtn}
+                    onClick={() => {
+                      setAntecedenteForm({
+                        tipo_condicion: '',
+                        descripcion: '',
+                        fecha_diagnostico: new Date().toISOString().split('T')[0],
+                        controlada: true,
+                        tratamiento_actual: ''
+                      });
+                      setEditingAntecedenteId('new');
+                    }}
+                  >
+                    ➕ Agregar
+                  </button>
+                )}
+              </div>
+
+              {editingAntecedenteId ? (
+                <form onSubmit={handleSaveAntecedente} className={styles.inlineForm}>
+                  <div className={styles.formGrid}>
+                    <div className={`${styles.formField} ${styles.formFieldFull}`}>
+                      <label>Tipo de Condición *</label>
+                      <input 
+                        type="text" required placeholder="Ej. Diabetes Gestacional, Hipertensión"
+                        value={antecedenteForm.tipo_condicion}
+                        onChange={e => setAntecedenteForm({...antecedenteForm, tipo_condicion: e.target.value})}
+                      />
+                    </div>
+                    <div className={`${styles.formField} ${styles.formFieldFull}`}>
+                      <label>Descripción</label>
+                      <textarea 
+                        placeholder="Detalles sobre el diagnóstico..."
+                        value={antecedenteForm.descripcion}
+                        onChange={e => setAntecedenteForm({...antecedenteForm, descripcion: e.target.value})}
+                      />
+                    </div>
+                    <div className={styles.formField}>
+                      <label>Fecha de Diagnóstico</label>
+                      <input 
+                        type="date"
+                        value={antecedenteForm.fecha_diagnostico}
+                        onChange={e => setAntecedenteForm({...antecedenteForm, fecha_diagnostico: e.target.value})}
+                      />
+                    </div>
+                    <div className={styles.formField}>
+                      <label>Estado de Control</label>
+                      <select 
+                        value={antecedenteForm.controlada ? 'true' : 'false'}
+                        onChange={e => setAntecedenteForm({...antecedenteForm, controlada: e.target.value === 'true'})}
+                      >
+                        <option value="true">Controlada</option>
+                        <option value="false">No controlada</option>
+                      </select>
+                    </div>
+                    <div className={`${styles.formField} ${styles.formFieldFull}`}>
+                      <label>Tratamiento Actual</label>
+                      <input 
+                        type="text" placeholder="Ej. Insulina, Dieta, Medicamentos..."
+                        value={antecedenteForm.tratamiento_actual}
+                        onChange={e => setAntecedenteForm({...antecedenteForm, tratamiento_actual: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className={styles.formActions}>
+                    <button type="button" className={styles.btnCancel} onClick={() => setEditingAntecedenteId(null)}>Cancelar</button>
+                    <button type="submit" className={styles.btnSave}>Guardar</button>
+                  </div>
+                </form>
+              ) : (
+                <div className={styles.antecedentesList}>
+                  {loadingClinico ? (
+                    <p style={{ fontSize: '12px', color: '#999', margin: 0 }}>Cargando datos clínicos...</p>
+                  ) : antecedentes.length === 0 ? (
+                    <p style={{ fontSize: '12px', color: '#999', margin: 0 }}>No hay antecedentes registrados.</p>
+                  ) : (
+                    antecedentes.map(ant => (
+                      <div key={ant.id} className={styles.antecedenteCard}>
+                        <div className={styles.antecedenteTitleRow}>
+                          <h4 className={styles.antecedenteTitle}>{ant.tipo_condicion}</h4>
+                          <div className={styles.antecedenteBadges}>
+                            <span className={`${styles.badge} ${ant.controlada ? styles.badgeControlled : styles.badgeNotControlled}`}>
+                              {ant.controlada ? 'Controlada' : 'No controlada'}
+                            </span>
+                          </div>
+                        </div>
+                        {ant.descripcion && <p className={styles.antecedenteDesc}>{ant.descripcion}</p>}
+                        
+                        <div className={styles.antecedenteMeta}>
+                          {ant.fecha_diagnostico && <span>📅 Diagnóstico: {ant.fecha_diagnostico}</span>}
+                          {ant.tratamiento_actual && <span>💊 Tratamiento: {ant.tratamiento_actual}</span>}
+                        </div>
+
+                        <div className={styles.antecedenteActions}>
+                          <button 
+                            type="button"
+                            className={styles.actionIconBtn} 
+                            title="Editar"
+                            onClick={() => {
+                              setAntecedenteForm({
+                                tipo_condicion: ant.tipo_condicion,
+                                descripcion: ant.descripcion || '',
+                                fecha_diagnostico: ant.fecha_diagnostico || '',
+                                controlada: !!ant.controlada,
+                                tratamiento_actual: ant.tratamiento_actual || ''
+                              });
+                              setEditingAntecedenteId(ant.id);
+                            }}
+                          >
+                            ✏️
+                          </button>
+                          <button 
+                            type="button"
+                            className={styles.actionIconBtn} 
+                            title="Eliminar"
+                            onClick={() => handleDeleteAntecedente(ant.id)}
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
 
             <h2 className={styles.secTitle}>Análisis actual de la paciente</h2>
             <p className={styles.secDesc}>

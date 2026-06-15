@@ -2,6 +2,7 @@
   margin: 20px 0;
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   animation: fadeIn 0.8s ease-out;
 
   & .informacion_usuario {
@@ -30,7 +31,7 @@
     display: grid;
     gap: 15px;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 25% 74.5%;
+    grid-template-rows: 160px auto;
     grid-template-areas:
       'datos datos'
       'consejos registros';

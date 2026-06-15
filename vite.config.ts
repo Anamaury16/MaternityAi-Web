@@ -56,6 +56,10 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 60 * 24, // 24 horas
               },
               networkTimeoutSeconds: 10,
+              // Asegura que las peticiones se realicen con CORS para mantener cabeceras correctas
+              fetchOptions: {
+                mode: 'cors',
+              },
             },
           },
           {
@@ -72,8 +76,8 @@ export default defineConfig({
         ],
       },
       devOptions: {
-        // Activa el SW en desarrollo para poder probarlo
-        enabled: true,
+        // Desactiva el SW en desarrollo para evitar problemas de CORS y caché obsoleta
+        enabled: false,
       },
     }),
   ],

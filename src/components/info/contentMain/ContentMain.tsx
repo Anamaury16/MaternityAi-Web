@@ -4,7 +4,9 @@ import styles from './ContentMain.module.css';
 import { Datos } from './datos/Datos';
 import { Registros } from './registros/Registros';
 import { SvgBell, SvgSparkle } from '../../Icons/IconsSystem';
-import { getActiveModule, getModuleHistory, type ModuleHistory } from '../../../services/m0Service';
+import { getActiveModule, getModuleHistory, type ModuleHistoryEntry as ModuleHistory } from '../../../services/m0Service';
+import { ProgressChecklist } from './progressChecklist/ProgressChecklist';
+import { RiskSummaryCard } from './RiskSummaryCard/RiskSummaryCard';
 
 export const ContentMain = () => {
   const userName = localStorage.getItem('user_name') || 'Gestante';
@@ -55,6 +57,17 @@ export const ContentMain = () => {
                 Semana de gestación actual: <strong>{activeModule.semana_gestacion_actual}</strong>
               </p>
             </div>
+          )}
+
+          {/* Semáforo de riesgo IA */}
+          <RiskSummaryCard />
+
+          {/* Checklist de Progreso */}
+          {activeModule && (
+            <ProgressChecklist
+              moduloId={activeModule.modulo_id}
+              moduloCodigo={activeModule.codigo}
+            />
           )}
 
           {/* Module Changes History */}
@@ -142,6 +155,18 @@ export const ContentMain = () => {
               <h2 className={styles.activeModuleTitle} style={{ fontSize: '1.6rem' }}>{activeModule.nombre}</h2>
               <p className={styles.activeModuleMeta}>Semana de gestación actual: {activeModule.semana_gestacion_actual}</p>
             </div>
+          )}
+
+          {/* Semáforo de riesgo IA Mobile */}
+          <RiskSummaryCard />
+
+          {/* Checklist de Progreso Mobile */}
+          {activeModule && (
+            <ProgressChecklist
+              moduloId={activeModule.modulo_id}
+              moduloCodigo={activeModule.codigo}
+              style={{ width: '100%', maxWidth: 'none', margin: '15px 0 0 0' }}
+            />
           )}
 
           {/* Module Changes History Mobile */}
