@@ -2,10 +2,12 @@
   margin: 20px 0;
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   animation: fadeIn 0.8s ease-out;
 
   & .informacion_usuario {
     animation: slideInLeft 0.8s ease-out;
+
     & p {
       font-size: 22px;
     }
@@ -29,17 +31,21 @@
     display: grid;
     gap: 15px;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: 25% 74.5%;
+    grid-template-rows: 160px auto;
     grid-template-areas:
       'datos datos'
       'consejos registros';
 
-    & .datos, & .consejos, & .registros {
+    & .datos,
+    & .consejos,
+    & .registros {
       transition: all 0.3s ease;
       animation: slideUp 0.8s ease-out backwards;
     }
-    
-    & .datos:hover, & .consejos:hover, & .registros:hover {
+
+    & .datos:hover,
+    & .consejos:hover,
+    & .registros:hover {
       transform: translateY(-5px);
       box-shadow: 0 8px 15px rgba(202, 67, 110, 0.15);
     }
@@ -62,24 +68,51 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideInLeft {
-  from { transform: translateX(-30px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
+  from {
+    transform: translateX(-30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @keyframes slideUp {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .desktopView {
@@ -102,7 +135,7 @@
   .desktopView {
     display: none;
   }
-  
+
   .mobileView {
     display: flex;
     flex-direction: column;
@@ -123,7 +156,7 @@
     padding: 30px 20px 60px 20px;
     width: 100%;
   }
-  
+
   .mobileHeaderContent {
     display: flex;
     justify-content: space-between;
@@ -135,7 +168,7 @@
     color: white;
     font-weight: 300;
   }
-  
+
   .mobileGreeting strong {
     font-size: 24px;
     font-weight: 600;

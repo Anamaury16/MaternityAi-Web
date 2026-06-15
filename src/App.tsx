@@ -18,6 +18,7 @@ const AdminOBA = lazy(() => import('./pages/adminPages/AdminOBA').then(module =>
 const AdminPreguntas = lazy(() => import('./pages/adminPages/AdminPreguntas').then(module => ({ default: module.AdminPreguntas })));
 const AdminCitas = lazy(() => import('./pages/adminPages/AdminCitas').then(module => ({ default: module.AdminCitas })));
 const AdminCargas = lazy(() => import('./pages/adminPages/AdminCargas').then(module => ({ default: module.AdminCargas })));
+const AdminChecklist = lazy(() => import('./pages/adminPages/AdminChecklist').then(module => ({ default: module.AdminChecklist })));
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
               <Route path="/admin/preguntas" element={<AdminPreguntas />} />
               <Route path="/admin/citas" element={<AdminCitas />} />
               <Route path="/admin/cargas" element={<AdminCargas />} />
+              <Route path="/admin/checklist" element={<AdminChecklist />} />
             </Route>
 
             {/* ── Rutas para clínico (también puede acceder a vistas admin) ── */}
@@ -58,6 +60,7 @@ function App() {
               <Route path="/clinico/citas" element={<AdminCitas />} />
               <Route path="/clinico/oba" element={<AdminOBA />} />
               <Route path="/clinico/preguntas" element={<AdminPreguntas />} />
+              <Route path="/clinico/checklist" element={<AdminChecklist />} />
             </Route>
 
 

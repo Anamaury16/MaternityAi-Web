@@ -102,7 +102,16 @@ export const AdminCitas = () => {
   const [citas, setCitas] = useState<CitaAdminResponse[]>([]);
   const [proximas, setProximas] = useState<CitaAdminResponse[]>([]);
   const [busqueda, setBusqueda] = useState('');
-  const [selPaciente, setSelPaciente] = useState<string | null>(null);
+  const [selPaciente, setSelPaciente] = useState<string | null>(() => {
+    return localStorage.getItem('selected_gestante_gmi') || 'XYZ1002';
+  });
+
+  useEffect(() => {
+    if (selPaciente && selPaciente !== 'XYZ1002') {
+      localStorage.setItem('selected_gestante_gmi', selPaciente);
+    }
+  }, [selPaciente]);
+
   const [vista, setVista] = useState<'Mes' | 'Semana'>('Mes');
   const [currentDate, setCurrentDate] = useState(() => {
     const d = new Date();

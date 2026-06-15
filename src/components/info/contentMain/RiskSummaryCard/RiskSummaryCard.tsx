@@ -1,0 +1,170 @@
+import { useState } from 'react';
+import styles from './RiskSummaryCard.module.css';
+import { useRiskSummary } from '../../../../hooks/ia/useRiskSummary';
+
+interface RiskDetails {
+  class: string;
+  label: string;
+}
+
+export const RiskSummaryCard = () => {
+  const { summary, isLoading, error, updateEvaluation } = useRiskSummary();
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (isLoading && !summary) {
+    return (
+      <div className={`${styles.card} ${styles.loadingCard}`}>
+        <div className={styles.loadingPulse}></div>
+        <p>Analizando datos clínicos con IA...</p>
+      </div>
+    );
+  }
+
+  if (error && !summary) {
+    return (
+      <div className={`${styles.card} ${styles.errorCard}`}>
+        <h4>⚠️ Error de Evaluación</h4>
+        <p>{error}</p>
+        <button onClick={updateEvaluation} className={styles.retryBtn}>
+          Intentar de nuevo
+        </button>
+      </div>
+    );
+  }
+
+  if (!summary) return null;
+
+  const {
+    nivel_riesgo,
+    resumen,
+    factores_riesgo,
+    recomendaciones,
+    explicacion_ia,
+    semana_gestacion,
+  } = summary;
+
+  // Mapear el nivel de riesgo a clases de estilo y etiquetas
+  const riskConfig: Record<'verde' | 'amarillo' | 'rojo', RiskDetails> = {
+    verde: {
+      class: styles.riskGreen,
+      label: 'Riesgo Bajo',
+    },
+    amarillo: {
+      class: styles.riskYellow,
+      label: 'Riesgo Medio',
+    },
+    rojo: {
+      class: styles.riskRed,
+      label: 'Riesgo Alto',
+    },
+  };
+
+  const currentRisk = riskConfig[nivel_riesgo] || {
+    class: styles.riskYellow,
+    label: 'Desconocido',
+  };
+
+  return (
+    <div className={`${styles.card} ${currentRisk.class}`}>
+      {/* Encabezado */}
+      <div className={styles.header}>
+        <div className={styles.riskBadge}>
+          <span className={`${styles.statusDot} ${styles[nivel_riesgo] || styles.verde}`} />
+          <span className={styles.riskLabel}>{currentRisk.label}</span>
+        </div>
+        <span className={styles.weekBadge}>Semana {semana_gestacion}</span>
+      </div>
+
+      {/* Resumen principal */}
+      <p className={styles.resumenText}>{resumen}</p>
+
+      {/* Factores de riesgo */}
+      {factores_riesgo && factores_riesgo.length > 0 && (
+        <div className={styles.section}>
+          <h4 className={styles.sectionTitle}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={styles.titleIcon}>
+              <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            Factores de riesgo identificados
+          </h4>
+          <ul className={styles.list}>
+            {factores_riesgo.map((factor: string, idx: number) => (
+              <li key={idx} className={styles.listItem}>
+                {factor}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Recomendaciones */}
+      {recomendaciones && recomendaciones.length > 0 && (
+        <div className={styles.section}>
+          <h4 className={styles.sectionTitle}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={styles.titleIcon}>
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+            Recomendaciones personalizadas
+          </h4>
+          <ul className={styles.list}>
+            {recomendaciones.map((rec: string, idx: number) => (
+              <li key={idx} className={styles.listItem}>
+                {rec}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Explicación IA Colapsable */}
+      {explicacion_ia && (
+        <div className={styles.collapsibleSection}>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={styles.toggleBtn}
+          >
+            <span className={styles.toggleBtnLabel}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={styles.titleIcon}>
+                <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A5 5 0 0 0 8 8c0 1 .3 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+                <path d="M9 18h6" />
+                <path d="M10 22h4" />
+              </svg>
+              Explicación detallada de la IA
+            </span>
+            <span className={styles.arrow}>{isExpanded ? '▲' : '▼'}</span>
+          </button>
+          {isExpanded && (
+            <div className={styles.explanationBox}>
+              <p>{explicacion_ia}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Acciones */}
+      <div className={styles.actions}>
+        <button
+          onClick={updateEvaluation}
+          disabled={isLoading}
+          className={styles.refreshBtn}
+        >
+          {isLoading ? (
+            'Evaluando...'
+          ) : (
+            <span className={styles.refreshBtnLabel}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={styles.titleIcon} style={{ marginRight: '6px' }}>
+                <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+                <polyline points="21 3 21 8 16 8" />
+              </svg>
+              Actualizar evaluación
+            </span>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+export default RiskSummaryCard;

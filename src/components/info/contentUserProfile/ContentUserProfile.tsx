@@ -7,13 +7,15 @@ import { ClinicalProfile } from '../../profile/ClinicalProfile';
 import { ObstetricFormula } from '../../profile/ObstetricFormula';
 import { PathologicalHistory } from '../../profile/PathologicalHistory';
 import { GestationalAge } from '../../profile/GestationalAge';
+import { SecurityQuestionUpdate } from '../../profile/SecurityQuestionUpdate';
+import { DeleteAccount } from '../../profile/DeleteAccount';
 import { Terms } from './Right/Terms/Terms';
 import { SvgGear } from '../../Icons/IconsSystem';
 import { logoutUser } from '../../../services/authService';
 import { useNavigate } from 'react-router-dom';
 
 export const ContentUserProfile = () => {
-  const [activeTab, setActiveTab] = useState<'perfil' | 'privacidad'>('perfil');
+  const [activeTab, setActiveTab] = useState<'perfil' | 'seguridad' | 'privacidad' | 'eliminar_cuenta'>('perfil');
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -50,6 +52,10 @@ export const ContentUserProfile = () => {
                   <GestationalAge />
                 </div>
               </>
+            ) : activeTab === 'seguridad' ? (
+              <SecurityQuestionUpdate />
+            ) : activeTab === 'eliminar_cuenta' ? (
+              <DeleteAccount />
             ) : (
               <Terms />
             )}
@@ -118,6 +124,8 @@ export const ContentUserProfile = () => {
             <ClinicalProfile />
             <PathologicalHistory />
             <GestationalAge />
+            <SecurityQuestionUpdate />
+            <DeleteAccount />
           </div>
         </div>
       </div>

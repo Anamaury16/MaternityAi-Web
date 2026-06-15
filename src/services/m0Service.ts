@@ -453,3 +453,69 @@ export const deleteAccount = async (): Promise<DetailResponse> => {
   const response = await api.delete('/api/v1/m0/account');
   return response.data;
 };
+
+// ---------------------------------------------------------------------------
+// Checklist de Progreso Clínico (Gestante)
+// ---------------------------------------------------------------------------
+
+export interface ChecklistItem {
+  id: number;
+  texto: string;
+  modulo_id: number | null;
+  semana_eg: number | null;
+  orden: number | null;
+  activo: boolean;
+}
+
+const MOCK_CHECKLIST: Record<string, ChecklistItem[]> = {
+  M0: [
+    { id: 1, texto: 'Registro inicial completado', modulo_id: 0, semana_eg: null, orden: 1, activo: true },
+    { id: 2, texto: 'Perfil clínico diligenciado', modulo_id: 0, semana_eg: null, orden: 2, activo: false },
+    { id: 3, texto: 'Consentimiento informado firmado', modulo_id: 0, semana_eg: null, orden: 3, activo: false },
+  ],
+  M1: [
+    { id: 4, texto: 'Primer control prenatal realizado', modulo_id: 1, semana_eg: null, orden: 1, activo: true },
+    { id: 5, texto: 'Ácido fólico iniciado', modulo_id: 1, semana_eg: null, orden: 2, activo: true },
+    { id: 6, texto: 'Exámenes de laboratorio iniciales', modulo_id: 1, semana_eg: null, orden: 3, activo: false },
+    { id: 7, texto: 'Ecografía del primer trimestre', modulo_id: 1, semana_eg: 12, orden: 4, activo: false },
+  ],
+  M2: [
+    { id: 8, texto: 'Control prenatal semana 16-20', modulo_id: 2, semana_eg: null, orden: 1, activo: true },
+    { id: 9, texto: 'Vacuna influenza aplicada', modulo_id: 2, semana_eg: null, orden: 2, activo: false },
+    { id: 10, texto: 'Vacuna tosferina aplicada', modulo_id: 2, semana_eg: null, orden: 3, activo: false },
+    { id: 11, texto: 'Ecografía morfológica', modulo_id: 2, semana_eg: 20, orden: 4, activo: true },
+    { id: 12, texto: 'Hierro y calcio suministrados', modulo_id: 2, semana_eg: null, orden: 5, activo: false },
+  ],
+  M3: [
+    { id: 13, texto: 'Plan de parto elaborado', modulo_id: 3, semana_eg: null, orden: 1, activo: false },
+    { id: 14, texto: 'Control semana 28-32', modulo_id: 3, semana_eg: null, orden: 2, activo: true },
+    { id: 15, texto: 'Bolsa de maternidad lista', modulo_id: 3, semana_eg: 36, orden: 3, activo: false },
+    { id: 16, texto: 'Conteo de movimientos fetales iniciado', modulo_id: 3, semana_eg: null, orden: 4, activo: true },
+    { id: 17, texto: 'IPS de atención identificada', modulo_id: 3, semana_eg: null, orden: 5, activo: false },
+  ],
+  M4: [
+    { id: 18, texto: 'Control posparto semana 1', modulo_id: 4, semana_eg: null, orden: 1, activo: true },
+    { id: 19, texto: 'Orientación lactancia materna', modulo_id: 4, semana_eg: null, orden: 2, activo: true },
+    { id: 20, texto: 'Método anticonceptivo definido', modulo_id: 4, semana_eg: null, orden: 3, activo: false },
+    { id: 21, texto: 'Control posparto semana 6', modulo_id: 4, semana_eg: null, orden: 4, activo: false },
+  ],
+};
+
+export const getChecklistForGestante = async (
+  moduloId: number,
+  moduloCodigo: string
+): Promise<ChecklistItem[]> => {
+  if (USE_MOCKS) {
+    await mockDelay(600);
+    return MOCK_CHECKLIST[moduloCodigo] ?? [];
+  }
+  try {
+    const response = await api.get<ChecklistItem[]>('/api/v1/clinical/checklist-items', {
+      params: { modulo_id: moduloId },
+    });
+    return response.data;
+  } catch {
+    // Endpoint aún no implementado — fallback a mocks
+    return MOCK_CHECKLIST[moduloCodigo] ?? [];
+  }
+};

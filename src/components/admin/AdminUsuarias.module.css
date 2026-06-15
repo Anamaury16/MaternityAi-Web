@@ -285,3 +285,265 @@
   color: white;
   border-color: #CA436E;
 }
+
+/* ── FÓRMULA OBSTÉTRICA ── */
+.formulaContainer {
+  margin-top: 15px;
+  margin-bottom: 25px;
+  padding: 16px;
+  background: #fff8fa;
+  border: 1px solid #fce8ef;
+  border-radius: 14px;
+}
+
+.formulaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.formulaHeader h3 {
+  margin: 0;
+  color: #CA436E;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.formulaGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+}
+
+.formulaItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: white;
+  padding: 8px 4px;
+  border-radius: 10px;
+  border: 1px solid #feeef2;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.formulaCount {
+  font-size: 20px;
+  font-weight: 700;
+  color: #CA436E;
+}
+
+.formulaLabel {
+  font-size: 10px;
+  color: #666;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.editBtn {
+  background: none;
+  border: none;
+  color: #CA436E;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.editBtn:hover {
+  background: #fce8ef;
+}
+
+/* ── ANTECEDENTES PATOLÓGICOS ── */
+.antecedentesContainer {
+  margin-top: 15px;
+  margin-bottom: 25px;
+  padding: 16px;
+  background: #fcfcfc;
+  border: 1px solid #eee;
+  border-radius: 14px;
+}
+
+.antecedentesHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.antecedentesHeader h3 {
+  margin: 0;
+  color: #CA436E;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.antecedentesList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.antecedenteCard {
+  background: white;
+  border: 1px solid #f0f0f0;
+  border-radius: 10px;
+  padding: 12px;
+  position: relative;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
+
+.antecedenteTitleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.antecedenteTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.antecedenteBadges {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.badgeType {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+.badgeControlled {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badgeNotControlled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.antecedenteDesc {
+  font-size: 12px;
+  color: #666;
+  margin: 6px 0 0 0;
+}
+
+.antecedenteMeta {
+  font-size: 11px;
+  color: #888;
+  margin-top: 8px;
+  display: flex;
+  gap: 12px;
+}
+
+.antecedenteActions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.actionIconBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.actionIconBtn:hover {
+  background: #f3f4f6;
+}
+
+/* ── FORM/INLINE STYLES ── */
+.inlineForm {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 14px;
+  margin-top: 10px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+}
+
+.formFieldFull {
+  grid-column: span 2;
+}
+
+.formField label {
+  font-size: 11px;
+  color: #666;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.formField input,
+.formField select,
+.formField textarea {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 12px;
+  outline: none;
+  font-family: inherit;
+}
+
+.formField textarea {
+  resize: vertical;
+  height: 60px;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btnCancel {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: white;
+  color: #374151;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btnSave {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #CA436E;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
