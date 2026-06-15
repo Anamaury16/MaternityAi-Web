@@ -381,3 +381,72 @@ export const updateEducationalContentStatus = async (
   );
   return response.data;
 };
+
+// ─── Preguntas de Seguimiento ────────────────────────────────────────────────
+
+export interface FollowUpQuestionCreate {
+  texto_pregunta: string;
+  tipo_respuesta: string;
+  modulo_id?: number | null;
+  frecuencia?: string | null;
+  es_signo_alarma?: boolean;
+  prioridad_alerta_default_id?: number | null;
+  orden?: number | null;
+}
+
+export interface FollowUpQuestionUpdate {
+  texto_pregunta?: string;
+  tipo_respuesta?: string;
+  modulo_id?: number | null;
+  frecuencia?: string | null;
+  es_signo_alarma?: boolean;
+  prioridad_alerta_default_id?: number | null;
+  orden?: number | null;
+}
+
+export interface FollowUpQuestionResponse {
+  id: number;
+  texto_pregunta: string;
+  tipo_respuesta: string;
+  modulo_id?: number | null;
+  frecuencia?: string | null;
+  es_signo_alarma: boolean;
+  prioridad_alerta_default_id?: number | null;
+  orden?: number | null;
+  activo: boolean;
+}
+
+export const getFollowUpQuestions = async (
+  params: { page?: number; size?: number; sort?: string } = {}
+): Promise<FollowUpQuestionResponse[]> => {
+  const response = await api.get<FollowUpQuestionResponse[]>('/api/v1/admin/follow-up-questions', {
+    params: { page: 1, size: 100, sort: 'fecha_desc', ...params },
+  });
+  return response.data;
+};
+
+export const createFollowUpQuestion = async (
+  data: FollowUpQuestionCreate
+): Promise<FollowUpQuestionResponse> => {
+  const response = await api.post<FollowUpQuestionResponse>('/api/v1/admin/follow-up-questions', data);
+  return response.data;
+};
+
+export const updateFollowUpQuestion = async (
+  id: number,
+  data: FollowUpQuestionUpdate
+): Promise<FollowUpQuestionResponse> => {
+  const response = await api.put<FollowUpQuestionResponse>(`/api/v1/admin/follow-up-questions/${id}`, data);
+  return response.data;
+};
+
+export const updateFollowUpQuestionStatus = async (
+  id: number,
+  activo: boolean
+): Promise<FollowUpQuestionResponse> => {
+  const response = await api.patch<FollowUpQuestionResponse>(
+    `/api/v1/admin/follow-up-questions/${id}/status`,
+    { activo }
+  );
+  return response.data;
+};
