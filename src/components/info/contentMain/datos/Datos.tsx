@@ -1,9 +1,12 @@
+import { useVitals } from '../../../../hooks/clinical/useClinical';
 import styles from './datos.module.css';
 
 interface Props {
   className?: string;
 }
 export const Datos = ({ className }: Props) => {
+  const {data: vitalsData} = useVitals();
+  const ultimoRegistro = vitalsData.length > 0 ? vitalsData[vitalsData.length - 1] : null;
   return (
     <section className={`${styles.container} ${className ?? ''}`}>
       <div className={styles.tarjeta}>
@@ -12,21 +15,21 @@ export const Datos = ({ className }: Props) => {
           <div className={styles.datos}>
             <h4>PESO</h4>
             <p>
-              67 <span>kg</span>
+              {ultimoRegistro?.peso_kg || '--'} <span>kg</span>
             </p>
           </div>
 
           <div className={styles.datos}>
             <h4>ALTURA</h4>
             <p>
-              1,67 <span>M</span>
+              {ultimoRegistro?.altura_uterina || '--'} <span>M</span>
             </p>
           </div>
 
           <div className={styles.datos}>
-            <h4>EDAD</h4>
+            <h4>TALLA </h4>
             <p>
-              20 <span>Años</span>
+              {ultimoRegistro?.talla_cm || '--'} <span>cm</span>
             </p>
           </div>
         </div>
