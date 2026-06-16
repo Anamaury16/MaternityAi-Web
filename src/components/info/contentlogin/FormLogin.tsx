@@ -10,6 +10,7 @@ const ROLE_HOME: Record<string, string> = {
   admin: '/admin',
   clinico: '/clinico',
   investigador: '/investigador',
+  hospital: '/hospital/dashboard',
 };
 
 interface GestanteLoginState {

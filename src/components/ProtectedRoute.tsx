@@ -14,6 +14,7 @@ const roleHomeMap: Record<string, string> = {
   admin:         '/admin',
   clinico:       '/clinico',
   investigador:  '/investigador',
+  hospital:      '/hospital',
 };
 
 export const ProtectedRoute = ({

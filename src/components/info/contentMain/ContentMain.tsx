@@ -5,12 +5,31 @@ import { Datos } from './datos/Datos';
 import { Registros } from './registros/Registros';
 import { SvgBell, SvgSparkle } from '../../Icons/IconsSystem';
 import { getActiveModule, getModuleHistory, type ModuleHistoryEntry as ModuleHistory } from '../../../services/m0Service';
+import { useGestationalAge } from '../../../hooks/m0/useM0';
 import { ProgressChecklist } from './progressChecklist/ProgressChecklist';
 import { RiskSummaryCard } from './RiskSummaryCard/RiskSummaryCard';
+import { ReporteModal } from './registros/reportarsignos/ReporteModal';
+import { useSymptoms } from '../../../hooks/clinical/useClinical';
+import { useChecklist } from '../../../hooks/m5/usM5';
 
 export const ContentMain = () => {
   const userName = localStorage.getItem('user_name') || 'Gestante';
   const displayId = userName.replace('Gestante ', '');
+  const { data } = useGestationalAge();
+
+  const mensajeTiempo = () => {
+    const hora = new Date().getHours();
+    if (hora < 12) return 'Buenos días';
+    if (hora < 18) return 'Buenas tardes';
+    return 'Buenas noches';
+  }
+
+  const calcularTrimestre = (semanas: number | undefined) => {
+    if (semanas === undefined) return 1;
+    if (semanas <= 12) return 2;
+    if (semanas <= 24) return 3;
+    return 4;
+  }
 
   const [activeModule, setActiveModule] = useState<{
     modulo_id: number;
@@ -19,6 +38,19 @@ export const ContentMain = () => {
     semana_gestacion_actual: number;
   } | null>(null);
   const [historyList, setHistoryList] = useState<ModuleHistory[]>([]);
+
+  const [symptomsModalOpen, setSymptomsModalOpen] = useState(false);
+  const { report: reportSymptoms, loading: symptomsLoading, error: symptomsError } = useSymptoms();
+  const { data: checklistData, loading: checklistLoading } = useChecklist();
+
+  const handleSymptomsSubmit = async (
+    descripcion: string,
+    severidad: 'leve' | 'moderado' | 'severo' | null,
+  ) => {
+    await reportSymptoms({ descripcion, severidad: severidad ?? undefined });
+    setSymptomsModalOpen(false);
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -41,8 +73,15 @@ export const ContentMain = () => {
       <div className={styles.desktopView}>
         <div className={styles.informacion_usuario}>
           <div className="">
-            Buenas tardes, <h1 className="">{userName}</h1>
-            <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" loading="lazy" decoding="async" />
+            <p style={{margin: 0}}>{mensajeTiempo()}, </p>
+            <h1 className="">{userName} 👋</h1>
+            <div className={styles.seccion_informacion}>
+              <div className={styles.semanas}>
+                <h2>{data?.semanas || '--'}/{calcularTrimestre(data?.semanas)*12}</h2>
+                <p>Semanas de embarazo</p>
+              </div>
+              <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" loading="lazy" decoding="async" />
+            </div>
           </div>
 
           {/* Active Module Card */}
@@ -105,7 +144,7 @@ export const ContentMain = () => {
         <div className={styles.mobileHeaderBg}>
           <div className={styles.mobileHeaderContent}>
             <div className={styles.mobileGreeting}>
-              Buenas tardes,<br />
+              {mensajeTiempo()},<br />
               <strong>{displayId}</strong> 👋
             </div>
             <div className={styles.mobileBell}>
@@ -117,14 +156,14 @@ export const ContentMain = () => {
 
         <div className={styles.mobileCard}>
           <div className={styles.weeksCounter}>
-            <span className={styles.weekSide}>27</span>
-            <span className={styles.weekCenter}>28</span>
-            <span className={styles.weekSide}>29</span>
-            <span className={styles.weekSide}>30</span>
+            <span className={styles.weekSide}>{data?.semanas ? data.semanas - 1 : 27}</span>
+            <span className={styles.weekCenter}>{data?.semanas || 28}</span>
+            <span className={styles.weekSide}>{data?.semanas ? data.semanas + 1 : 29}</span>
+            <span className={styles.weekSide}>{data?.semanas ? data.semanas + 2 : 30}</span>
           </div>
           <div className={styles.weeksLabel}>Semanas</div>
 
-          <button className={styles.sintomasBtn}>
+          <button className={styles.sintomasBtn} onClick={() => setSymptomsModalOpen(true)}>
             Sintomas criticos
             <div className={styles.sintomasIcon}>
               <SvgSparkle width={18} height={18} fill="white" />
@@ -133,16 +172,20 @@ export const ContentMain = () => {
 
           <div className={styles.preparacionSeccion}>
             <h4>Preparacion para el parto</h4>
-
-            <div className={styles.prepItem}>
-              <span className={styles.prepLabel}>Actividad fisica</span>
-              <div className={styles.prepCard}></div>
-            </div>
-
-            <div className={styles.prepItem}>
-              <span className={styles.prepLabel}>Alimentacion balanceada</span>
-              <div className={styles.prepCard}></div>
-            </div>
+            {checklistLoading ? (
+              <p style={{fontSize: '14px', color: '#666'}}>Cargando...</p>
+            ) : checklistData?.items?.length ? (
+              checklistData.items.slice(0, 2).map((item) => (
+                <div key={item.id} className={styles.prepItem}>
+                  <span className={styles.prepLabel}>
+                    {item.texto} {item.completado && '✅'}
+                  </span>
+                  <div className={styles.prepCard}></div>
+                </div>
+              ))
+            ) : (
+              <p style={{fontSize: '14px', color: '#666'}}>No hay items pendientes</p>
+            )}
           </div>
 
           {/* Active Module Mobile */}
@@ -193,6 +236,15 @@ export const ContentMain = () => {
           )}
         </div>
       </div>
+
+      {symptomsModalOpen && (
+        <ReporteModal
+          loading={symptomsLoading}
+          error={symptomsError}
+          onClose={() => setSymptomsModalOpen(false)}
+          onSubmit={handleSymptomsSubmit}
+        />
+      )}
     </section>
   );
 };

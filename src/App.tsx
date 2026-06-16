@@ -20,6 +20,7 @@ const AdminCitas = lazy(() => import('./pages/adminPages/AdminCitas').then(modul
 const AdminCargas = lazy(() => import('./pages/adminPages/AdminCargas').then(module => ({ default: module.AdminCargas })));
 const AdminChecklist = lazy(() => import('./pages/adminPages/AdminChecklist').then(module => ({ default: module.AdminChecklist })));
 const AdminIA = lazy(() => import('./pages/adminPages/AdminIA').then(module => ({ default: module.AdminIA })));
+const HospitalDashboard = lazy(() => import('./pages/hospitalPages/HospitalDashboard').then(module => ({ default: module.HospitalDashboard })));
 
 function App() {
   return (
@@ -63,6 +64,12 @@ function App() {
               <Route path="/clinico/oba" element={<AdminOBA />} />
               <Route path="/clinico/preguntas" element={<AdminPreguntas />} />
               <Route path="/clinico/checklist" element={<AdminChecklist />} />
+            </Route>
+
+            {/* ── Rutas para Hospital ── */}
+            <Route element={<ProtectedRoute requiredRoles="hospital" />}>
+              <Route path="/hospital" element={<Navigate to="/hospital/dashboard" replace />} />
+              <Route path="/hospital/dashboard" element={<HospitalDashboard />} />
             </Route>
 
 

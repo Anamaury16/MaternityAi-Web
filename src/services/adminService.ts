@@ -649,3 +649,60 @@ export const getIARecommendations = async (codigoGmi: string): Promise<IARecomme
   });
   return response.data;
 };
+
+// ─── Checklist Items (Gestión administrativa) ───────────────────────────────
+
+export interface ChecklistItemResponse {
+  id: number;
+  texto: string;
+  modulo_id: number | null;
+  semana_eg: number | null;
+  orden: number | null;
+  activo: boolean;
+}
+
+export interface ChecklistItemCreate {
+  texto: string;
+  modulo_id?: number | null;
+  semana_eg?: number | null;
+  orden?: number | null;
+}
+
+export interface ChecklistItemUpdate {
+  texto?: string;
+  modulo_id?: number | null;
+  semana_eg?: number | null;
+  orden?: number | null;
+}
+
+export const getChecklistItems = async (): Promise<ChecklistItemResponse[]> => {
+  const response = await api.get<ChecklistItemResponse[]>('/api/v1/admin/checklist-items', {
+    params: { size: 100 },
+  });
+  return response.data;
+};
+
+export const createChecklistItem = async (
+  data: ChecklistItemCreate
+): Promise<ChecklistItemResponse> => {
+  const response = await api.post<ChecklistItemResponse>('/api/v1/admin/checklist-items', data);
+  return response.data;
+};
+
+export const updateChecklistItem = async (
+  id: number,
+  data: ChecklistItemUpdate
+): Promise<ChecklistItemResponse> => {
+  const response = await api.put<ChecklistItemResponse>(`/api/v1/admin/checklist-items/${id}`, data);
+  return response.data;
+};
+
+export const updateChecklistItemStatus = async (
+  id: number,
+  activo: boolean
+): Promise<ChecklistItemResponse> => {
+  const response = await api.patch<ChecklistItemResponse>(`/api/v1/admin/checklist-items/${id}/status`, {
+    activo,
+  });
+  return response.data;
+};

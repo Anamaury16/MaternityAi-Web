@@ -4,7 +4,7 @@ import type { LoginResponse } from '../services/authService';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
-export type UserRole = 'gestante' | 'admin' | 'clinico' | 'investigador' | null;
+export type UserRole = 'gestante' | 'admin' | 'clinico' | 'investigador' | 'hospital' | null;
 
 export interface AuthUser {
   role: UserRole;

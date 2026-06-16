@@ -29,20 +29,23 @@
     }
 
     & .activeTab {
-      background-color: white;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      background: linear-gradient(135deg, #FF4B72 0%, #CA436E 100%);
+      color: white !important;
+      box-shadow: 0 4px 10px rgba(202, 67, 110, 0.2);
     }
 
     & .tab:not(.activeTab):hover,
     & .link:hover {
-      background-color: rgba(255, 255, 255, 0.6);
+      background-color: rgba(202, 67, 110, 0.05);
+      color: #CA436E !important;
       transform: translateY(-2px);
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 5px rgba(202, 67, 110, 0.05);
     }
 
     & .activeTab:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      box-shadow: 0 6px 14px rgba(202, 67, 110, 0.35);
+      opacity: 0.95;
     }
   }
 

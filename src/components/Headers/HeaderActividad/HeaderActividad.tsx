@@ -6,7 +6,7 @@ import { MobileBottomNav } from '../MobileBottomNav';
 
 {/* interface para los roles */}
 interface HeaderActividadProps {
-  rol?: 'paciente' | 'medico' | 'admin';
+  rol?: 'paciente' | 'medico' | 'admin' | 'hospital';
   tabActivo?: string; 
 }
 
@@ -17,8 +17,9 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
   const currentPath = location.pathname;
 
   const rawRole = localStorage.getItem('role') || rol;
-  const activeRole: 'paciente' | 'medico' | 'admin' = 
+  const activeRole: 'paciente' | 'medico' | 'admin' | 'hospital' = 
     rawRole === 'admin' ? 'admin' :
+    rawRole === 'hospital' ? 'hospital' :
     (rawRole === 'clinico' || rawRole === 'medico') ? 'medico' : 'paciente';
 
   const handleLogout = async () => {
@@ -59,13 +60,24 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
             <Link to={'/admin/ia'} className={styles.link}>IA</Link>
           </>
         )}
+
+        {activeRole === 'hospital' && (
+          <>
+            <Link to={'/hospital/dashboard'} className={getTabClass('/hospital/dashboard')}>Monitoreo de Alertas</Link>
+          </>
+        )}
       </nav>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
         <div onClick={() => navigate('/userprofile')} className={styles.perfil}>
           <div>
             <p className={styles.name}>{localStorage.getItem('user_name') || 'Usuario'}</p>
-            <p className={styles.desc}>{activeRole === 'medico' ? 'Personal Médico' : activeRole === 'admin' ? 'Administrador' : 'Gestante'}</p>
+            <p className={styles.desc}>
+              {activeRole === 'medico' ? 'Personal Médico' : 
+               activeRole === 'admin' ? 'Administrador' : 
+               activeRole === 'hospital' ? 'Personal Hospitalario' : 
+               'Gestante'}
+            </p>
           </div>
         </div>
         

@@ -53,7 +53,7 @@ const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
   useEffect(() => {
       getRoles()
       .then((data) => {
-        // Solo mostrar Admin y Clínico en el selector de staff
+        // Solo mostrar Admin, Clínico y Hospital en el selector de staff
         setRoles(data.filter((r) => r.nombre !== 'gestante' && r.nombre !== 'investigador'));
       })
       .catch(() => {
@@ -61,6 +61,7 @@ const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
         setRoles([
           { id: 2, nombre: 'clinico' },
           { id: 3, nombre: 'admin' },
+          { id: 4, nombre: 'hospital' },
         ]);
       });
   }, []);
@@ -161,6 +162,7 @@ const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
             {rolSeleccionado.nombre === 'admin' && '🛡️ Administrador del sistema'}
             {rolSeleccionado.nombre === 'clinico' && '🩺 Profesional de salud'}
             {rolSeleccionado.nombre === 'investigador' && '🔬 Acceso a datos de investigación'}
+            {rolSeleccionado.nombre === 'hospital' && '🏥 Personal Hospitalario (Alertas)'}
           </span>
         )}
       </div>
@@ -206,7 +208,6 @@ export const AdminUsuarias = () => {
       localStorage.setItem('selected_gestante_gmi', selPaciente);
     }
   }, [selPaciente]);
-  const [selAnalisis, setSelAnalisis] = useState('HEMOGLOBINA');
   const [activeList, setActiveList] = useState<'maternas' | 'staff'>('maternas');
 
   // --- Estados de Fórmula Obstétrica ---
@@ -339,6 +340,7 @@ export const AdminUsuarias = () => {
         { id: 1, nombre: 'admin' },
         { id: 2, nombre: 'gestante' },
         { id: 3, nombre: 'clinico' },
+        { id: 4, nombre: 'hospital' },
       ]);
     });
   }, []);
@@ -870,7 +872,9 @@ export const AdminUsuarias = () => {
                   <div>
                     <h1 className={styles.nombrePaciente}>{selStaff.nombre}</h1>
                     <p className={styles.diagnostico}>
-                      {getRolNombre(selStaff.rol_id).toLowerCase() === 'admin' ? 'Administrador' : 'Personal Clínico'}
+                      {getRolNombre(selStaff.rol_id).toLowerCase() === 'admin' ? 'Administrador' : 
+                       getRolNombre(selStaff.rol_id).toLowerCase() === 'hospital' ? 'Personal Hospitalario' : 
+                       'Personal Clínico'}
                     </p>
                   </div>
                   {isAdmin && (
