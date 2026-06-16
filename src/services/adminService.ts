@@ -602,70 +602,50 @@ export const createGestanteEmergencyCall = async (
   return response.data;
 };
 
-// ─── Ítems de Checklist ───────────────────────────────────────────────────────
+// ─── IA (asistente clínico) ────────────────────────────────────────────────
 
-export interface ChecklistItemResponse {
-  id: number;
-  texto: string;
-  modulo_id: number | null;
-  semana_eg: number | null;
-  orden: number | null;
-  activo: boolean;
+export interface ClinicalSummaryResponse {
+  codigo_gmi: string;
+  semana_gestacion: number;
+  modulo_activo: string;
+  resumen_clinico: string;
+  alertas_activas: number;
+  puntos_clave: string[];
+  sugerencias_clinico: string[];
 }
 
-export interface ChecklistItemCreate {
-  texto: string;
-  modulo_id?: number | null;
-  semana_eg?: number | null;
-  orden?: number | null;
+export interface RiskSummaryResponse {
+  assessment_id: string;
+  nivel_riesgo: string;
+  resumen: string;
+  factores_riesgo: string[];
+  recomendaciones: string[];
+  explicacion_ia: string;
+  semana_gestacion: number;
 }
 
-export interface ChecklistItemUpdate {
-  texto?: string | null;
-  modulo_id?: number | null;
-  semana_eg?: number | null;
-  orden?: number | null;
+export interface IARecommendationResponse {
+  semana_gestacion: number;
+  modulo: string;
+  recomendaciones: string[];
+  mensaje_motivacional: string;
 }
 
-export interface ChecklistItemStatusUpdate {
-  activo: boolean;
-}
-
-export const getChecklistItems = async (): Promise<ChecklistItemResponse[]> => {
-  const response = await api.get<ChecklistItemResponse[]>(
-    '/api/v1/admin/checklist-items'
-  );
+export const getClinicalSummary = async (codigoGmi: string): Promise<ClinicalSummaryResponse> => {
+  const response = await api.get<ClinicalSummaryResponse>(`/api/v1/ia/clinical-summary/${codigoGmi}`);
   return response.data;
 };
 
-export const createChecklistItem = async (
-  data: ChecklistItemCreate
-): Promise<ChecklistItemResponse> => {
-  const response = await api.post<ChecklistItemResponse>(
-    '/api/v1/admin/checklist-items',
-    data
-  );
+export const getRiskSummary = async (codigoGmi: string): Promise<RiskSummaryResponse> => {
+  const response = await api.get<RiskSummaryResponse>('/api/v1/ia/risk-summary', {
+    params: { codigo_gmi: codigoGmi },
+  });
   return response.data;
 };
 
-export const updateChecklistItem = async (
-  id: number,
-  data: ChecklistItemUpdate
-): Promise<ChecklistItemResponse> => {
-  const response = await api.put<ChecklistItemResponse>(
-    `/api/v1/admin/checklist-items/${id}`,
-    data
-  );
-  return response.data;
-};
-
-export const updateChecklistItemStatus = async (
-  id: number,
-  activo: boolean
-): Promise<ChecklistItemResponse> => {
-  const response = await api.patch<ChecklistItemResponse>(
-    `/api/v1/admin/checklist-items/${id}/status`,
-    { activo }
-  );
+export const getIARecommendations = async (codigoGmi: string): Promise<IARecommendationResponse> => {
+  const response = await api.get<IARecommendationResponse>('/api/v1/ia/recommendations', {
+    params: { codigo_gmi: codigoGmi },
+  });
   return response.data;
 };
