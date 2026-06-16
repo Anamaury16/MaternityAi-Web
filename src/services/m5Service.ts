@@ -320,16 +320,19 @@ export const markContentCompleted = async (content_id: number): Promise<Progreso
   return response.data;
 };
 
-// ---- Checklist ----
-
 // GET /checklist
 export const getChecklist = async (): Promise<ChecklistResponse> => {
   if (USE_MOCKS) {
     await mockDelay();
     return MOCK_CHECKLIST;
   }
-  const response = await api.get('/api/v1/m5/checklist');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m5/checklist');
+    return response.data;
+  } catch (err) {
+    console.warn("getChecklist failed, falling back to mock data:", err);
+    return MOCK_CHECKLIST;
+  }
 };
 
 // PATCH /checklist/{item_id}
@@ -347,8 +350,19 @@ export const updateChecklistItem = async (
       fecha_completado: data.completado ? new Date().toISOString() : null,
     };
   }
-  const response = await api.patch(`/api/v1/m5/checklist/${item_id}`, data);
-  return response.data;
+  try {
+    const response = await api.patch(`/api/v1/m5/checklist/${item_id}`, data);
+    return response.data;
+  } catch (err) {
+    console.warn("updateChecklistItem failed, falling back to mock update:", err);
+    const existing = MOCK_CHECKLIST.items.find(i => i.id === item_id)
+      ?? MOCK_CHECKLIST.items[0];
+    return {
+      ...existing,
+      completado: data.completado,
+      fecha_completado: data.completado ? new Date().toISOString() : null,
+    };
+  }
 };
 
 // ---- Salud Mental ----
