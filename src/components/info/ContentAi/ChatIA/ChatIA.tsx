@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import styles from './ChatIA.module.css';
 import { type ChatMessage } from '../../../../services/iaService';
+import {
+  parseMarkdown,
+  formatOutgoingMessage,
+  getQuickSuggestions,
+} from '../../../../utils/iaHelpers';
 
 interface ChatIAProps {
   messages: ChatMessage[];
@@ -9,6 +14,7 @@ interface ChatIAProps {
   error: string | null;
   sendMessage: (text: string) => Promise<void>;
   clearHistory?: () => Promise<boolean>;
+  activeTopicTag: string;
 }
 
 export const ChatIA = ({
@@ -18,6 +24,7 @@ export const ChatIA = ({
   error,
   sendMessage,
   clearHistory,
+  activeTopicTag,
 }: ChatIAProps) => {
   const [inputText, setInputText] = useState('');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -37,7 +44,8 @@ export const ChatIA = ({
 
     const text = inputText;
     setInputText(''); // Limpiar input inmediatamente (optimistic UX)
-    await sendMessage(text);
+    const formattedText = formatOutgoingMessage(text, activeTopicTag);
+    await sendMessage(formattedText);
   };
 
   const handleDeleteClick = async () => {
@@ -105,6 +113,24 @@ export const ChatIA = ({
             </div>
             <h3>¡Hola! Soy tu asistente MaternityAI</h3>
             <p>Pregúntame cualquier duda que tengas sobre tu embarazo, nutrición, controles o síntomas.</p>
+
+            <div className={styles.suggestionsContainer}>
+              {getQuickSuggestions(activeTopicTag).map((suggestion, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  className={styles.suggestionBtn}
+                  onClick={async () => {
+                    if (isSending || isLoading) return;
+                    const formattedText = formatOutgoingMessage(suggestion, activeTopicTag);
+                    await sendMessage(formattedText);
+                  }}
+                  disabled={isSending || isLoading}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           messages.map((msg) => {
@@ -115,7 +141,7 @@ export const ChatIA = ({
                 className={isUser ? styles.userBubbleWrapper : styles.aiBubbleWrapper}
               >
                 <div className={isUser ? styles.user : styles.Ai}>
-                  <p>{msg.contenido}</p>
+                  {isUser ? <p>{msg.contenido}</p> : parseMarkdown(msg.contenido)}
                   <span className={styles.timeLabel}>
                     {new Date(msg.created_at).toLocaleTimeString('es-ES', {
                       hour: '2-digit',
