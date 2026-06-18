@@ -4,16 +4,10 @@ import styles from './styles.module.css';
 
 type Tab = 'alertas' | 'notificaciones';
 
-const CANAL_META: Record<string, { icon: string; label: string }> = {
-  push:  { icon: '📱', label: 'Push' },
-  sms:   { icon: '💬', label: 'SMS' },
-  email: { icon: '📧', label: 'Email' },
-};
-
-const PRIORIDAD_ICON: Record<number, string> = {
-  1: '🔴',
-  2: '🟠',
-  3: '🟡',
+const CANAL_META: Record<string, { label: string }> = {
+  push:  { label: 'Push' },
+  sms:   { label: 'SMS' },
+  email: { label: 'Email' },
 };
 
 const PRIORIDAD_CLASS: Record<number, string> = {
@@ -62,7 +56,7 @@ export const NotificacionesPanel = () => {
           className={`${styles.tab} ${activeTab === 'alertas' ? styles.active : ''}`}
           onClick={() => setActiveTab('alertas')}
         >
-          🔔 Alertas
+          Alertas
           {alertasActivas > 0 && (
             <span className={styles.tabBadge}>{alertasActivas}</span>
           )}
@@ -71,7 +65,7 @@ export const NotificacionesPanel = () => {
           className={`${styles.tab} ${activeTab === 'notificaciones' ? styles.active : ''}`}
           onClick={() => setActiveTab('notificaciones')}
         >
-          💬 Notificaciones
+          Notificaciones
           {unreadCount > 0 && (
             <span className={styles.tabBadge}>{unreadCount}</span>
           )}
@@ -94,7 +88,6 @@ export const NotificacionesPanel = () => {
         {!loading && activeTab === 'alertas' && (
           alertas.length === 0 ? (
             <div className={styles.emptyState}>
-              <div className={styles.emptyIcon}>✅</div>
               <h4>Todo en orden</h4>
               <p>No tienes alertas activas en este momento.</p>
             </div>
@@ -102,7 +95,6 @@ export const NotificacionesPanel = () => {
             alertas.map(alerta => {
               const isActiva = alerta.estado !== 'leida';
               const prioClass = PRIORIDAD_CLASS[alerta.prioridad_id] ?? '';
-              const icon = PRIORIDAD_ICON[alerta.prioridad_id] ?? '🔔';
 
               return (
                 <div
@@ -116,8 +108,6 @@ export const NotificacionesPanel = () => {
                   }}
                   title={isActiva ? 'Click para marcar como leída' : undefined}
                 >
-                  <div className={styles.alertIconBox}>{icon}</div>
-
                   <div className={styles.alertBody}>
                     <div className={styles.alertModuloRow}>
                       {alerta.modulo_origen && (
@@ -131,7 +121,7 @@ export const NotificacionesPanel = () => {
                       {alerta.descripcion ?? 'Sin descripción'}
                     </p>
                     <span className={styles.alertFecha}>
-                      🕐 {formatFecha(alerta.created_at)}
+                      {formatFecha(alerta.created_at)}
                     </span>
                   </div>
                 </div>
@@ -144,14 +134,13 @@ export const NotificacionesPanel = () => {
         {!loading && activeTab === 'notificaciones' && (
           notificaciones.length === 0 ? (
             <div className={styles.emptyState}>
-              <div className={styles.emptyIcon}>🔔</div>
               <h4>Sin Notificaciones</h4>
               <p>No tienes notificaciones por ahora.</p>
             </div>
           ) : (
             notificaciones.map(notif => {
               const isUnread = notif.estado_entrega !== 'leida';
-              const canal = CANAL_META[notif.canal] ?? { icon: '📩', label: notif.canal };
+              const canal = CANAL_META[notif.canal] ?? { label: notif.canal };
 
               return (
                 <div
@@ -166,14 +155,13 @@ export const NotificacionesPanel = () => {
                   title={isUnread ? 'Click para marcar como leída' : undefined}
                 >
                   <div className={styles.notifTop}>
-                    <div className={styles.notifCanalIcon}>{canal.icon}</div>
                     <span className={styles.notifCanal}>{canal.label}</span>
                   </div>
                   <p className={styles.notifContenido}>
                     {notif.contenido ?? 'Sin contenido'}
                   </p>
                   <span className={styles.notifFecha}>
-                    🕐 {formatFecha(notif.created_at)}
+                    {formatFecha(notif.created_at)}
                   </span>
                 </div>
               );

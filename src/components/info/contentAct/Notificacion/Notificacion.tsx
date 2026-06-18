@@ -57,7 +57,7 @@ export const Notificacion = React.memo(({ item }: Props) => {
       <div className={styles.conten_card}>
         {/* Tag: alerta o categoría normal */}
         {hasAlert ? (
-          <p className={styles.alert_badge}>⚠️ Generó una alerta</p>
+          <p className={styles.alert_badge}>Generó una alerta</p>
         ) : (
           <p className={styles.nombre_notificacion}>{tag}</p>
         )}

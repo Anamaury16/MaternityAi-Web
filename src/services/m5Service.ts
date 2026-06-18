@@ -259,8 +259,16 @@ export const getContentByModule = async (): Promise<ContenidoEducativoResponse[]
     await mockDelay();
     return MOCK_CONTENIDOS;
   }
-  const response = await api.get('/api/v1/m5/content');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m5/content');
+    if (response.data && response.data.length > 0) {
+      return response.data;
+    }
+    return MOCK_CONTENIDOS;
+  } catch (err) {
+    console.warn("getContentByModule failed, falling back to mock:", err);
+    return MOCK_CONTENIDOS;
+  }
 };
 
 // GET /content/categories
@@ -269,8 +277,16 @@ export const getCategories = async (): Promise<CategoriaResponse[]> => {
     await mockDelay();
     return MOCK_CATEGORIAS;
   }
-  const response = await api.get('/api/v1/m5/content/categories');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m5/content/categories');
+    if (response.data && response.data.length > 0) {
+      return response.data;
+    }
+    return MOCK_CATEGORIAS;
+  } catch (err) {
+    console.warn("getCategories failed, falling back to mock:", err);
+    return MOCK_CATEGORIAS;
+  }
 };
 
 // GET /content/category/{category_id}
@@ -280,8 +296,16 @@ export const getContentsByCategory = async (category_id: number): Promise<Conten
     await mockDelay();
     return MOCK_CONTENIDOS;
   }
-  const response = await api.get(`/api/v1/m5/content/category/${category_id}`);
-  return response.data;
+  try {
+    const response = await api.get(`/api/v1/m5/content/category/${category_id}`);
+    if (response.data && response.data.length > 0) {
+      return response.data;
+    }
+    return MOCK_CONTENIDOS;
+  } catch (err) {
+    console.warn("getContentsByCategory failed, falling back to mock:", err);
+    return MOCK_CONTENIDOS;
+  }
 };
 
 // GET /content/{content_id}
@@ -290,8 +314,13 @@ export const getContentById = async (content_id: number): Promise<ContenidoEduca
     await mockDelay();
     return MOCK_CONTENIDO_DETALLE;
   }
-  const response = await api.get(`/api/v1/m5/content/${content_id}`);
-  return response.data;
+  try {
+    const response = await api.get(`/api/v1/m5/content/${content_id}`);
+    return response.data;
+  } catch (err) {
+    console.warn("getContentById failed, falling back to mock:", err);
+    return MOCK_CONTENIDO_DETALLE;
+  }
 };
 
 // ---- Progreso ----
@@ -302,8 +331,13 @@ export const getProgress = async (): Promise<ProgresoResponse[]> => {
     await mockDelay();
     return MOCK_PROGRESO;
   }
-  const response = await api.get('/api/v1/m5/progress');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m5/progress');
+    return response.data;
+  } catch (err) {
+    console.warn("getProgress failed, falling back to mock:", err);
+    return MOCK_PROGRESO;
+  }
 };
 
 // POST /content/{content_id}/complete  — status 201
@@ -328,7 +362,10 @@ export const getChecklist = async (): Promise<ChecklistResponse> => {
   }
   try {
     const response = await api.get('/api/v1/m5/checklist');
-    return response.data;
+    if (response.data && response.data.items && response.data.items.length > 0) {
+      return response.data;
+    }
+    return MOCK_CHECKLIST;
   } catch (err) {
     console.warn("getChecklist failed, falling back to mock data:", err);
     return MOCK_CHECKLIST;

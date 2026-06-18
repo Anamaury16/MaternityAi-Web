@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChatIA } from './ChatIA/ChatIA';
 import styles from './ContentAi.module.css';
 import { Historial } from './Historial/Historial';
@@ -18,6 +18,14 @@ export const ContentAi = () => {
 
   const activeTopicTag = TOPIC_TAGS[activeTopic] || 'General';
   const filteredMessages = getMessagesByTopic(messages, activeTopicTag);
+
+  useEffect(() => {
+    const pending = localStorage.getItem('pending_ai_question');
+    if (pending) {
+      localStorage.removeItem('pending_ai_question');
+      sendMessage(pending);
+    }
+  }, [sendMessage]);
 
   return (
     <section className={styles.container}>

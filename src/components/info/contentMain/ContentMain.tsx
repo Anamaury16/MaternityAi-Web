@@ -11,11 +11,24 @@ import { RiskSummaryCard } from './RiskSummaryCard/RiskSummaryCard';
 import { ReporteModal } from './registros/reportarsignos/ReporteModal';
 import { useSymptoms } from '../../../hooks/clinical/useClinical';
 import { useChecklist } from '../../../hooks/m5/usM5';
+import { PostpartumDashboard } from './postpartum/PostpartumDashboard';
+import { useBirthRecord } from '../../../hooks/m4/useM4';
 
 export const ContentMain = () => {
   const userName = localStorage.getItem('user_name') || 'Gestante';
   const displayId = userName.replace('Gestante ', '');
   const { data } = useGestationalAge();
+  const { data: birthData } = useBirthRecord();
+
+  const calcularDiasPosparto = () => {
+    if (!birthData?.fecha_parto) return null;
+    const fechaPartoDate = new Date(birthData.fecha_parto);
+    const hoy = new Date();
+    const diferenciaMs = hoy.getTime() - fechaPartoDate.getTime();
+    const dias = Math.floor(diferenciaMs / (1000 * 60 * 60 * 24));
+    return dias >= 0 ? dias : 0;
+  };
+  const diasPosparto = calcularDiasPosparto();
 
   const mensajeTiempo = () => {
     const hora = new Date().getHours();
@@ -75,13 +88,23 @@ export const ContentMain = () => {
           <div className="">
             <p style={{margin: 0}}>{mensajeTiempo()}, </p>
             <h1 className="">{userName} 👋</h1>
-            <div className={styles.seccion_informacion}>
-              <div className={styles.semanas}>
-                <h2>{data?.semanas || '--'}/{calcularTrimestre(data?.semanas)*12}</h2>
-                <p>Semanas de embarazo</p>
+            {activeModule?.codigo === 'M4' ? (
+              <div className={styles.seccion_informacion}>
+                <div className={styles.semanas}>
+                  <h2>{diasPosparto !== null ? `${diasPosparto} días` : 'Pendiente'}</h2>
+                  <p>Posparto / Recuperación</p>
+                </div>
+                <img alt="foto posparto" src="./image/etapas/primertrimestre.png" loading="lazy" decoding="async" />
               </div>
-              <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" loading="lazy" decoding="async" />
-            </div>
+            ) : (
+              <div className={styles.seccion_informacion}>
+                <div className={styles.semanas}>
+                  <h2>{data?.semanas || '--'}/{calcularTrimestre(data?.semanas)*12}</h2>
+                  <p>Semanas de embarazo</p>
+                </div>
+                <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" loading="lazy" decoding="async" />
+              </div>
+            )}
           </div>
 
           {/* Active Module Card */}
@@ -133,6 +156,7 @@ export const ContentMain = () => {
           )}
         </div>
         <section className={styles.right}>
+          {activeModule?.codigo === 'M4' && <PostpartumDashboard />}
           <Datos className={styles.datos} />
           <Consejos className={styles.consejos} />
           <Registros className={styles.registros} />
@@ -155,13 +179,24 @@ export const ContentMain = () => {
         </div>
 
         <div className={styles.mobileCard}>
-          <div className={styles.weeksCounter}>
-            <span className={styles.weekSide}>{data?.semanas ? data.semanas - 1 : 27}</span>
-            <span className={styles.weekCenter}>{data?.semanas || 28}</span>
-            <span className={styles.weekSide}>{data?.semanas ? data.semanas + 1 : 29}</span>
-            <span className={styles.weekSide}>{data?.semanas ? data.semanas + 2 : 30}</span>
-          </div>
-          <div className={styles.weeksLabel}>Semanas</div>
+          {activeModule?.codigo === 'M4' ? (
+            <>
+              <div className={styles.weeksCounter}>
+                <span className={styles.weekCenter}>{diasPosparto !== null ? `${diasPosparto}` : '--'}</span>
+              </div>
+              <div className={styles.weeksLabel}>Días Posparto</div>
+            </>
+          ) : (
+            <>
+              <div className={styles.weeksCounter}>
+                <span className={styles.weekSide}>{data?.semanas ? data.semanas - 1 : 27}</span>
+                <span className={styles.weekCenter}>{data?.semanas || 28}</span>
+                <span className={styles.weekSide}>{data?.semanas ? data.semanas + 1 : 29}</span>
+                <span className={styles.weekSide}>{data?.semanas ? data.semanas + 2 : 30}</span>
+              </div>
+              <div className={styles.weeksLabel}>Semanas</div>
+            </>
+          )}
 
           <button className={styles.sintomasBtn} onClick={() => setSymptomsModalOpen(true)}>
             Sintomas criticos
@@ -197,6 +232,12 @@ export const ContentMain = () => {
               </div>
               <h2 className={styles.activeModuleTitle} style={{ fontSize: '1.6rem' }}>{activeModule.nombre}</h2>
               <p className={styles.activeModuleMeta}>Semana de gestación actual: {activeModule.semana_gestacion_actual}</p>
+            </div>
+          )}
+
+          {activeModule?.codigo === 'M4' && (
+            <div style={{ width: '100%', margin: '20px 0 0 0' }}>
+              <PostpartumDashboard />
             </div>
           )}
 
