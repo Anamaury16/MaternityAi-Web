@@ -14,6 +14,42 @@ import {
   type CatalogoItem
 } from '../../services/adminService';
 
+// ─── SVG Icons ───
+const SvgDownload = ({ size = 16, className = '' }: { size?: number; className?: string }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2.2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </svg>
+);
+
+const SvgRefresh = ({ size = 14, className = '' }: { size?: number; className?: string }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2.2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M23 4v6h-6" />
+    <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+  </svg>
+);
+
 export const AdminCargas = () => {
   const [activeSubTab, setActiveSubTab] = useState<'excel' | 'catalogs'>('excel');
 
@@ -24,6 +60,7 @@ export const AdminCargas = () => {
   const [selectedCarga, setSelectedCarga] = useState<CargaExcelDetalleResponse | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // ─── Catálogos State ───
   const [selectedCatalog, setSelectedCatalog] = useState<string>('nacionalidad');
@@ -78,6 +115,7 @@ export const AdminCargas = () => {
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
       setErrorMsg(null);
+      setSuccessMsg(null);
     }
   };
 
@@ -86,15 +124,17 @@ export const AdminCargas = () => {
     
     setIsUploading(true);
     setErrorMsg(null);
+    setSuccessMsg(null);
     try {
       await uploadExcel(file);
       setFile(null);
       const fileInput = document.getElementById('excel-upload') as HTMLInputElement;
       if (fileInput) fileInput.value = '';
       
+      setSuccessMsg('¡Archivo cargado y procesado exitosamente! Revisa el historial para ver el detalle de cada fila.');
       await fetchCargas();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Error al subir el archivo');
+      setErrorMsg(err.response?.data?.detail || err.message || 'Error al subir el archivo');
     } finally {
       setIsUploading(false);
     }
@@ -200,7 +240,26 @@ export const AdminCargas = () => {
           <div className={styles.grid}>
             {/* Panel Izquierdo: Subir Excel e Historial */}
             <div className={`${styles.panel} ${styles.panelLeft}`}>
-              <h2 className={styles.panelTitle}>Carga Masiva</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                <h2 className={styles.panelTitle} style={{ margin: 0 }}>Carga Masiva</h2>
+                <a 
+                  href="/plantilla_carga_masiva.xlsx" 
+                  download="plantilla_carga_masiva.xlsx"
+                  style={{
+                    color: '#CA436E',
+                    textDecoration: 'none',
+                    fontWeight: '600',
+                    fontSize: '0.85rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <SvgDownload size={16} />
+                  Descargar Plantilla (.xlsx)
+                </a>
+              </div>
               
               <div className={styles.uploadSection}>
                 <label htmlFor="excel-upload" className={styles.fileInputLabel}>
@@ -214,6 +273,7 @@ export const AdminCargas = () => {
                   className={styles.fileInput}
                 />
                 {errorMsg && <p className={styles.errorMessage}>{errorMsg}</p>}
+                {successMsg && <p className={styles.successMessage}>{successMsg}</p>}
                 <button 
                   className={styles.uploadBtn}
                   onClick={handleUpload}
@@ -223,7 +283,28 @@ export const AdminCargas = () => {
                 </button>
               </div>
 
-              <h2 className={styles.panelTitle}>Historial</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '20px', marginBottom: '10px' }}>
+                <h2 className={styles.panelTitle} style={{ margin: 0 }}>Historial</h2>
+                <button 
+                  onClick={fetchCargas} 
+                  style={{ 
+                    padding: '5px 12px', 
+                    fontSize: '0.8rem', 
+                    cursor: 'pointer', 
+                    border: '1px solid #CA436E', 
+                    borderRadius: '15px', 
+                    color: '#CA436E', 
+                    background: 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontWeight: '600'
+                  }}
+                >
+                  <SvgRefresh size={14} />
+                  Refrescar
+                </button>
+              </div>
               <div style={{ overflowY: 'auto' }}>
                 <table className={styles.table}>
                   <thead>

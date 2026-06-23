@@ -8,7 +8,7 @@ const UsPage = lazy(() => import('./pages/UsPage').then(module => ({ default: mo
 const Login = lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
 const Register = lazy(() => import('./pages/Register').then(module => ({ default: module.Register })));
 const UserProfile = lazy(() => import('./pages/UserProfile').then(module => ({ default: module.UserProfile })));
-const Biliboteca = lazy(() => import('./pages/Biblioteca').then(module => ({ default: module.Biliboteca })));
+const Biblioteca = lazy(() => import('./pages/Biblioteca').then(module => ({ default: module.Biblioteca })));
 const Actividad = lazy(() => import('./pages/Actividad').then(module => ({ default: module.Actividad })));
 const Ai = lazy(() => import('./pages/Ai').then(module => ({ default: module.Ai })));
 const Main = lazy(() => import('./pages/Main').then(module => ({ default: module.Main })));
@@ -37,7 +37,7 @@ function App() {
             {/* ── Rutas exclusivas de gestante ── */}
             <Route element={<ProtectedRoute requiredRoles="gestante" />}>
               <Route path="/userprofile" element={<UserProfile />} />
-              <Route path="/biblioteca" element={<Biliboteca />} />
+              <Route path="/biblioteca" element={<Biblioteca />} />
               <Route path="/actividad" element={<Actividad />} />
               <Route path="/ai" element={<Ai />} />
               <Route path="/main" element={<Main />} />
@@ -64,6 +64,8 @@ function App() {
               <Route path="/clinico/oba" element={<AdminOBA />} />
               <Route path="/clinico/preguntas" element={<AdminPreguntas />} />
               <Route path="/clinico/checklist" element={<AdminChecklist />} />
+              <Route path="/clinico/cargas" element={<AdminCargas />} />
+              <Route path="/clinico/ia" element={<AdminIA />} />
             </Route>
 
             {/* ── Rutas para Hospital ── */}

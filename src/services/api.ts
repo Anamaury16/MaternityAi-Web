@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 export const USE_MOCKS = false; // Cambiar a false para usar el backend real
 
 const api = axios.create({
@@ -18,7 +18,7 @@ api.interceptors.request.use(
     // Inyectar automáticamente gestante_id si el usuario es de staff y hay un paciente seleccionado
     const role = localStorage.getItem('role');
     const selectedGestante = localStorage.getItem('selected_gestante_gmi');
-    if ((role === 'clinico' || role === 'admin') && selectedGestante) {
+    if ((role === 'clinico' || role === 'admin' || role === 'hospital') && selectedGestante) {
       config.params = {
         ...config.params,
         gestante_id: selectedGestante,

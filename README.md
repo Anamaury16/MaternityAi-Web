@@ -39,7 +39,7 @@ corepack prepare pnpm@latest --activate
 
 ---
 
-## Instalación
+## Instalación y Desarrollo Local
 
 ```bash
 # Clonar el repositorio
@@ -53,7 +53,51 @@ pnpm install
 pnpm dev
 ```
 
-> La app estará en **http://localhost:5173**
+> La app estará disponible localmente en **http://localhost:3000**
+
+---
+
+## Configuración y Variables de Entorno
+
+El proyecto soporta configuración para apuntar al backend mediante variables de entorno de Vite:
+
+| Variable | Descripción | Valor por Defecto (Desarrollo) |
+|---|---|---|
+| `VITE_API_URL` | URL base del servidor del backend API (sin barra diagonal final) | `http://localhost:8000` / `http://127.0.0.1:8000` |
+
+> 💡 **Nota**: En desarrollo local, si no defines `VITE_API_URL`, la aplicación usará los valores por defecto locales automáticamente, por lo que no es estrictamente necesario configurar un archivo `.env` en tu máquina de desarrollo.
+
+Para configurar una ruta específica para desarrollo:
+1. Crea un archivo `.env.local` en la raíz del proyecto.
+2. Define la variable:
+   ```env
+   VITE_API_URL=http://tu-direccion-ip:8000
+   ```
+
+---
+
+## Despliegue con Docker 🐳
+
+El proyecto incluye un archivo `Dockerfile` multi-etapa y un servidor web Nginx seguro y optimizado para servir los archivos estáticos en entornos de producción.
+
+### 1. Construir la imagen de Docker
+
+Puedes compilar la imagen inyectando la URL de tu API de producción mediante `--build-arg`:
+
+```bash
+# Construir la imagen apuntando al backend
+docker build --build-arg VITE_API_URL=https://api.tu-produccion.com -t maternity-web .
+```
+
+### 2. Ejecutar el contenedor
+
+Ejecuta el contenedor exponiendo el puerto HTTP (puerto `80` del contenedor) a tu puerto local deseado (por ejemplo, `8080`):
+
+```bash
+docker run -d -p 8080:80 --name maternity-web-app maternity-web
+```
+
+La aplicación estará corriendo de forma segura en **http://localhost:8080** servida por un Nginx con cabeceras de seguridad activadas (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, etc.).
 
 ---
 
@@ -72,42 +116,48 @@ pnpm dev
 
 ```
 src/
+├── api/                  ← Instancia Axios base
 ├── components/           ← Componentes reutilizables
-│   ├── Headers/          Navegación por sección
-│   ├── Icons/            Íconos SVG
+│   ├── Headers/          Navegación por sección (HeaderActividad, MobileBottomNav)
+│   ├── Icons/            Íconos SVG del sistema
 │   ├── Modal.tsx         Modal genérico
 │   ├── ProtectedRoute.tsx Guard de rutas por rol
-│   ├── admin/            Panel administrativo
-│   ├── buttons/          Botones
+│   ├── admin/            Estilos del panel administrativo
+│   ├── buttons/          Botones reutilizables
 │   ├── info/             Secciones informativas
-│   └── profile/          Perfil de usuario
+│   └── profile/          Componente de eliminación de cuenta/perfil
 │
 ├── context/
-│   └── AuthContext.tsx    ← Autenticación global
+│   └── AuthContext.tsx    ← Autenticación global y persistencia de roles
+│
+├── hooks/                ← Custom Hooks (IA, riesgos, etc.)
 │
 ├── pages/                ← Vistas
 │   ├── HomePage.tsx      Inicio (pública)
+│   ├── UsPage.tsx        Nosotros (pública)
 │   ├── Login.tsx         Inicio de sesión
 │   ├── Register.tsx      Registro
 │   ├── Main.tsx          Dashboard gestante
 │   ├── Ai.tsx            Chat con IA
 │   ├── Biblioteca.tsx    Recursos educativos
-│   ├── Actividad.tsx     Actividades
-│   ├── adminPages/       Panel admin
-│   └── clinicoPages/     Panel clínico
+│   ├── Actividad.tsx     Actividades y monitoreo diario
+│   ├── UserProfile.tsx   Perfil de usuaria y configuración
+│   ├── adminPages/       Vistas de administración (Usuarias, OBA, Preguntas, Citas, Cargas, Checklist, IA)
+│   ├── clinicoPages/     Vistas del personal clínico (reutiliza componentes de admin)
+│   └── hospitalPages/    Monitoreo de alertas para el rol hospital
 │
-├── services/             ← Llamadas API
-│   ├── api.ts            Config base Axios
-│   ├── authService.ts    Auth (login, registro)
-│   ├── adminService.ts   Endpoints admin
-│   └── m0Service.ts      Servicio M0
+├── services/             ← Servicios API modulados
+│   ├── authService.ts    Autenticación (login, registro de staff)
+│   ├── adminService.ts   Endpoints admin y gestión de gestantes
+│   ├── m0Service.ts      Servicio M0 (Fórmula obstétrica, antecedentes)
+│   ├── m4Service.ts      Servicio M4 (Postparto y anticonceptivos)
+│   └── m6Service.ts      Servicio M6 (Alertas y alarmas)
 │
-├── App.tsx               ← Enrutamiento
-├── main.tsx              ← Entry point
+├── utils/                ← Utilidades y constantes auxiliares
+├── App.tsx               ← Enrutamiento y definición de Layouts/Guards
+├── main.tsx              ← Entry point de la aplicación
 └── index.css             ← Estilos globales
 ```
-
----
 
 ## Roles y rutas
 
@@ -115,8 +165,9 @@ src/
 |-----|-------|
 | 🌐 **Pública** | `/` · `/nosotros` · `/login` · `/register` |
 | 🤰 **Gestante** | `/main` · `/ai` · `/biblioteca` · `/actividad` · `/userprofile` |
-| 🔧 **Admin** | `/admin/usuarias` · `/admin/citas` · `/admin/oba` · `/admin/preguntas` · `/admin/cargas` |
-| 🩺 **Clínico** | `/clinico/usuarias` · `/clinico/citas` · `/clinico/oba` · `/clinico/preguntas` |
+| 🔧 **Admin** | `/admin/usuarias` · `/admin/citas` · `/admin/oba` · `/admin/preguntas` · `/admin/cargas` · `/admin/checklist` · `/admin/ia` |
+| 🩺 **Clínico** | `/clinico/usuarias` · `/clinico/citas` · `/clinico/oba` · `/clinico/preguntas` · `/clinico/cargas` · `/clinico/checklist` · `/clinico/ia` |
+| 🏥 **Hospital** | `/hospital/dashboard` |
 
 ---
 

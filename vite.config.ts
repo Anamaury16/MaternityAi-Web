@@ -47,7 +47,7 @@ export default defineConfig({
         // Estrategia: red primero para las llamadas a la API
         runtimeCaching: [
           {
-            urlPattern: /^http:\/\/localhost:8000\/api\/.*/i,
+            urlPattern: /\/api\/.*/i,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'maternity-api-cache',
