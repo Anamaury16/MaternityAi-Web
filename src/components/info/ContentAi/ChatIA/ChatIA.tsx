@@ -6,6 +6,13 @@ import {
   formatOutgoingMessage,
   getQuickSuggestions,
 } from '../../../../utils/iaHelpers';
+import { useTriage } from '../../../../hooks/ia/useTriage';
+
+const URGENCY_LABELS: Record<string, string> = {
+  inmediata: 'Inmediata',
+  urgente: 'Urgente',
+  no_urgente: 'No urgente',
+};
 
 interface ChatIAProps {
   messages: ChatMessage[];
@@ -29,7 +36,10 @@ export const ChatIA = ({
   const [inputText, setInputText] = useState('');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showSymptomPanel, setShowSymptomPanel] = useState(false);
+  const [symptomsText, setSymptomsText] = useState('');
   const chatsContainerRef = useRef<HTMLDivElement>(null);
+  const triage = useTriage();
 
   // Auto-scroll al final del contenedor de chats sin afectar el viewport global
   useEffect(() => {
@@ -46,6 +56,25 @@ export const ChatIA = ({
     setInputText(''); // Limpiar input inmediatamente (optimistic UX)
     const formattedText = formatOutgoingMessage(text, activeTopicTag);
     await sendMessage(formattedText);
+  };
+
+  const handleToggleSymptomPanel = () => {
+    if (showSymptomPanel) {
+      setSymptomsText('');
+    }
+    setShowSymptomPanel((prev) => !prev);
+  };
+
+  const handleRunTriage = async () => {
+    const sintomas = symptomsText
+      .split(/[,\n]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (sintomas.length === 0) return;
+
+    await triage.runTriage(sintomas);
+    setShowSymptomPanel(false);
+    setSymptomsText('');
   };
 
   const handleDeleteClick = async () => {
@@ -81,18 +110,32 @@ export const ChatIA = ({
               <span className={styles.statusDot}></span>
               <h3>Asistente MaternityAI</h3>
             </div>
-            {messages.length > 0 && clearHistory && (
+            <div className={styles.headerActions}>
               <button
-                className={styles.headerClearBtn}
-                onClick={() => setConfirmingDelete(true)}
-                title="Borrar historial"
+                className={styles.headerSymptomBtn}
+                onClick={handleToggleSymptomPanel}
+                title="Reportar síntomas"
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="3 6 5 6 21 6" />
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
+                <span>Reportar síntomas</span>
               </button>
-            )}
+              {messages.length > 0 && clearHistory && (
+                <button
+                  className={styles.headerClearBtn}
+                  onClick={() => setConfirmingDelete(true)}
+                  title="Borrar historial"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                </button>
+              )}
+            </div>
           </>
         )}
       </div>
@@ -167,6 +210,94 @@ export const ChatIA = ({
           </div>
         )}
       </div>
+
+      {/* Panel de reporte de síntomas (Triage) */}
+      {showSymptomPanel && (
+        <div className={styles.symptomPanel}>
+          <label className={styles.symptomLabel}>
+            Describe tus síntomas, separados por coma
+          </label>
+          <textarea
+            className={styles.symptomTextarea}
+            placeholder="Ej: dolor de cabeza intenso, hinchazón en manos, sangrado"
+            value={symptomsText}
+            onChange={(e) => setSymptomsText(e.target.value)}
+            disabled={triage.isLoading}
+            rows={2}
+          />
+          <div className={styles.symptomActions}>
+            <button
+              type="button"
+              className={styles.symptomCancelBtn}
+              onClick={handleToggleSymptomPanel}
+              disabled={triage.isLoading}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className={styles.symptomSubmitBtn}
+              onClick={handleRunTriage}
+              disabled={triage.isLoading || !symptomsText.trim()}
+            >
+              {triage.isLoading ? 'Evaluando...' : 'Evaluar urgencia'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Error del triage */}
+      {triage.error && (
+        <div className={styles.errorBanner}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', display: 'inline-block', verticalAlign: 'middle' }}>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span style={{ verticalAlign: 'middle' }}>{triage.error}</span>
+        </div>
+      )}
+
+      {/* Resultado del triage */}
+      {triage.result && (
+        <div
+          className={`${styles.triageCard} ${
+            triage.result.requiere_llamada_emergencia ? styles.triageEmergency : styles.triageNormal
+          }`}
+        >
+          <div className={styles.triageHeader}>
+            <span className={styles.triageTitle}>
+              {triage.result.requiere_llamada_emergencia
+                ? '🚨 Atención médica inmediata recomendada'
+                : 'Evaluación de síntomas'}
+            </span>
+            <button
+              className={styles.triageCloseBtn}
+              onClick={triage.clearResult}
+              aria-label="Cerrar evaluación"
+            >
+              &times;
+            </button>
+          </div>
+          <p className={styles.triageUrgencyLabel}>
+            Nivel de urgencia:{' '}
+            <strong>{URGENCY_LABELS[triage.result.nivel_urgencia] || triage.result.nivel_urgencia}</strong>
+          </p>
+          <p className={styles.triageDescription}>{triage.result.descripcion}</p>
+          {triage.result.acciones_recomendadas.length > 0 && (
+            <ul className={styles.triageActionsList}>
+              {triage.result.acciones_recomendadas.map((accion, idx) => (
+                <li key={idx}>{accion}</li>
+              ))}
+            </ul>
+          )}
+          {triage.result.requiere_llamada_emergencia && (
+            <div className={styles.triageEmergencyBanner}>
+              Contacta a tu equipo médico de inmediato o llama a los servicios de emergencia de tu localidad.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Alerta de error si ocurre alguno */}
       {error && (

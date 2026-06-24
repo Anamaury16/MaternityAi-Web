@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import styles from './RiskSummaryCard.module.css';
 import { useRiskSummary } from '../../../../hooks/ia/useRiskSummary';
+import { Modal } from '../../../Modal';
+import { getExplainability, type ExplainabilityResponse } from '../../../../services/iaService';
 
 interface RiskDetails {
   class: string;
@@ -10,6 +12,29 @@ interface RiskDetails {
 export const RiskSummaryCard = () => {
   const { summary, isLoading, error, updateEvaluation } = useRiskSummary();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isExplainOpen, setIsExplainOpen] = useState(false);
+  const [explainData, setExplainData] = useState<ExplainabilityResponse | null>(null);
+  const [isExplainLoading, setIsExplainLoading] = useState(false);
+  const [explainError, setExplainError] = useState<string | null>(null);
+
+  const handleOpenExplain = async (assessmentId: string) => {
+    setIsExplainOpen(true);
+    if (explainData?.assessment_id === assessmentId) return;
+
+    setIsExplainLoading(true);
+    setExplainError(null);
+    try {
+      const response = await getExplainability(assessmentId);
+      setExplainData(response);
+    } catch (err: any) {
+      console.error('Error fetching explainability:', err);
+      setExplainError(
+        err.response?.data?.detail || 'No se pudo obtener la explicación de esta evaluación.'
+      );
+    } finally {
+      setIsExplainLoading(false);
+    }
+  };
 
   if (isLoading && !summary) {
     return (
@@ -35,6 +60,7 @@ export const RiskSummaryCard = () => {
   if (!summary) return null;
 
   const {
+    assessment_id,
     nivel_riesgo,
     resumen,
     factores_riesgo,
@@ -146,6 +172,22 @@ export const RiskSummaryCard = () => {
 
       {/* Acciones */}
       <div className={styles.actions}>
+        {assessment_id && (
+          <button
+            onClick={() => handleOpenExplain(assessment_id)}
+            disabled={isLoading}
+            className={styles.refreshBtn}
+          >
+            <span className={styles.refreshBtnLabel}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={styles.titleIcon} style={{ marginRight: '6px' }}>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 1 1 5.83 1c0 2-3 2-3 4" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              Ver explicación
+            </span>
+          </button>
+        )}
         <button
           onClick={updateEvaluation}
           disabled={isLoading}
@@ -164,6 +206,49 @@ export const RiskSummaryCard = () => {
           )}
         </button>
       </div>
+
+      {/* Modal de explicabilidad */}
+      <Modal
+        isOpen={isExplainOpen}
+        onClose={() => setIsExplainOpen(false)}
+        title="Explicación de la evaluación de riesgo"
+      >
+        {isExplainLoading ? (
+          <p className={styles.resumenText}>Cargando explicación...</p>
+        ) : explainError ? (
+          <p className={styles.resumenText}>{explainError}</p>
+        ) : explainData ? (
+          <>
+            <p className={styles.resumenText}>{explainData.explicacion}</p>
+
+            {explainData.factores_determinantes.length > 0 && (
+              <div className={styles.section}>
+                <h4 className={styles.sectionTitle}>Factores determinantes</h4>
+                <ul className={styles.list}>
+                  {explainData.factores_determinantes.map((factor, idx) => (
+                    <li key={idx} className={styles.listItem}>
+                      {factor}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {explainData.datos_utilizados.length > 0 && (
+              <div className={styles.section}>
+                <h4 className={styles.sectionTitle}>Datos utilizados</h4>
+                <ul className={styles.list}>
+                  {explainData.datos_utilizados.map((dato, idx) => (
+                    <li key={idx} className={styles.listItem}>
+                      {dato}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        ) : null}
+      </Modal>
     </div>
   );
 };

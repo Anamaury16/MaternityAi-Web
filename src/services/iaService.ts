@@ -34,6 +34,30 @@ export interface RiskSummaryResponse {
   semana_gestacion: number;
 }
 
+// ---- Triage ----
+
+export interface TriageRequest {
+  sintomas: string[];
+  respuestas_recientes?: string[];
+}
+
+export interface TriageResponse {
+  nivel_urgencia: 'inmediata' | 'urgente' | 'no_urgente';
+  descripcion: string;
+  acciones_recomendadas: string[];
+  requiere_llamada_emergencia: boolean;
+}
+
+// ---- Explainability ----
+
+export interface ExplainabilityResponse {
+  assessment_id: string;
+  nivel_riesgo: 'verde' | 'amarillo' | 'rojo';
+  explicacion: string;
+  factores_determinantes: string[];
+  datos_utilizados: string[];
+}
+
 // ---- Respuesta genérica ----
 
 export interface DetailResponse {
@@ -75,6 +99,33 @@ const MOCK_RISK_SUMMARY: RiskSummaryResponse = {
   ],
   explicacion_ia: 'Evaluación basada en signos vitales normales (tensión arterial 110/70 mmHg), ganancia de peso adecuada para la edad gestacional y ausencia de antecedentes de hipertensión o diabetes gestacional.',
   semana_gestacion: 28,
+};
+
+const MOCK_TRIAGE_RESPONSE: TriageResponse = {
+  nivel_urgencia: 'urgente',
+  descripcion: 'Los síntomas reportados sugieren una situación que debe ser evaluada por tu equipo médico en las próximas horas.',
+  acciones_recomendadas: [
+    'Comunícate con tu equipo médico hoy mismo',
+    'Registra la intensidad y frecuencia del síntoma',
+    'Evita esfuerzos físicos hasta ser evaluada',
+  ],
+  requiere_llamada_emergencia: false,
+};
+
+const MOCK_EXPLAINABILITY: ExplainabilityResponse = {
+  assessment_id: 'risk-001',
+  nivel_riesgo: 'verde',
+  explicacion: 'La clasificación se basó en signos vitales dentro de rangos normales, ausencia de antecedentes de riesgo y ganancia de peso adecuada para la semana de gestación.',
+  factores_determinantes: [
+    'Tensión arterial estable (110/70 mmHg)',
+    'Sin antecedentes de hipertensión o diabetes gestacional',
+    'Ganancia de peso acorde a la semana de gestación',
+  ],
+  datos_utilizados: [
+    'Últimos signos vitales registrados',
+    'Antecedentes patológicos',
+    'Controles prenatales recientes',
+  ],
 };
 
 // ---------------------------------------------------------------------------
@@ -125,5 +176,33 @@ export const getRiskSummary = async (): Promise<RiskSummaryResponse> => {
     return MOCK_RISK_SUMMARY;
   }
   const response = await api.get('/api/v1/ia/risk-summary');
+  return response.data;
+};
+
+// POST /api/v1/ia/triage
+export const getTriage = async (
+  sintomas: string[],
+  respuestasRecientes: string[] = []
+): Promise<TriageResponse> => {
+  if (USE_MOCKS) {
+    await mockDelay(1500);
+    return MOCK_TRIAGE_RESPONSE;
+  }
+  const response = await api.post('/api/v1/ia/triage', {
+    sintomas,
+    respuestas_recientes: respuestasRecientes,
+  });
+  return response.data;
+};
+
+// GET /api/v1/ia/explainability/{assessment_id}
+export const getExplainability = async (
+  assessmentId: string
+): Promise<ExplainabilityResponse> => {
+  if (USE_MOCKS) {
+    await mockDelay();
+    return { ...MOCK_EXPLAINABILITY, assessment_id: assessmentId };
+  }
+  const response = await api.get(`/api/v1/ia/explainability/${assessmentId}`);
   return response.data;
 };
