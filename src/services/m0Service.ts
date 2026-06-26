@@ -464,7 +464,8 @@ export interface ChecklistItem {
   modulo_id: number | null;
   semana_eg: number | null;
   orden: number | null;
-  activo: boolean;
+  activo?: boolean; // deprecated, use completado
+  completado?: boolean;
 }
 
 const MOCK_CHECKLIST: Record<string, ChecklistItem[]> = {

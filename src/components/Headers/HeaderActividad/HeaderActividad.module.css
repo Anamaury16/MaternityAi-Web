@@ -115,3 +115,57 @@
     display: none !important;
   }
 }
+
+.perfilSection {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  position: relative;
+}
+
+.bellBtn {
+  background: transparent;
+  border: 1px solid rgba(223, 93, 134, 0.2);
+  color: #555;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bellBtn:hover, .bellActive {
+  background-color: rgba(223, 93, 134, 0.08);
+  border-color: #df5d86;
+  color: #df5d86;
+  transform: scale(1.05);
+}
+
+.alertsDropdown {
+  position: absolute;
+  top: 55px;
+  right: 0;
+  width: 350px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
+  z-index: 10000;
+  max-height: 480px;
+  animation: slideDownIn 0.2s ease-out;
+}
+
+@keyframes slideDownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

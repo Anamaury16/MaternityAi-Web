@@ -8,6 +8,84 @@
   margin-bottom: 20px;
 }
 
+/* ── Semáforo Visual ── */
+.semaforoRow {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  background: rgba(0,0,0,0.04);
+  border-radius: 14px;
+}
+
+.semaforoDots {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background: #222;
+  border-radius: 20px;
+  padding: 10px 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 2px 4px rgba(0,0,0,0.4);
+}
+
+.semaforoDot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transition: all 0.4s ease;
+}
+
+.semaforoDot.dotOff {
+  opacity: 0.15;
+}
+
+.semaforoDot.dotRojo {
+  background: #ef4444;
+  box-shadow: 0 0 12px rgba(239,68,68,0.8), 0 0 24px rgba(239,68,68,0.4);
+  animation: semPulse 1.2s ease-in-out infinite;
+}
+
+.semaforoDot.dotAmarillo {
+  background: #eab308;
+  box-shadow: 0 0 12px rgba(234,179,8,0.8), 0 0 24px rgba(234,179,8,0.4);
+  animation: semPulse 2s ease-in-out infinite;
+}
+
+.semaforoDot.dotVerde {
+  background: #22c55e;
+  box-shadow: 0 0 12px rgba(34,197,94,0.8), 0 0 24px rgba(34,197,94,0.4);
+  animation: semPulse 3s ease-in-out infinite;
+}
+
+@keyframes semPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.semaforoInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.semaforoLevel {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.semaforoLevel.levelVerde { color: #16a34a; }
+.semaforoLevel.levelAmarillo { color: #ca8a04; }
+.semaforoLevel.levelRojo { color: #dc2626; }
+
+.semaforoDesc {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+
 /* Semáforo de Riesgo (Variantes) */
 .riskGreen {
   background-color: #f0fdf4;

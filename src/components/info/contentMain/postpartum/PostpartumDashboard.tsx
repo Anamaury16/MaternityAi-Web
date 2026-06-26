@@ -12,6 +12,41 @@ const METODOS_ANTICONCEPTIVOS = [
   { id: 7, nombre: 'Ninguno / Otro' },
 ];
 
+const PartoIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+    <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+  </svg>
+);
+
+const BebesIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const EvolucionIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+    <polyline points="17 6 23 6 23 12" />
+  </svg>
+);
+
+const PlanificacionIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
+const ShieldIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+
 export const PostpartumDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'parto' | 'bebes' | 'evolucion' | 'planificacion'>('parto');
 
@@ -110,7 +145,7 @@ export const PostpartumDashboard: React.FC = () => {
           className={`${styles.tabBtn} ${activeTab === 'parto' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('parto')}
         >
-          🤱 Mi Parto
+          <PartoIcon /> Mi Parto
         </button>
         <button
           className={`${styles.tabBtn} ${activeTab === 'bebes' ? styles.activeTab : ''}`}
@@ -118,19 +153,19 @@ export const PostpartumDashboard: React.FC = () => {
           disabled={!birthData}
           title={!birthData ? 'Primero registra el parto' : ''}
         >
-          👶 Bebés
+          <BebesIcon /> Bebés
         </button>
         <button
           className={`${styles.tabBtn} ${activeTab === 'evolucion' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('evolucion')}
         >
-          📈 Evolución
+          <EvolucionIcon /> Evolución
         </button>
         <button
           className={`${styles.tabBtn} ${activeTab === 'planificacion' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('planificacion')}
         >
-          🗓️ Planificación
+          <PlanificacionIcon /> Planificación
         </button>
       </div>
 
@@ -221,7 +256,12 @@ export const PostpartumDashboard: React.FC = () => {
               <div className={styles.newbornList}>
                 {newborns.map((baby) => (
                   <div key={baby.id} className={styles.babyCard}>
-                    <div className={styles.babyIcon}>👶</div>
+                    <div className={styles.babyIcon}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#df5d86' }}>
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                    </div>
                     <div className={styles.babyDetails}>
                       <h5>{baby.vivo ? 'Recién Nacido Activo' : 'Óbito fetal'}</h5>
                       <p>
@@ -313,7 +353,12 @@ export const PostpartumDashboard: React.FC = () => {
                       <span className={styles.timelineDate}>{item.fecha_evaluacion}</span>
                       {item.complicaciones && (
                         <p className={styles.timelineAlert}>
-                          ⚠️ <strong>Alerta:</strong> {item.complicaciones}
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px', color: '#dc2626', verticalAlign: 'middle' }}>
+                            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                            <line x1="12" y1="9" x2="12" y2="13" />
+                            <line x1="12" y1="17" x2="12.01" y2="17" />
+                          </svg>
+                          <strong>Alerta:</strong> {item.complicaciones}
                         </p>
                       )}
                       {item.observaciones && <p className={styles.timelineText}>{item.observaciones}</p>}
@@ -396,7 +441,9 @@ export const PostpartumDashboard: React.FC = () => {
                   const metodo = METODOS_ANTICONCEPTIVOS.find((m) => m.id === item.metodo_id);
                   return (
                     <div key={item.id} className={styles.contraceptionCard}>
-                      <div className={styles.contraceptionIcon}>🛡️</div>
+                      <div className={styles.contraceptionIcon}>
+                        <ShieldIcon />
+                      </div>
                       <div className={styles.contraceptionDetails}>
                         <h5>{metodo?.nombre || 'Método no especificado'}</h5>
                         <p><strong>Fecha de inicio/aplicación:</strong> {item.fecha_aplicacion}</p>

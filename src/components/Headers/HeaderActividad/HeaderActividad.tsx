@@ -1,15 +1,15 @@
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { DegradedText } from '../../gradedcomponents/degradedtext/DegradedText';
 import { logoutUser } from '../../../services/authService';
 import styles from './HeaderActividad.module.css';
 import { MobileBottomNav } from '../MobileBottomNav';
+import { AlertasPanel } from '../../alertas/AlertasPanel';
 
-{/* interface para los roles */}
 interface HeaderActividadProps {
   rol?: 'paciente' | 'medico' | 'admin' | 'hospital';
   tabActivo?: string; 
 }
-
 
 export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
   const navigate = useNavigate();
@@ -22,6 +22,9 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
     rawRole === 'hospital' ? 'hospital' :
     (rawRole === 'clinico' || rawRole === 'medico') ? 'medico' : 'paciente';
 
+  const [alertsOpen, setAlertsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const handleLogout = async () => {
     await logoutUser();
     navigate('/login');
@@ -30,6 +33,16 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
   const getTabClass = (path: string) => {
     return currentPath.includes(path) ? `${styles.tab} ${styles.activeTab}` : styles.tab;
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setAlertsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <>
@@ -81,7 +94,20 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
         )}
       </nav>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+      <div className={styles.perfilSection} ref={dropdownRef}>
+        {activeRole === 'paciente' && (
+          <button 
+            onClick={() => setAlertsOpen(!alertsOpen)}
+            className={`${styles.bellBtn} ${alertsOpen ? styles.bellActive : ''}`}
+            aria-label="Alertas y Notificaciones"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </button>
+        )}
+
         <div onClick={() => navigate('/userprofile')} className={styles.perfil}>
           <div>
             <p className={styles.name}>{localStorage.getItem('user_name') || 'Usuario'}</p>
@@ -110,6 +136,12 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
         >
           Cerrar sesión
         </button>
+
+        {alertsOpen && (
+          <div className={styles.alertsDropdown}>
+            <AlertasPanel />
+          </div>
+        )}
       </div>
     </header>
     

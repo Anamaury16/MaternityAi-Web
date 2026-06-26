@@ -19,7 +19,9 @@ export const ProgressChecklist = ({ moduloId, moduloCodigo, style }: Props) => {
         const data = await getChecklistForGestante(moduloId, moduloCodigo);
         // Ordenar: primero activos (completos), luego pendientes, luego por orden
         const sorted = [...data].sort((a, b) => {
-          if (a.activo !== b.activo) return a.activo ? -1 : 1;
+          const aDone = a.completado ?? a.activo ?? false;
+          const bDone = b.completado ?? b.activo ?? false;
+          if (aDone !== bDone) return aDone ? -1 : 1;
           return (a.orden ?? 99) - (b.orden ?? 99);
         });
         setItems(sorted);
@@ -32,7 +34,7 @@ export const ProgressChecklist = ({ moduloId, moduloCodigo, style }: Props) => {
     load();
   }, [moduloId, moduloCodigo]);
 
-  const completados = items.filter(i => i.activo).length;
+  const completados = items.filter(i => i.completado ?? i.activo ?? false).length;
   const total = items.length;
   const porcentaje = total > 0 ? Math.round((completados / total) * 100) : 0;
 
@@ -70,24 +72,27 @@ export const ProgressChecklist = ({ moduloId, moduloCodigo, style }: Props) => {
         <p className={styles.empty}>No hay ítems configurados para este módulo.</p>
       ) : (
         <div className={styles.list}>
-          {items.map(item => (
-            <div
-              key={item.id}
-              className={`${styles.item} ${item.activo ? styles.itemDone : ''}`}
-            >
-              <div className={`${styles.icon} ${item.activo ? styles.iconDone : styles.iconPending}`}>
-                {item.activo ? '✓' : '○'}
+          {items.map(item => {
+            const isDone = item.completado ?? item.activo ?? false;
+            return (
+              <div
+                key={item.id}
+                className={`${styles.item} ${isDone ? styles.itemDone : ''}`}
+              >
+                <div className={`${styles.icon} ${isDone ? styles.iconDone : styles.iconPending}`}>
+                  {isDone ? '✓' : '○'}
+                </div>
+                <div>
+                  <p className={`${styles.itemText} ${isDone ? styles.itemTextDone : styles.itemTextPending}`}>
+                    {item.texto}
+                  </p>
+                  {item.semana_eg && (
+                    <span className={styles.semanaTag}>Semana {item.semana_eg}</span>
+                  )}
+                </div>
               </div>
-              <div>
-                <p className={`${styles.itemText} ${item.activo ? styles.itemTextDone : styles.itemTextPending}`}>
-                  {item.texto}
-                </p>
-                {item.semana_eg && (
-                  <span className={styles.semanaTag}>Semana {item.semana_eg}</span>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

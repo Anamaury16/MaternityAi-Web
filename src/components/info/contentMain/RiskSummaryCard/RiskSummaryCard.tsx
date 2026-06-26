@@ -101,6 +101,25 @@ export const RiskSummaryCard = () => {
         <span className={styles.weekBadge}>Semana {semana_gestacion}</span>
       </div>
 
+      {/* Semáforo visual prominente */}
+      <div className={styles.semaforoRow}>
+        <div className={styles.semaforoDots}>
+          <div className={`${styles.semaforoDot} ${nivel_riesgo === 'rojo' ? styles.dotRojo : styles.dotOff}`} />
+          <div className={`${styles.semaforoDot} ${nivel_riesgo === 'amarillo' ? styles.dotAmarillo : styles.dotOff}`} />
+          <div className={`${styles.semaforoDot} ${nivel_riesgo === 'verde' ? styles.dotVerde : styles.dotOff}`} />
+        </div>
+        <div className={styles.semaforoInfo}>
+          <span className={`${styles.semaforoLevel} ${styles[`level${nivel_riesgo.charAt(0).toUpperCase() + nivel_riesgo.slice(1)}`]}`}>
+            {currentRisk.label}
+          </span>
+          <span className={styles.semaforoDesc}>
+            {nivel_riesgo === 'verde' && 'Embarazo sin factores de riesgo críticos detectados. Continúa con tus controles.'}
+            {nivel_riesgo === 'amarillo' && 'Se detectaron factores a vigilar. Consulta a tu equipo médico pronto.'}
+            {nivel_riesgo === 'rojo' && '⚠️ Situación urgente. Contacta a tu equipo médico de inmediato.'}
+          </span>
+        </div>
+      </div>
+
       {/* Resumen principal */}
       <p className={styles.resumenText}>{resumen}</p>
 

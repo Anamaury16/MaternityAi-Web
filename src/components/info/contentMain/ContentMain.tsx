@@ -13,8 +13,10 @@ import { useSymptoms } from '../../../hooks/clinical/useClinical';
 import { useChecklist } from '../../../hooks/m5/usM5';
 import { PostpartumDashboard } from './postpartum/PostpartumDashboard';
 import { useBirthRecord } from '../../../hooks/m4/useM4';
+import { AlertasPanel } from '../../alertas/AlertasPanel';
 
 export const ContentMain = () => {
+  const [alertsOpen, setAlertsOpen] = useState(false);
   const userName = localStorage.getItem('user_name') || 'Gestante';
   const displayId = userName.replace('Gestante ', '');
   const { data } = useGestationalAge();
@@ -171,12 +173,22 @@ export const ContentMain = () => {
               {mensajeTiempo()},<br />
               <strong>{displayId}</strong> 👋
             </div>
-            <div className={styles.mobileBell}>
+            <div 
+              className={styles.mobileBell} 
+              onClick={() => setAlertsOpen(!alertsOpen)} 
+              style={{ cursor: 'pointer' }}
+            >
               <SvgBell />
               <span className={styles.notificationDot}></span>
             </div>
           </div>
         </div>
+
+        {alertsOpen && (
+          <div className={styles.mobileAlertsOverlay}>
+            <AlertasPanel />
+          </div>
+        )}
 
         <div className={styles.mobileCard}>
           {activeModule?.codigo === 'M4' ? (
@@ -240,6 +252,8 @@ export const ContentMain = () => {
               <PostpartumDashboard />
             </div>
           )}
+
+          {/* Alertas Panel Mobile (movido al header) */}
 
           {/* Semáforo de riesgo IA Mobile */}
           <RiskSummaryCard />

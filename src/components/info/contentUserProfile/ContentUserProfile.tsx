@@ -10,13 +10,11 @@ import { GestationalAge } from '../../profile/GestationalAge';
 import { SecurityQuestionUpdate } from '../../profile/SecurityQuestionUpdate';
 import { DeleteAccount } from '../../profile/DeleteAccount';
 import { Terms } from './Right/Terms/Terms';
-import { SvgGear } from '../../Icons/IconsSystem';
 import { logoutUser } from '../../../services/authService';
 import { useNavigate } from 'react-router-dom';
 
 export const ContentUserProfile = () => {
   const [activeTab, setActiveTab] = useState<'perfil' | 'seguridad' | 'privacidad' | 'eliminar_cuenta'>('perfil');
-  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -70,29 +68,6 @@ export const ContentUserProfile = () => {
             <p>Buenas tardes,</p>
             <h2>{userId} 👋</h2>
           </div>
-          <div className={styles.gearContainer}>
-            <button 
-              className={styles.gearBtn} 
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              <SvgGear width={28} height={28} />
-            </button>
-            
-            {menuOpen && (
-              <div className={styles.dropdownMenu}>
-                <button className={styles.dropdownItem}>
-                  Terminos y condiciones
-                </button>
-                <div className={styles.dropdownDivider}></div>
-                <button 
-                  className={`${styles.dropdownItem} ${styles.logoutText}`}
-                  onClick={handleLogout}
-                >
-                  Cerrar sesión
-                </button>
-              </div>
-            )}
-          </div>
         </div>
 
         <div className={styles.fetusImageContainer}>
@@ -126,6 +101,57 @@ export const ContentUserProfile = () => {
             <GestationalAge />
             <SecurityQuestionUpdate />
             <DeleteAccount />
+            
+            <button 
+              onClick={() => setActiveTab(activeTab === 'privacidad' ? 'perfil' : 'privacidad')}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '12px',
+                border: 'none',
+                background: '#fff',
+                color: '#333',
+                fontSize: '1rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                textAlign: 'left'
+              }}
+            >
+              Términos y condiciones
+            </button>
+
+            {activeTab === 'privacidad' && (
+              <div style={{ background: '#fff', padding: '15px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
+                <Terms />
+              </div>
+            )}
+
+            <button 
+              onClick={handleLogout}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '12px',
+                border: 'none',
+                background: '#fff',
+                color: '#CA436E',
+                fontSize: '1rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                textAlign: 'left',
+                marginTop: '10px'
+              }}
+            >
+              Cerrar sesión
+            </button>
           </div>
         </div>
       </div>
