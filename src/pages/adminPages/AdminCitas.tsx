@@ -109,8 +109,12 @@ export const AdminCitas = () => {
   useEffect(() => {
     if (selPaciente && selPaciente !== 'XYZ1002') {
       localStorage.setItem('selected_gestante_gmi', selPaciente);
+      const g = gestantes.find(p => p.codigo_gmi === selPaciente);
+      if (g) {
+        localStorage.setItem('selected_gestante_id', g.id);
+      }
     }
-  }, [selPaciente]);
+  }, [selPaciente, gestantes]);
 
   const [vista, setVista] = useState<'Mes' | 'Semana'>('Mes');
   const [currentDate, setCurrentDate] = useState(() => {

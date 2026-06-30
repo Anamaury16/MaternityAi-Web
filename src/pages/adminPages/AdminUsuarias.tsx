@@ -202,12 +202,17 @@ export const AdminUsuarias = () => {
   const [selPaciente, setSelPaciente] = useState(() => {
     return localStorage.getItem('selected_gestante_gmi') || 'XYZ1002';
   });
+  const [gestantes, setGestantes] = useState<GestanteResponse[]>([]);
 
   useEffect(() => {
     if (selPaciente && selPaciente !== 'XYZ1002') {
       localStorage.setItem('selected_gestante_gmi', selPaciente);
+      const g = gestantes.find(p => p.codigo_gmi === selPaciente);
+      if (g) {
+        localStorage.setItem('selected_gestante_id', g.id);
+      }
     }
-  }, [selPaciente]);
+  }, [selPaciente, gestantes]);
   const [activeList, setActiveList] = useState<'maternas' | 'staff'>('maternas');
 
   // --- Estados de Fórmula Obstétrica ---
@@ -361,8 +366,6 @@ export const AdminUsuarias = () => {
       setEditForm({ nombre: selStaff.nombre || '', rol_id: Number(selStaff.rol_id) });
     }
   }, [selStaff]);
-
-  const [gestantes, setGestantes] = useState<GestanteResponse[]>([]);
 
   useEffect(() => {
     if (activeList === 'maternas') {

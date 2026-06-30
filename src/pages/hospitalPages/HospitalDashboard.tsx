@@ -291,6 +291,7 @@ export const HospitalDashboard = () => {
 
     // Save patient ID to local storage so standard hooks/services query it automatically
     localStorage.setItem('selected_gestante_gmi', alert.codigoGmi);
+    localStorage.setItem('selected_gestante_id', alert.patientId);
 
     try {
       const [examsData, formulaData, pathologyData] = await Promise.all([

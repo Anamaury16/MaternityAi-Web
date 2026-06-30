@@ -17,12 +17,19 @@ api.interceptors.request.use(
 
     // Inyectar automáticamente gestante_id si el usuario es de staff y hay un paciente seleccionado
     const role = localStorage.getItem('role');
-    const selectedGestante = localStorage.getItem('selected_gestante_gmi');
-    if ((role === 'clinico' || role === 'admin' || role === 'hospital') && selectedGestante) {
-      config.params = {
-        ...config.params,
-        gestante_id: selectedGestante,
-      };
+    const selectedGestanteId = localStorage.getItem('selected_gestante_id');
+    if ((role === 'clinico' || role === 'admin' || role === 'hospital') && selectedGestanteId) {
+      // Evitar auto-inyectar gestante_id en endpoints de administración general o de listados globales
+      const isGeneralAdminEndpoint = config.url?.includes('/api/v1/admin/appointments') || 
+                                     config.url?.includes('/api/v1/admin/gestantes') ||
+                                     config.url?.includes('/api/v1/admin/users');
+
+      if (!isGeneralAdminEndpoint) {
+        config.params = {
+          ...config.params,
+          gestante_id: selectedGestanteId,
+        };
+      }
     }
 
     return config;
