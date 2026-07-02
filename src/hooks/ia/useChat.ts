@@ -6,11 +6,20 @@ import {
   type ChatMessage,
 } from '../../services/iaService';
 
+// Extendemos la interfaz localmente para anticipar lo que el backend enviará
+interface ExtendedChatMessage extends ChatMessage {
+  nivel_riesgo?: 'verde' | 'amarillo' | 'rojo';
+  alerta_generada?: boolean;
+}
+
 export const useChat = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ExtendedChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Estado para controlar el banner de escalamiento al hospital en la UI
+  const [escalatedAlert, setEscalatedAlert] = useState<{ active: boolean; nivel?: string } | null>(null);
 
   const loadHistory = useCallback(async () => {
     setIsLoading(true);
@@ -34,8 +43,7 @@ export const useChat = () => {
     setIsSending(true);
     setError(null);
 
-    // 1. Crear el mensaje del usuario (optimistic update)
-    const userMessage: ChatMessage = {
+    const userMessage: ExtendedChatMessage = {
       id: `user-msg-${Date.now()}`,
       rol: 'user',
       contenido: text,
@@ -45,9 +53,15 @@ export const useChat = () => {
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      // 2. Realizar POST al backend
-      const assistantMessage = await sendChatMessage(text);
+      // Realizar POST al backend
+      const assistantMessage: ExtendedChatMessage = await sendChatMessage(text);
       setMessages((prev) => [...prev, assistantMessage]);
+
+      // HOOK INTEGRACIÓN: Si el backend envía riesgo 'rojo' o alerta_generada, disparamos alerta visual y recarga de semáforo
+      if (assistantMessage.nivel_riesgo === 'rojo' || assistantMessage.alerta_generada) {
+        setEscalatedAlert({ active: true, nivel: assistantMessage.nivel_riesgo });
+        window.dispatchEvent(new CustomEvent('refresh-risk-summary'));
+      }
     } catch (err: any) {
       console.error('Error sending chat message:', err);
       setError(
@@ -64,6 +78,7 @@ export const useChat = () => {
     try {
       await deleteChatHistory();
       setMessages([]);
+      setEscalatedAlert(null); // Limpiar alertas al borrar historial
       return true;
     } catch (err: any) {
       console.error('Error clearing chat history:', err);
@@ -76,7 +91,6 @@ export const useChat = () => {
     }
   }, []);
 
-  // Cargar historial al montar el hook
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
@@ -89,5 +103,7 @@ export const useChat = () => {
     sendMessage,
     clearHistory,
     refreshHistory: loadHistory,
+    escalatedAlert,
+    clearEscalatedAlert: () => setEscalatedAlert(null),
   };
 };

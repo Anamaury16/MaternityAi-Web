@@ -14,6 +14,7 @@ import {
   type PathologicalHistory as IPathologicalHistory,
 } from '../../services/m0Service';
 import styles from './HospitalDashboard.module.css';
+import { resolveAlerta } from '../../services/iaService';
 
 // Interface representing an active consolidated alert card on the hospital side
 interface ActiveHospitalAlert {
@@ -27,6 +28,8 @@ interface ActiveHospitalAlert {
   semanaGestacion: number;
   tipoAlerta: string;
   createdAt: string;
+  moduloOrigen?: string;
+  assessmentId?: string;
 }
 
 // Preset simulation alerts
@@ -88,6 +91,7 @@ export const HospitalDashboard = () => {
   const [patientFormula, setPatientFormula] = useState<IObstetricFormula | null>(null);
   const [patientPathology, setPatientPathology] = useState<IPathologicalHistory[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [resolutionObservations, setResolutionObservations] = useState('');
   // Audio configuration ref
   const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -179,6 +183,8 @@ export const HospitalDashboard = () => {
               semanaGestacion: g.semanas_eg_ingreso || 12,
               tipoAlerta: sign.tipo_alerta || 'Alerta Obstétrica',
               createdAt: sign.created_at || new Date().toISOString(),
+              moduloOrigen: (sign as any).modulo_origen || 'seguimiento',
+              assessmentId: (sign as any).clasificacion_riesgo_id || (sign as any).assessment_id,
             });
           });
         }
@@ -316,13 +322,16 @@ export const HospitalDashboard = () => {
     try {
       // Call mock or real backend resolve
       if (!selectedAlert.id.startsWith('sim-')) {
-        // If it's a real alert from backend, try to acknowledge it
         try {
-          // Acknowledge in clinical/m6 services
-          const m6Service = await import('../../services/m6Service');
-          await m6Service.acknowledgeAlerta(selectedAlert.id);
+          if (selectedAlert.moduloOrigen === 'IA') {
+            await resolveAlerta(selectedAlert.id, resolutionObservations);
+          } else {
+            // Acknowledge in clinical/m6 services
+            const m6Service = await import('../../services/m6Service');
+            await m6Service.acknowledgeAlerta(selectedAlert.id);
+          }
         } catch (e) {
-          console.warn('Acknowledge endpoint failed, resolving in client interface:', e);
+          console.warn('Backend resolution endpoint failed, resolving in client interface:', e);
         }
       }
 
@@ -330,6 +339,7 @@ export const HospitalDashboard = () => {
       setAlerts(prev => prev.filter(a => a.id !== selectedAlert.id));
       setDrawerOpen(false);
       setSelectedAlert(null);
+      setResolutionObservations('');
       showToast('✅ Alerta Obstétrica marcada como Atendida.');
     } catch (err) {
       console.error(err);
@@ -738,7 +748,7 @@ export const HospitalDashboard = () => {
                 )}
               </div>
 
-              {/* Analysis / Exams */}
+              {/* Exámenes de Laboratorio */}
               <div className={styles.sectionCard}>
                 <h4 className={styles.sectionTitle}>Exámenes de Laboratorio</h4>
                 {patientExams.length === 0 ? (
@@ -753,6 +763,37 @@ export const HospitalDashboard = () => {
                     ))}
                   </div>
                 )}
+              </div>
+
+              {/* Observaciones de Resolución */}
+              <div className={styles.sectionCard} style={{ marginTop: '16px', borderLeft: '4px solid #10b981', background: 'rgba(16, 185, 129, 0.03)' }}>
+                <h4 className={styles.sectionTitle} style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px', margin: 0 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                  Resolución Clínica / Observaciones
+                </h4>
+                <textarea
+                  style={{
+                    width: '100%',
+                    minHeight: '80px',
+                    marginTop: '10px',
+                    padding: '10px',
+                    borderRadius: '8px',
+                    border: '1px solid #e5e7eb',
+                    background: '#ffffff',
+                    color: '#1f2937',
+                    fontSize: '13px',
+                    fontFamily: 'inherit',
+                    resize: 'vertical',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  placeholder="Escribe aquí las observaciones clínicas sobre la resolución de esta alerta (ej: Se contactó con la paciente para seguimiento, se programó cita urgente)..."
+                  value={resolutionObservations}
+                  onChange={(e) => setResolutionObservations(e.target.value)}
+                />
               </div>
             </>
           ) : null}

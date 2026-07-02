@@ -65,9 +65,7 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
         {activeRole === 'admin' && (
           <>
             <Link to={'/admin/usuarias'} className={styles.link}>Usuarias</Link>
-            <Link to={'/admin/oba'} className={styles.link}>OBA</Link>
             <Link to={'/admin/preguntas'} className={styles.link}>Preguntas</Link>
-            <Link to={'/admin/citas'} className={styles.link}>Citas</Link>
             <Link to={'/admin/cargas'} className={styles.link}>Cargas</Link>
             <Link to={'/admin/checklist'} className={styles.link}>Checklist</Link>
             <Link to={'/admin/ia'} className={styles.link}>IA</Link>
@@ -79,11 +77,7 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
           <>
             <Link to={'/clinico/usuarias'} className={styles.link}>Usuarias</Link>
             <Link to={'/clinico/oba'} className={styles.link}>OBA</Link>
-            <Link to={'/clinico/preguntas'} className={styles.link}>Preguntas</Link>
             <Link to={'/clinico/citas'} className={styles.link}>Citas</Link>
-            <Link to={'/clinico/cargas'} className={styles.link}>Cargas</Link>
-            <Link to={'/clinico/checklist'} className={styles.link}>Checklist</Link>
-            <Link to={'/clinico/ia'} className={styles.link}>IA</Link>
           </>
         )}
 

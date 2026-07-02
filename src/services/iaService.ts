@@ -206,3 +206,24 @@ export const getExplainability = async (
   const response = await api.get(`/api/v1/ia/explainability/${assessmentId}`);
   return response.data;
 };
+
+// PATCH /api/v1/ia/alerts/{alerta_id}/resolve
+export const resolveAlerta = async (
+  alertaId: string,
+  observaciones: string
+): Promise<any> => {
+  if (USE_MOCKS) {
+    await mockDelay();
+    return {
+      id: alertaId,
+      estado: 'resuelta',
+      resuelta_por: 'staff-mock-id',
+      fecha_resolucion: new Date().toISOString(),
+      descripcion: `Alerta resuelta | Resolución: ${observaciones}`,
+    };
+  }
+  const response = await api.patch(`/api/v1/ia/alerts/${alertaId}/resolve`, {
+    observaciones,
+  });
+  return response.data;
+};

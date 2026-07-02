@@ -14,6 +14,8 @@ export const ContentAi = () => {
     error,
     sendMessage,
     clearHistory,
+    escalatedAlert,
+    clearEscalatedAlert,
   } = useChat();
 
   const activeTopicTag = TOPIC_TAGS[activeTopic] || 'General';
@@ -46,6 +48,8 @@ export const ContentAi = () => {
           sendMessage={sendMessage}
           clearHistory={clearHistory}
           activeTopicTag={activeTopicTag}
+          escalatedAlert={escalatedAlert}
+          clearEscalatedAlert={clearEscalatedAlert}
         />
       </div>
     </section>

@@ -39,12 +39,7 @@ export const ContentMain = () => {
     return 'Buenas noches';
   }
 
-  const calcularTrimestre = (semanas: number | undefined) => {
-    if (semanas === undefined) return 1;
-    if (semanas <= 12) return 2;
-    if (semanas <= 24) return 3;
-    return 4;
-  }
+
 
   const [activeModule, setActiveModule] = useState<{
     modulo_id: number;
@@ -101,7 +96,7 @@ export const ContentMain = () => {
             ) : (
               <div className={styles.seccion_informacion}>
                 <div className={styles.semanas}>
-                  <h2>{data?.semanas || '--'}/{calcularTrimestre(data?.semanas)*12}</h2>
+                  <h2>{data?.semanas || '--'}/42</h2>
                   <p>Semanas de embarazo</p>
                 </div>
                 <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" loading="lazy" decoding="async" />
