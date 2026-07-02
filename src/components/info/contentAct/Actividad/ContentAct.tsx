@@ -3,6 +3,7 @@ import { Notificacion, NotificacionSkeleton } from '../Notificacion/Notificacion
 import { Mensaje } from '../Mensaje/Mensaje';
 import styles from './ContentAct.module.css';
 import { NotificacionesPanel } from '../Notificacionespanel/Notificacionespanel';
+import { CitasPanel } from '../CitasPanel/CitasPanel';
 
 export const ContentAct = () => {
   const { history, loading } = useDailyQuestions();
@@ -34,8 +35,9 @@ export const ContentAct = () => {
             </div>
           </div>
 
-          {/* Derecha — alertas y notificaciones M6 */}
+          {/* Derecha — citas y notificaciones M6 */}
           <div className={styles.right}>
+            <CitasPanel />
             <NotificacionesPanel />
           </div>
 
@@ -62,6 +64,9 @@ export const ContentAct = () => {
             ))
           )}
         </div>
+
+        <h2 className={styles.mobileSectionTitle}>Mis Citas</h2>
+        <CitasPanel horizontal />
 
         <h2 className={styles.mobileSectionTitle}>Alertas y Notificaciones</h2>
         <div className={styles.mobileSms}>

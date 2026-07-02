@@ -41,6 +41,14 @@ export const ContentMain = () => {
 
 
 
+  const getEtapaImage = (moduloCodigo: string | undefined, semanas: number | undefined): string => {
+    if (moduloCodigo === 'M4') return './image/etapas/puerperio.png';
+    const s = semanas ?? 0;
+    if (s <= 13) return './image/etapas/primertrimestre.png';
+    if (s <= 36) return './image/etapas/tercertrimestre.png';
+    return './image/etapas/parto.png';
+  };
+
   const [activeModule, setActiveModule] = useState<{
     modulo_id: number;
     codigo: string;
@@ -91,7 +99,7 @@ export const ContentMain = () => {
                   <h2>{diasPosparto !== null ? `${diasPosparto} días` : 'Pendiente'}</h2>
                   <p>Posparto / Recuperación</p>
                 </div>
-                <img alt="foto posparto" src="./image/etapas/primertrimestre.png" loading="lazy" decoding="async" />
+                <img alt="foto posparto" src={getEtapaImage(activeModule?.codigo, undefined)} loading="lazy" decoding="async" />
               </div>
             ) : (
               <div className={styles.seccion_informacion}>
@@ -99,7 +107,7 @@ export const ContentMain = () => {
                   <h2>{data?.semanas || '--'}/42</h2>
                   <p>Semanas de embarazo</p>
                 </div>
-                <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" loading="lazy" decoding="async" />
+                <img alt="foto trimestre" src={getEtapaImage(activeModule?.codigo, data?.semanas)} loading="lazy" decoding="async" />
               </div>
             )}
           </div>

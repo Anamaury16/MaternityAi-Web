@@ -15,15 +15,13 @@ export const Cuestionario = () => {
   return (
     <>
       <section className={styles.cuestionario}>
-        <h4>Comportamientos del bebé</h4>
+        <h4>Cuestionario diario</h4>
         <p>
-          Queremos estar contigo en cada etapa de tu embarazo y posparto. Comparte
-          cómo te sientes y así podremos acompañarte mejor y cuidar de tu bienestar.
+          Queremos estar contigo en cada etapa de tu embarazo y posparto.
+          Comparte cómo te sientes y así podremos acompañarte mejor y cuidar de
+          tu bienestar.
         </p>
-        <button
-          className={styles.boton}
-          onClick={() => setModalOpen(true)}
-        >
+        <button className={styles.boton} onClick={() => setModalOpen(true)}>
           Realizar cuestionario
         </button>
       </section>

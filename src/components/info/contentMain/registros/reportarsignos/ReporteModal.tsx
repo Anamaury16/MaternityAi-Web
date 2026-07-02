@@ -76,7 +76,7 @@ export const ReporteModal = ({ onClose, onSubmit, error, loading }: Props) => {
           </button>
         </div>
 
-        {!error && !loading ? (
+        {error && !loading ? (
           /* Estado de éxito */
           <div className={styles.successState}>
             <div className={styles.successIcon}>✓</div>
