@@ -4,10 +4,9 @@ import styles from './ContentMain.module.css';
 import { Datos } from './datos/Datos';
 import { Registros } from './registros/Registros';
 import { SvgBell, SvgSparkle } from '../../Icons/IconsSystem';
-import { getActiveModule, getModuleHistory, type ModuleHistoryEntry as ModuleHistory } from '../../../services/m0Service';
+import { getActiveModule } from '../../../services/m0Service';
 import { useGestationalAge } from '../../../hooks/m0/useM0';
-import { ProgressChecklist } from './progressChecklist/ProgressChecklist';
-import { RiskSummaryCard } from './RiskSummaryCard/RiskSummaryCard';
+
 import { ReporteModal } from './registros/reportarsignos/ReporteModal';
 import { useSymptoms } from '../../../hooks/clinical/useClinical';
 import { useChecklist } from '../../../hooks/m5/usM5';
@@ -39,12 +38,15 @@ export const ContentMain = () => {
     return 'Buenas noches';
   }
 
-  const calcularTrimestre = (semanas: number | undefined) => {
-    if (semanas === undefined) return 1;
-    if (semanas <= 12) return 2;
-    if (semanas <= 24) return 3;
-    return 4;
-  }
+
+
+  const getEtapaImage = (moduloCodigo: string | undefined, semanas: number | undefined): string => {
+    if (moduloCodigo === 'M4') return './image/etapas/puerperio.png';
+    const s = semanas ?? 0;
+    if (s <= 13) return './image/etapas/primertrimestre.png';
+    if (s <= 36) return './image/etapas/tercertrimestre.png';
+    return './image/etapas/parto.png';
+  };
 
   const [activeModule, setActiveModule] = useState<{
     modulo_id: number;
@@ -52,7 +54,6 @@ export const ContentMain = () => {
     nombre: string;
     semana_gestacion_actual: number;
   } | null>(null);
-  const [historyList, setHistoryList] = useState<ModuleHistory[]>([]);
 
   const [symptomsModalOpen, setSymptomsModalOpen] = useState(false);
   const { report: reportSymptoms, loading: symptomsLoading, error: symptomsError } = useSymptoms();
@@ -69,14 +70,10 @@ export const ContentMain = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [activeData, historyData] = await Promise.all([
-          getActiveModule(),
-          getModuleHistory()
-        ]);
+        const activeData = await getActiveModule();
         setActiveModule(activeData);
-        setHistoryList(historyData);
       } catch (err) {
-        console.error("Error loading active module and history:", err);
+        console.error("Error loading active module:", err);
       }
     };
     loadData();
@@ -91,71 +88,41 @@ export const ContentMain = () => {
             <p style={{margin: 0}}>{mensajeTiempo()}, </p>
             <h1 className="">{userName} 👋</h1>
             {activeModule?.codigo === 'M4' ? (
-              <div className={styles.seccion_informacion}>
-                <div className={styles.semanas}>
-                  <h2>{diasPosparto !== null ? `${diasPosparto} días` : 'Pendiente'}</h2>
-                  <p>Posparto / Recuperación</p>
+              <>
+                <div className={styles.seccion_informacion}>
+                  <div className={styles.semanas}>
+                    <h2>{diasPosparto !== null ? `${diasPosparto} días` : 'Pendiente'}</h2>
+                    <p>Posparto / Recuperación</p>
+                  </div>
+                  <img alt="foto posparto" src={getEtapaImage(activeModule?.codigo, undefined)} loading="lazy" decoding="async" />
                 </div>
-                <img alt="foto posparto" src="./image/etapas/primertrimestre.png" loading="lazy" decoding="async" />
-              </div>
+                {activeModule && (
+                  <div className={styles.trimestreLabelOuter}>{activeModule.nombre}</div>
+                )}
+              </>
             ) : (
-              <div className={styles.seccion_informacion}>
-                <div className={styles.semanas}>
-                  <h2>{data?.semanas || '--'}/{calcularTrimestre(data?.semanas)*12}</h2>
-                  <p>Semanas de embarazo</p>
+              <>
+                <div className={styles.seccion_informacion}>
+                  <div className={styles.semanas}>
+                    <h2>{data?.semanas || '--'}/40</h2>
+                    <p>Semanas</p>
+                  </div>
+                  <img alt="foto trimestre" src={getEtapaImage(activeModule?.codigo, data?.semanas)} loading="lazy" decoding="async" />
                 </div>
-                <img alt="foto trimestre" src="./image/etapas/primertrimestre.png" loading="lazy" decoding="async" />
-              </div>
+                {activeModule && (
+                  <div className={styles.trimestreLabelOuter}>{activeModule.nombre}</div>
+                )}
+              </>
             )}
           </div>
 
-          {/* Active Module Card */}
-          {activeModule && (
-            <div className={styles.activeModuleCard}>
-              <div className={styles.activeModuleHeader}>
-                <h3>Módulo Clínico Activo</h3>
-                <span className={styles.moduleBadge}>{activeModule.codigo}</span>
-              </div>
-              <h2 className={styles.activeModuleTitle}>{activeModule.nombre}</h2>
-              <p className={styles.activeModuleMeta}>
-                Semana de gestación actual: <strong>{activeModule.semana_gestacion_actual}</strong>
-              </p>
-            </div>
-          )}
 
-          {/* Semáforo de riesgo IA */}
-          <RiskSummaryCard />
 
-          {/* Checklist de Progreso */}
-          {activeModule && (
-            <ProgressChecklist
-              moduloId={activeModule.modulo_id}
-              moduloCodigo={activeModule.codigo}
-            />
-          )}
 
-          {/* Module Changes History */}
-          {historyList.length > 0 && (
-            <div className={styles.historyCard}>
-              <h3>Historial de Cambios</h3>
-              <div className={styles.historyList}>
-                {historyList.map((item) => (
-                  <div key={item.id} className={styles.historyItem}>
-                    <div className={styles.historyPills}>
-                      <span className={styles.pillNew}>{item.modulo_nuevo}</span>
-                      {item.modulo_anterior && (
-                        <span className={styles.pillOld}>{item.modulo_anterior}</span>
-                      )}
-                    </div>
-                    <div className={styles.historyDetails}>
-                      <p>{item.motivo}</p>
-                      <span>Origen: {item.origen} | {new Date(item.created_at).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+
+
+
+
         </div>
         <section className={styles.right}>
           {activeModule?.codigo === 'M4' && <PostpartumDashboard />}
@@ -197,6 +164,9 @@ export const ContentMain = () => {
                 <span className={styles.weekCenter}>{diasPosparto !== null ? `${diasPosparto}` : '--'}</span>
               </div>
               <div className={styles.weeksLabel}>Días Posparto</div>
+              {activeModule && (
+                <div className={styles.mobileTrimestreLabel}>{activeModule.nombre}</div>
+              )}
             </>
           ) : (
             <>
@@ -207,6 +177,9 @@ export const ContentMain = () => {
                 <span className={styles.weekSide}>{data?.semanas ? data.semanas + 2 : 30}</span>
               </div>
               <div className={styles.weeksLabel}>Semanas</div>
+              {activeModule && (
+                <div className={styles.mobileTrimestreLabel}>{activeModule.nombre}</div>
+              )}
             </>
           )}
 
@@ -235,17 +208,7 @@ export const ContentMain = () => {
             )}
           </div>
 
-          {/* Active Module Mobile */}
-          {activeModule && (
-            <div className={styles.activeModuleCard} style={{ width: '100%', maxWidth: 'none', margin: '20px 0 0 0' }}>
-              <div className={styles.activeModuleHeader}>
-                <h3>Módulo Clínico Activo</h3>
-                <span className={styles.moduleBadge}>{activeModule.codigo}</span>
-              </div>
-              <h2 className={styles.activeModuleTitle} style={{ fontSize: '1.6rem' }}>{activeModule.nombre}</h2>
-              <p className={styles.activeModuleMeta}>Semana de gestación actual: {activeModule.semana_gestacion_actual}</p>
-            </div>
-          )}
+
 
           {activeModule?.codigo === 'M4' && (
             <div style={{ width: '100%', margin: '20px 0 0 0' }}>
@@ -255,40 +218,11 @@ export const ContentMain = () => {
 
           {/* Alertas Panel Mobile (movido al header) */}
 
-          {/* Semáforo de riesgo IA Mobile */}
-          <RiskSummaryCard />
 
-          {/* Checklist de Progreso Mobile */}
-          {activeModule && (
-            <ProgressChecklist
-              moduloId={activeModule.modulo_id}
-              moduloCodigo={activeModule.codigo}
-              style={{ width: '100%', maxWidth: 'none', margin: '15px 0 0 0' }}
-            />
-          )}
 
-          {/* Module Changes History Mobile */}
-          {historyList.length > 0 && (
-            <div className={styles.historyCard} style={{ width: '100%', maxWidth: 'none', margin: '15px 0 0 0' }}>
-              <h3>Historial de Cambios</h3>
-              <div className={styles.historyList}>
-                {historyList.map((item) => (
-                  <div key={item.id} className={styles.historyItem}>
-                    <div className={styles.historyPills}>
-                      <span className={styles.pillNew}>{item.modulo_nuevo}</span>
-                      {item.modulo_anterior && (
-                        <span className={styles.pillOld}>{item.modulo_anterior}</span>
-                      )}
-                    </div>
-                    <div className={styles.historyDetails}>
-                      <p>{item.motivo}</p>
-                      <span>{new Date(item.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+
+
+
         </div>
       </div>
 

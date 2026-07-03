@@ -11,7 +11,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['image/logo.png'],
+      includeAssets: ['image/logo.png', 'image/logo.svg'],
       manifest: {
         name: 'MaternityAI',
         short_name: 'MaternityAI',

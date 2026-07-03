@@ -44,6 +44,19 @@ export const useRiskSummary = () => {
     loadSummary(false);
   }, []);
 
+  // Listener para eventos de recarga en tiempo real (ej. desde chat o triage)
+  useEffect(() => {
+    const handleRefresh = () => {
+      sessionStorage.removeItem(SESSION_CACHE_KEY);
+      loadSummary(true);
+    };
+
+    window.addEventListener('refresh-risk-summary', handleRefresh);
+    return () => {
+      window.removeEventListener('refresh-risk-summary', handleRefresh);
+    };
+  }, [loadSummary]);
+
   return {
     summary,
     isLoading,

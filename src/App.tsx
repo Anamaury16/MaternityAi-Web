@@ -47,25 +47,18 @@ function App() {
             <Route element={<ProtectedRoute requiredRoles="admin" />}>
               <Route path="/admin" element={<Navigate to="/admin/usuarias" />} />
               <Route path="/admin/usuarias" element={<AdminUsuarias />} />
-              <Route path="/admin/oba" element={<AdminOBA />} />
               <Route path="/admin/preguntas" element={<AdminPreguntas />} />
-              <Route path="/admin/citas" element={<AdminCitas />} />
               <Route path="/admin/cargas" element={<AdminCargas />} />
               <Route path="/admin/checklist" element={<AdminChecklist />} />
               <Route path="/admin/ia" element={<AdminIA />} />
             </Route>
 
-            {/* ── Rutas para clínico (también puede acceder a vistas admin) ── */}
+            {/* ── Rutas para clínico (Personal Médico) ── */}
             <Route element={<ProtectedRoute requiredRoles="clinico" />}>
               <Route path="/clinico" element={<Navigate to="/clinico/usuarias" replace />} />
-              {/* El clínico reutiliza las vistas admin para gestionar pacientes */}
               <Route path="/clinico/usuarias" element={<AdminUsuarias />} />
               <Route path="/clinico/citas" element={<AdminCitas />} />
               <Route path="/clinico/oba" element={<AdminOBA />} />
-              <Route path="/clinico/preguntas" element={<AdminPreguntas />} />
-              <Route path="/clinico/checklist" element={<AdminChecklist />} />
-              <Route path="/clinico/cargas" element={<AdminCargas />} />
-              <Route path="/clinico/ia" element={<AdminIA />} />
             </Route>
 
             {/* ── Rutas para Hospital ── */}

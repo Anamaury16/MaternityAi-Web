@@ -120,7 +120,7 @@
   }
 }
 
-@media (max-width: 1100px) and (min-width: 769px) {
+@media (max-width: 1200px) and (min-width: 1025px) {
   .container {
     flex-direction: column;
     align-items: center;
@@ -150,7 +150,7 @@
   display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .container {
     flex-direction: column;
     margin-top: 0;
@@ -272,6 +272,14 @@
     margin-bottom: 25px;
   }
 
+  .mobileTrimestreLabel {
+    font-size: 18px;
+    color: #ca436e;
+    font-weight: bold;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+
   .sintomasBtn {
     background: linear-gradient(to right, #B9768B, #E0A4B6);
     color: white;
@@ -331,14 +339,31 @@
 .seccion_informacion {
   position: relative;
   animation: float 3s ease-in-out infinite;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+
+  & img {
+    padding-left: 0 !important;
+    display: block;
+    margin: 0 auto;
+    max-width: 98%;
+    max-height: 73vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
 
   & .semanas {
-    padding-left: 100px;
+    padding-left: 0 !important;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
     bottom: 9%;
+    width: 100%;
 
     & h2 {
       color: #9C4460;
@@ -354,4 +379,13 @@
       font-weight: 500;
     }
   }
+}
+
+.trimestreLabelOuter {
+  text-align: center;
+  color: #ca436e;
+  font-size: 24px;
+  font-weight: 700;
+  margin-top: 15px;
+  text-transform: capitalize;
 }

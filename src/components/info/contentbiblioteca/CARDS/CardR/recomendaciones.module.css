@@ -1,81 +1,53 @@
 .recomendaciones {
-  background: linear-gradient(to bottom, #fbeff3, #e799b2, #c57e94);
-  border-radius: 20px;
-  padding: 10px 30px 70px 30px;
-  box-shadow: -3px 3px 6px rgb(180, 180, 180);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: linear-gradient(160deg, #fff0f5 0%, #ffffff 65%);
+  border-radius: 18px;
+  padding: 18px 16px;
+  border: 1px solid rgba(202, 67, 110, 0.12);
+  box-shadow: 0 3px 14px rgba(202, 67, 110, 0.07);
+}
 
-  & h3 {
-    color: white;
-    font-weight: normal;
-    font-size: 28px;
-  }
+.sideLabel {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #ca436e;
+  margin: 0 0 12px 0;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
 
-  & .articulo {
-    border: 1px solid none;
-    border-radius: 12px;
-    background-color: white;
-    padding: 17px 10px 17px 30px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-    color: rgb(170, 170, 170);
-    margin-bottom: 10px;
-  }
+.rec {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #5a2a3a;
+  line-height: 1.5;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(202, 67, 110, 0.1);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
 
-  & .articulo:hover {
-    box-shadow: 3px 3px 6px rgb(124, 124, 124);
-    cursor: pointer;
-  }
+.rec:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
 
-  & button {
-    background-color: transparent;
-    border: none;
-    color: #f8a2bd;
-    font-size: 12px;
-  }
+.recDot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f8b4ca, #ca436e);
+  margin-top: 5px;
+  box-shadow: 0 2px 5px rgba(202, 67, 110, 0.3);
 }
 
 @media (max-width: 768px) {
   .recomendaciones {
-    background: transparent;
-    box-shadow: none;
-    padding: 0 0 10px 20px;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .recomendaciones h3 {
-    display: block;
-    color: #E24C6C;
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 15px;
-    margin-top: 0;
-  }
-
-  .carousel {
-    display: flex;
-    flex-direction: row;
-    overflow-x: auto;
-    gap: 15px;
-    scrollbar-width: none; /* Firefox */
-  }
-
-  .carousel::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
-  }
-
-  .articulo {
-    min-width: 250px;
-    margin-bottom: 0;
-    flex-direction: column;
-    padding: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    border: 1px solid #f9f9f9;
-  }
-
-  .articulo button {
-    margin-top: 10px;
-    align-self: flex-start;
+    padding: 16px 14px;
   }
 }

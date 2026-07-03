@@ -26,10 +26,12 @@ export const AdminOBA = () => {
   // Modales
   const [modalCatOpen, setModalCatOpen] = useState(false);
   const [modalContOpen, setModalContOpen] = useState(false);
+  const [modalPreviewOpen, setModalPreviewOpen] = useState(false);
 
-  // Edición
+  // Edición / Previsualización
   const [editingCategory, setEditingCategory] = useState<EducationalCategoryResponse | null>(null);
   const [editingContent, setEditingContent] = useState<EducationalContentResponse | null>(null);
+  const [previewContent, setPreviewContent] = useState<EducationalContentResponse | null>(null);
 
   // Form Categoría
   const [catNombre, setCatNombre] = useState('');
@@ -49,6 +51,7 @@ export const AdminOBA = () => {
   const [contDuracion, setContDuracion] = useState('5');
   const [contOrden, setContOrden] = useState('0');
   const [contCatId, setContCatId] = useState<string>('');
+  const [contModuloId, setContModuloId] = useState<string>('');
 
   const cargarDatos = async () => {
     setLoading(true);
@@ -140,6 +143,7 @@ export const AdminOBA = () => {
     setContDuracion('5');
     setContOrden('0');
     setContCatId(catActiva?.id.toString() || '');
+    setContModuloId('');
     setModalContOpen(true);
   };
 
@@ -156,6 +160,7 @@ export const AdminOBA = () => {
     setContDuracion(c.duracion_minutos?.toString() || '5');
     setContOrden(c.orden?.toString() || '0');
     setContCatId(c.categoria_id?.toString() || '');
+    setContModuloId(c.modulo_id?.toString() || '');
     setModalContOpen(true);
   };
 
@@ -175,7 +180,8 @@ export const AdminOBA = () => {
         semana_eg_inicio: parseInt(contSemanaInicio) || null,
         semana_eg_fin: parseInt(contSemanaFin) || null,
         duracion_minutos: parseInt(contDuracion) || null,
-        orden: parseInt(contOrden) || 0
+        orden: parseInt(contOrden) || 0,
+        modulo_id: parseInt(contModuloId) || null
       };
 
       if (editingContent) {
@@ -209,6 +215,18 @@ export const AdminOBA = () => {
     return c.tipo_contenido === 'VIDEO'
       ? 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=200&fit=crop'
       : 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400&h=200&fit=crop';
+  };
+
+  const getYoutubeEmbedUrl = (url: string) => {
+    if (!url) return '';
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    if (match && match[2].length === 12) {
+      return `https://www.youtube.com/embed/${match[2].substring(0, 11)}`;
+    } else if (match && match[2].length === 11) {
+      return `https://www.youtube.com/embed/${match[2]}`;
+    }
+    return url;
   };
 
   return (
@@ -291,10 +309,23 @@ export const AdminOBA = () => {
           ) : (
             <div className={styles.obaGrid}>
               {filtrado.map(c => (
-                <div key={c.id} className={styles.obaCard} style={{ opacity: c.activo ? 1 : 0.6 }}>
+                <div
+                  key={c.id}
+                  className={styles.obaCard}
+                  style={{ opacity: c.activo ? 1 : 0.6, cursor: 'pointer' }}
+                  onClick={() => {
+                    setPreviewContent(c);
+                    setModalPreviewOpen(true);
+                  }}
+                >
                   <div className={styles.imgWrap}>
                     <img src={getImagenUrl(c)} alt={c.titulo} className={styles.img} />
                     <span className={styles.badge}>{c.tipo_contenido}</span>
+                    {c.modulo_id && (
+                      <span className={styles.badge} style={{ background: '#7C3AED', left: 'auto', right: '10px' }}>
+                        {c.modulo_id === 1 ? 'M1 (Trimestre 1)' : c.modulo_id === 2 ? 'M2 (Trimestre 2)' : c.modulo_id === 3 ? 'M3 (Trimestre 3)' : 'M4 (Puerperio)'}
+                      </span>
+                    )}
                     {c.tipo_contenido === 'VIDEO' && (
                       <div className={styles.playBtn}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
@@ -307,33 +338,61 @@ export const AdminOBA = () => {
                     <h3 className={styles.cardTitle}>{c.titulo}</h3>
                     <p className={styles.cardDesc}>{c.descripcion}</p>
                     <p style={{ fontSize: '11px', color: '#888', margin: '0 0 10px' }}>
-                      EG: Semanas {c.semana_eg_inicio}-{c.semana_eg_fin} | Duración: {c.duracion_minutos} min
+                      Duración: {c.duracion_minutos} min
                     </p>
                     <div className={styles.cardActions}>
+                      {/* Vista Previa */}
+                      <button
+                        className={styles.iconBtn}
+                        title="Vista Previa"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewContent(c);
+                          setModalPreviewOpen(true);
+                        }}
+                        style={{ color: '#0284c7' }}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
+                      </button>
+
                       {/* Estado activo/inactivo */}
                       <button
                         className={styles.iconBtn}
                         title={c.activo ? "Desactivar" : "Activar"}
-                        onClick={() => handleToggleStatus(c)}
-                        style={{ color: c.activo ? '#4caf50' : '#f44336' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleStatus(c);
+                        }}
+                        style={{ color: c.activo ? '#10b981' : '#ef4444' }}
                       >
                         {c.activo ? (
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
                           </svg>
                         ) : (
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                            <line x1="1" y1="1" x2="23" y2="23" />
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="15" y1="9" x2="9" y2="15" />
+                            <line x1="9" y1="9" x2="15" y2="15" />
                           </svg>
                         )}
                       </button>
 
                       {/* Editar */}
-                      <button className={styles.iconBtn} title="Editar" onClick={() => openEditContent(c)}>
+                      <button
+                        className={styles.iconBtn}
+                        title="Editar"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditContent(c);
+                        }}
+                      >
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                          stroke="currentColor" strokeWidth="2"
+                          stroke="currentColor" strokeWidth="2.2"
                           strokeLinecap="round" strokeLinejoin="round">
                           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
@@ -470,6 +529,21 @@ export const AdminOBA = () => {
           </div>
 
           <div className={modalStyles.field}>
+            <label className={modalStyles.label}>Módulo Clínico (Fase Gestacional BD)</label>
+            <select
+              className={modalStyles.select}
+              value={contModuloId}
+              onChange={e => setContModuloId(e.target.value)}
+            >
+              <option value="">Ninguno / General</option>
+              <option value="1">M1 - Primer Trimestre (Semanas 0-13)</option>
+              <option value="2">M2 - Segundo Trimestre (Semanas 14-27)</option>
+              <option value="3">M3 - Tercer Trimestre (Semanas 28-42)</option>
+              <option value="4">M4 - Parto y Puerperio (Semanas 0-6)</option>
+            </select>
+          </div>
+
+          <div className={modalStyles.field}>
             <label className={modalStyles.label}>Cuerpo / Texto del Artículo</label>
             <textarea
               className={modalStyles.input}
@@ -481,13 +555,15 @@ export const AdminOBA = () => {
           </div>
 
           <div className={modalStyles.field}>
-            <label className={modalStyles.label}>URL del Recurso / Video</label>
+            <label className={modalStyles.label}>
+              {contTipo === 'ARTÍCULO' ? 'Enlace Web o Documento del Artículo *' : 'URL del Video (YouTube, etc.) *'}
+            </label>
             <input
               type="text"
               className={modalStyles.input}
               value={contUrlRecurso}
               onChange={e => setContUrlRecurso(e.target.value)}
-              placeholder="https://..."
+              placeholder={contTipo === 'ARTÍCULO' ? 'https://ejemplo.com/articulo.pdf o enlace' : 'https://www.youtube.com/watch?v=...'}
             />
           </div>
 
@@ -500,27 +576,6 @@ export const AdminOBA = () => {
               onChange={e => setContUrlImagen(e.target.value)}
               placeholder="https://..."
             />
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <div className={modalStyles.field}>
-              <label className={modalStyles.label}>Semana EG Inicio</label>
-              <input
-                type="number"
-                className={modalStyles.input}
-                value={contSemanaInicio}
-                onChange={e => setContSemanaInicio(e.target.value)}
-              />
-            </div>
-            <div className={modalStyles.field}>
-              <label className={modalStyles.label}>Semana EG Fin</label>
-              <input
-                type="number"
-                className={modalStyles.input}
-                value={contSemanaFin}
-                onChange={e => setContSemanaFin(e.target.value)}
-              />
-            </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -553,6 +608,121 @@ export const AdminOBA = () => {
             </button>
           </div>
         </form>
+      </Modal>
+      {/* ── MODAL VISTA PREVIA ── */}
+      <Modal
+        isOpen={modalPreviewOpen}
+        onClose={() => {
+          setModalPreviewOpen(false);
+          setPreviewContent(null);
+        }}
+        title={previewContent ? `Vista Previa: ${previewContent.titulo}` : 'Vista Previa'}
+      >
+        {previewContent && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '75vh', overflowY: 'auto', paddingRight: '4px' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', fontSize: '12px', color: '#6b7280', borderBottom: '1px solid #e5e7eb', paddingBottom: '10px' }}>
+              <span style={{ background: '#f3f4f6', padding: '2px 8px', borderRadius: '12px', fontWeight: 600, color: '#374151' }}>
+                {previewContent.tipo_contenido}
+              </span>
+              {previewContent.modulo_id && (
+                <span style={{ background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                  {previewContent.modulo_id === 1 ? 'M1 - 1er Trimestre' : previewContent.modulo_id === 2 ? 'M2 - 2do Trimestre' : previewContent.modulo_id === 3 ? 'M3 - 3er Trimestre' : 'M4 - Puerperio'}
+                </span>
+              )}
+              <span>Duración: {previewContent.duracion_minutos} min</span>
+            </div>
+
+            {previewContent.descripcion && (
+              <p style={{ fontSize: '14.5px', color: '#4b5563', lineHeight: 1.5, margin: 0, fontWeight: 500 }}>
+                {previewContent.descripcion}
+              </p>
+            )}
+
+            {previewContent.tipo_contenido === 'VIDEO' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {previewContent.url_recurso ? (
+                  previewContent.url_recurso.includes('youtube.com') || previewContent.url_recurso.includes('youtu.be') ? (
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', borderRadius: '12px', overflow: 'hidden', backgroundColor: '#000', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                      <iframe
+                        src={getYoutubeEmbedUrl(previewContent.url_recurso)}
+                        title={previewContent.titulo}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                      />
+                    </div>
+                  ) : (
+                    <div style={{ background: '#f3f4f6', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+                      <p style={{ margin: '0 0 12px 0', fontSize: '13px', color: '#4b5563' }}>
+                        Este video apunta a un recurso externo:
+                      </p>
+                      <a
+                        href={previewContent.url_recurso}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '8px',
+                          background: 'linear-gradient(135deg, #FF4B72 0%, #CA436E 100%)',
+                          color: 'white', padding: '8px 20px', borderRadius: '20px',
+                          fontSize: '13px', fontWeight: 600, textDecoration: 'none',
+                          boxShadow: '0 4px 10px rgba(202,67,110,0.2)'
+                        }}
+                      >
+                        Ver Video Externo
+                      </a>
+                    </div>
+                  )
+                ) : (
+                  <p style={{ color: '#ef4444', fontSize: '13px', fontStyle: 'italic' }}>No se ha configurado ninguna URL de recurso para este video.</p>
+                )}
+              </div>
+            ) : (
+              // Artículo
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {previewContent.url_imagen && (
+                  <img
+                    src={getImagenUrl(previewContent)}
+                    alt={previewContent.titulo}
+                    style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+                  />
+                )}
+                
+                {previewContent.url_recurso && (
+                  <a
+                    href={previewContent.url_recurso}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      alignSelf: 'flex-start',
+                      display: 'inline-flex', alignItems: 'center', gap: '8px',
+                      background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                      color: 'white', padding: '8px 18px', borderRadius: '20px',
+                      fontSize: '13px', fontWeight: 600, textDecoration: 'none',
+                      boxShadow: '0 4px 10px rgba(2,132,199,0.2)',
+                      marginTop: '4px', marginBottom: '8px'
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                    Leer Documento / Artículo Completo
+                  </a>
+                )}
+
+                {previewContent.cuerpo_texto ? (
+                  <div style={{ fontSize: '14.5px', color: '#1f2937', lineHeight: 1.7, whiteSpace: 'pre-wrap', fontFamily: 'inherit' }}>
+                    {previewContent.cuerpo_texto}
+                  </div>
+                ) : (
+                  <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: '13px' }}>Este artículo no tiene contenido de texto redactado en el cuerpo.</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </Modal>
     </div>
   );

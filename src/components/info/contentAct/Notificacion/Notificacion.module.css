@@ -45,9 +45,10 @@
   }
 
   & img {
-    width: 170px;
-    height: 160px;
-    padding: 50px;
+    width: 90px;
+    height: 90px;
+    padding: 8px;
+    object-fit: contain;
   }
 
   /* Badge de alerta sobre el tag */

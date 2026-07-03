@@ -6,20 +6,39 @@ interface ArticuloProps {
   post: ContenidoEducativoResponse;
 }
 
-export const Articulo = React.memo(({ post: {titulo, descripcion, url_imagen, url_recurso} }: ArticuloProps) => {
+export const Articulo = React.memo(({ post }: ArticuloProps) => {
+  const { titulo, descripcion, url_recurso, duracion_minutos, url_imagen } = post;
+
   return (
-    <article className={styles.articulo}>
-      {url_imagen  && <img src={url_imagen} loading="lazy" decoding="async" />}
-      <div className={styles.contenido}>
-        <h2 className={styles.title}>{titulo}</h2>
-        <p>{descripcion}</p>
-        <div className={styles.detalles}>
-          {url_recurso && (
-            <button className={styles.boton} onClick={() => window.open(url_recurso, '_blank')}>
-              Ver más
-            </button>
-          )}
-        </div>
+    <article className={styles.card}>
+      <div className={styles.cardTop}>
+        <span className={styles.badge}>📄 Artículo</span>
+        {duracion_minutos && (
+          <span className={styles.meta}>{duracion_minutos} min lectura</span>
+        )}
+      </div>
+
+      {url_imagen && (
+        <img className={styles.thumbnail} src={url_imagen} alt={titulo} loading="lazy" decoding="async" />
+      )}
+
+      <h3 className={styles.title}>{titulo}</h3>
+
+      {descripcion && (
+        <p className={styles.desc}>{descripcion}</p>
+      )}
+
+      <div className={styles.footer}>
+        {url_recurso ? (
+          <button
+            className={styles.btnLeer}
+            onClick={() => window.open(url_recurso!, '_blank')}
+          >
+            Leer artículo <span>→</span>
+          </button>
+        ) : (
+          <span className={styles.noLink}>Sin enlace disponible</span>
+        )}
       </div>
     </article>
   );

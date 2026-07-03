@@ -40,7 +40,7 @@ export interface RecomendacionResponse {
 
 export interface SintomaCreate {
   descripcion: string;
-  severidad?: 'leve' | 'moderado' | 'severo' | null;
+  severidad?: 'Leve' | 'Moderado' | 'Severo' | 'leve' | 'moderado' | 'severo' | null;
 }
 
 export interface SintomaResponse {
