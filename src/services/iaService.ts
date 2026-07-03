@@ -1,10 +1,6 @@
 import api, { USE_MOCKS } from './api';
 
-// ---------------------------------------------------------------------------
-// Interfaces — alineadas 1:1 con schemas.py del módulo IA
-// ---------------------------------------------------------------------------
 
-// ---- Chat ----
 
 export interface ChatMessageRequest {
   mensaje: string;
