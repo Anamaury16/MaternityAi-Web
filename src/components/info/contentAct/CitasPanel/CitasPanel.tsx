@@ -23,27 +23,75 @@ const estadoConfig: Record<string, { label: string; className: string }> = {
   cancelada:  { label: 'Cancelada',  className: styles.estadoCancelada  },
 };
 
-const TIPO_EMOJI: Record<string, string> = {
-  'control prenatal': '🩺',
-  'ecografía':        '🔬',
-  'laboratorio':      '🧪',
-  'vacuna':           '💉',
-};
-
-const getTipoEmoji = (tipo: string | null) => {
+const getTipoIcon = (tipo: string | null) => {
   const t = (tipo ?? '').toLowerCase();
-  for (const [key, emoji] of Object.entries(TIPO_EMOJI)) {
-    if (t.includes(key)) return emoji;
+  if (t.includes('control prenatal')) {
+    return (
+      <span className={`${styles.iconWrapper} ${styles.iconPrenatal}`}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 10a7 7 0 0 0 14 0V4a2 2 0 0 1 4 0v3a2 2 0 0 0 4 0" />
+          <path d="M21 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
+          <path d="M12 17v4" />
+          <circle cx="12" cy="21" r="1" />
+        </svg>
+      </span>
+    );
   }
-  return '📋';
+  if (t.includes('ecografía')) {
+    return (
+      <span className={`${styles.iconWrapper} ${styles.iconEco}`}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M6 18h8" />
+          <path d="M3 22h18" />
+          <path d="M12 18a4 4 0 0 0 4-4V6a4 4 0 0 0-4-4" />
+          <circle cx="12" cy="6" r="2" />
+          <path d="M16 12h2" />
+        </svg>
+      </span>
+    );
+  }
+  if (t.includes('laboratorio')) {
+    return (
+      <span className={`${styles.iconWrapper} ${styles.iconLab}`}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 2v7.31L4.75 18A2 2 0 0 0 6.5 21h11a2 2 0 0 0 1.75-3L14 9.31V2h-4z" />
+          <line x1="8.5" y1="2" x2="15.5" y2="2" />
+          <line x1="6.5" y1="15" x2="17.5" y2="15" />
+        </svg>
+      </span>
+    );
+  }
+  if (t.includes('vacuna')) {
+    return (
+      <span className={`${styles.iconWrapper} ${styles.iconVacuna}`}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="m18 2 4 4" />
+          <path d="m17 7 3-3" />
+          <path d="M16 9 9.5 15.5" />
+          <path d="m14 11 1.5 1.5" />
+          <path d="m11 14 1.5 1.5" />
+          <path d="M9 16H5v-4l7-7 5 5-8 8Z" />
+          <path d="M3 21v-3l3 3H3Z" />
+        </svg>
+      </span>
+    );
+  }
+  return (
+    <span className={`${styles.iconWrapper} ${styles.iconDefault}`}>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+      </svg>
+    </span>
+  );
 };
 
 const CitaCard = React.memo(({ cita }: { cita: CitaMedicaResponse }) => {
   const cfg = estadoConfig[cita.estado] ?? { label: cita.estado, className: '' };
   return (
     <div className={styles.card}>
-      <div className={styles.cardAvatar}>
-        {getTipoEmoji(cita.tipo_cita)}
+      <div className={styles.cardAvatar} style={{ background: 'transparent', boxShadow: 'none' }}>
+        {getTipoIcon(cita.tipo_cita)}
       </div>
 
       <div className={styles.cardLeft}>

@@ -5,6 +5,10 @@ import { logoutUser } from '../../../services/authService';
 import styles from './HeaderActividad.module.css';
 import { MobileBottomNav } from '../MobileBottomNav';
 import { AlertasPanel } from '../../alertas/AlertasPanel';
+import { RiskSummaryCard } from '../../info/contentMain/RiskSummaryCard/RiskSummaryCard';
+import { Modal } from '../../Modal';
+import { ProgressChecklist } from '../../info/contentMain/progressChecklist/ProgressChecklist';
+import { getActiveModule } from '../../../services/m0Service';
 
 interface HeaderActividadProps {
   rol?: 'paciente' | 'medico' | 'admin' | 'hospital';
@@ -23,7 +27,20 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
     (rawRole === 'clinico' || rawRole === 'medico') ? 'medico' : 'paciente';
 
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const [isRiskModalOpen, setIsRiskModalOpen] = useState(false);
+  const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
+  const [activeModule, setActiveModule] = useState<{
+    modulo_id: number;
+    codigo: string;
+    nombre: string;
+  } | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (activeRole === 'paciente') {
+      getActiveModule().then(setActiveModule).catch(console.error);
+    }
+  }, [activeRole]);
 
   const handleLogout = async () => {
     await logoutUser();
@@ -90,16 +107,48 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
 
       <div className={styles.perfilSection} ref={dropdownRef}>
         {activeRole === 'paciente' && (
-          <button 
-            onClick={() => setAlertsOpen(!alertsOpen)}
-            className={`${styles.bellBtn} ${alertsOpen ? styles.bellActive : ''}`}
-            aria-label="Alertas y Notificaciones"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-            </svg>
-          </button>
+          <>
+            <button 
+              onClick={() => setIsProgressModalOpen(true)}
+              className={styles.bellBtn}
+              style={{ marginRight: '5px' }}
+              aria-label="Mi Progreso"
+              title="Mi Progreso"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="9" y1="6" x2="20" y2="6"></line>
+                <line x1="9" y1="12" x2="20" y2="12"></line>
+                <line x1="9" y1="18" x2="20" y2="18"></line>
+                <circle cx="4" cy="6" r="1"></circle>
+                <circle cx="4" cy="12" r="1"></circle>
+                <circle cx="4" cy="18" r="1"></circle>
+              </svg>
+            </button>
+            <button 
+              onClick={() => setIsRiskModalOpen(true)}
+              className={styles.bellBtn}
+              style={{ marginRight: '5px' }}
+              aria-label="Semáforo de Riesgo IA"
+              title="Semáforo de Riesgo IA"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="7" y="2" width="10" height="20" rx="3" />
+                <circle cx="12" cy="7" r="2" />
+                <circle cx="12" cy="12" r="2" />
+                <circle cx="12" cy="17" r="2" />
+              </svg>
+            </button>
+            <button 
+              onClick={() => setAlertsOpen(!alertsOpen)}
+              className={`${styles.bellBtn} ${alertsOpen ? styles.bellActive : ''}`}
+              aria-label="Alertas y Notificaciones"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </button>
+          </>
         )}
 
         <div onClick={() => navigate('/userprofile')} className={styles.perfil}>
@@ -138,6 +187,19 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
         )}
       </div>
     </header>
+
+    <Modal isOpen={isRiskModalOpen} onClose={() => setIsRiskModalOpen(false)} title="Semáforo de Riesgo IA">
+      <RiskSummaryCard />
+    </Modal>
+
+    <Modal isOpen={isProgressModalOpen} onClose={() => setIsProgressModalOpen(false)} title="Mi Progreso">
+      {activeModule && (
+        <ProgressChecklist
+          moduloId={activeModule.modulo_id}
+          moduloCodigo={activeModule.codigo}
+        />
+      )}
+    </Modal>
     
     <div className={styles.mobileNavWrapper}>
       <MobileBottomNav />

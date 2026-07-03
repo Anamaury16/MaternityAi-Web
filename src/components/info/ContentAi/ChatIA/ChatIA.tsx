@@ -22,6 +22,8 @@ interface ChatIAProps {
   sendMessage: (text: string) => Promise<void>;
   clearHistory?: () => Promise<boolean>;
   activeTopicTag: string;
+  escalatedAlert?: { active: boolean; nivel?: string } | null;
+  clearEscalatedAlert?: () => void;
 }
 
 export const ChatIA = ({
@@ -32,6 +34,8 @@ export const ChatIA = ({
   sendMessage,
   clearHistory,
   activeTopicTag,
+  escalatedAlert,
+  clearEscalatedAlert,
 }: ChatIAProps) => {
   const [inputText, setInputText] = useState('');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -139,6 +143,21 @@ export const ChatIA = ({
           </>
         )}
       </div>
+
+      {escalatedAlert?.active && (
+        <div className={styles.alertBanner}>
+          <div className={styles.alertIcon}>🚨</div>
+          <div className={styles.alertContent}>
+            <h4>Alerta Obstétrica Activada</h4>
+            <p>Se ha detectado un nivel de riesgo clínico alto. Tu reporte ha sido escalado de manera inmediata al personal del hospital para su monitoreo.</p>
+          </div>
+          {clearEscalatedAlert && (
+            <button className={styles.alertCloseBtn} onClick={clearEscalatedAlert} aria-label="Cerrar alerta">
+              ✕
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Listado de mensajes */}
       <div ref={chatsContainerRef} className={styles.chats}>

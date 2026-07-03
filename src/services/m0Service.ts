@@ -173,7 +173,7 @@ const MOCK_CONSENT: ConsentResponse = {
 };
 
 const MOCK_GESTATIONAL_AGE: GestationalAge = {
-  semanas: 30,
+  semanas: 12,
   dias: 3,
   descripcion: '12 semanas y 3 días de gestación',
   fecha_ultima_menstruacion: '2024-02-15',

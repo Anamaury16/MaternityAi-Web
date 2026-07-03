@@ -20,6 +20,7 @@ const SEVERIDADES: { value: Severidad; emoji: string; label: string }[] = [
 export const ReporteModal = ({ onClose, onSubmit, error, loading }: Props) => {
   const [descripcion, setDescripcion]   = useState('');
   const [severidad, setSeveridad]       = useState<Severidad | null>(null);
+  const [submitted, setSubmitted]       = useState(false);
   const textareaRef                     = useRef<HTMLTextAreaElement>(null);
 
   // Foco automático al abrir
@@ -48,6 +49,7 @@ export const ReporteModal = ({ onClose, onSubmit, error, loading }: Props) => {
       textareaRef.current?.focus();
       return;
     }
+    setSubmitted(true);
     await onSubmit(descripcion.trim(), severidad);
   };
 
@@ -75,8 +77,7 @@ export const ReporteModal = ({ onClose, onSubmit, error, loading }: Props) => {
             ✕
           </button>
         </div>
-
-        {error && !loading ? (
+        {submitted && !error && !loading ? (
           /* Estado de éxito */
           <div className={styles.successState}>
             <div className={styles.successIcon}>✓</div>

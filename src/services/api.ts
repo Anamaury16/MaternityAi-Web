@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-export const USE_MOCKS = true; // Cambiar a false para usar el backend real
+export const USE_MOCKS = false; // Cambiar a false para usar el backend real
 
 const api = axios.create({
   baseURL: API_BASE_URL,

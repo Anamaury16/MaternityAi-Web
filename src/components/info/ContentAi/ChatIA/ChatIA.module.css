@@ -634,3 +634,52 @@
     transform: translateY(0);
   }
 }
+
+.alertBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background-color: #fff5f5;
+  border-left: 4px solid #f56565;
+  padding: 12px 16px;
+  margin: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.alertIcon {
+  font-size: 20px;
+}
+
+.alertContent {
+  flex: 1;
+}
+
+.alertContent h4 {
+  margin: 0 0 4px 0;
+  color: #c53030;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.alertContent p {
+  margin: 0;
+  color: #742a2a;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.alertCloseBtn {
+  background: transparent;
+  border: none;
+  color: #e53e3e;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.alertCloseBtn:hover {
+  color: #9b2c2c;
+}
