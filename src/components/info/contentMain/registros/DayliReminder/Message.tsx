@@ -4,8 +4,9 @@ export const Message = () => {
     <div className={styles.Message}>
       <h3>Tu cuerpo</h3>
       <p>
-        Hoy podrías sentirme más cansada de lo normal, tus pesones sensibles ,
-        esto se debe a que tu cuerpo se esta preparando para el bebé
+        Es normal sentir cansancio o incluso un poco de ansiedad, pero recuerda que
+        cada movimiento y cada cambio en tu cuerpo es una señal de que la vida crece
+        dentro de ti.
       </p>
     </div>
   );

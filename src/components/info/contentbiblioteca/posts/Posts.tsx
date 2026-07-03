@@ -39,7 +39,7 @@ export const Posts = React.memo(({ data, loading, error }: Props) => {
   return (
     <div className={styles.grid}>
       {data.map(item =>
-        item.tipo_contenido === 'video'
+        (item.tipo_contenido ?? '').toLowerCase().trim() === 'video'
           ? <Videos key={item.id} post={item} />
           : <Articulo key={item.id} post={item} />
       )}

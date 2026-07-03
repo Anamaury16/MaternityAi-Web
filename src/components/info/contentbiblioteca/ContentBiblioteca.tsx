@@ -12,6 +12,15 @@ const TIPOS = [
   { key: 'documento', label: 'Documentos' },
 ];
 
+const normalizeTipoContenido = (tipo: string | null | undefined): string => {
+  if (!tipo) return 'otro';
+  const clean = tipo.toLowerCase().trim();
+  if (clean === 'video') return 'video';
+  if (clean === 'articulo' || clean === 'artículo') return 'articulo';
+  if (clean === 'documento') return 'documento';
+  return clean;
+};
+
 export const ContentBiblioteca = () => {
   const { data, loading, error } = useEducationalContent();
   const [search, setSearch] = useState('');
@@ -22,7 +31,7 @@ export const ContentBiblioteca = () => {
     return data.filter(item => {
       const matchType =
         activeFilter === 'todos' ||
-        (item.tipo_contenido ?? '').toLowerCase() === activeFilter;
+        normalizeTipoContenido(item.tipo_contenido) === activeFilter;
       const matchSearch =
         search.trim() === '' ||
         item.titulo.toLowerCase().includes(search.toLowerCase()) ||
@@ -34,7 +43,7 @@ export const ContentBiblioteca = () => {
   const counts = useMemo(() => {
     if (!data) return {};
     return data.reduce<Record<string, number>>((acc, item) => {
-      const t = (item.tipo_contenido ?? 'otro').toLowerCase();
+      const t = normalizeTipoContenido(item.tipo_contenido);
       acc[t] = (acc[t] ?? 0) + 1;
       return acc;
     }, {});

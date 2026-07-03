@@ -261,10 +261,7 @@ export const getContentByModule = async (): Promise<ContenidoEducativoResponse[]
   }
   try {
     const response = await api.get('/api/v1/m5/content');
-    if (response.data && response.data.length > 0) {
-      return response.data;
-    }
-    return MOCK_CONTENIDOS;
+    return response.data ?? [];
   } catch (err) {
     console.warn("getContentByModule failed, falling back to mock:", err);
     return MOCK_CONTENIDOS;
@@ -279,10 +276,7 @@ export const getCategories = async (): Promise<CategoriaResponse[]> => {
   }
   try {
     const response = await api.get('/api/v1/m5/content/categories');
-    if (response.data && response.data.length > 0) {
-      return response.data;
-    }
-    return MOCK_CATEGORIAS;
+    return response.data ?? [];
   } catch (err) {
     console.warn("getCategories failed, falling back to mock:", err);
     return MOCK_CATEGORIAS;
@@ -298,10 +292,7 @@ export const getContentsByCategory = async (category_id: number): Promise<Conten
   }
   try {
     const response = await api.get(`/api/v1/m5/content/category/${category_id}`);
-    if (response.data && response.data.length > 0) {
-      return response.data;
-    }
-    return MOCK_CONTENIDOS;
+    return response.data ?? [];
   } catch (err) {
     console.warn("getContentsByCategory failed, falling back to mock:", err);
     return MOCK_CONTENIDOS;

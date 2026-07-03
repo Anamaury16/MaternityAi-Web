@@ -151,7 +151,8 @@ export const AdminOBA = () => {
     setEditingContent(c);
     setContTitulo(c.titulo);
     setContDescripcion(c.descripcion || '');
-    setContTipo((c.tipo_contenido === 'VIDEO' ? 'VIDEO' : 'ARTÍCULO') as 'VIDEO' | 'ARTÍCULO');
+    const t = (c.tipo_contenido ?? '').toUpperCase().trim();
+    setContTipo((t === 'VIDEO' || t === 'VIDEO') ? 'VIDEO' : 'ARTÍCULO');
     setContCuerpo(c.cuerpo_texto || '');
     setContUrlRecurso(c.url_recurso || '');
     setContUrlImagen(c.url_imagen || '');
@@ -173,7 +174,7 @@ export const AdminOBA = () => {
         categoria_id: parseInt(contCatId) || null,
         titulo: contTitulo,
         descripcion: contDescripcion || null,
-        tipo_contenido: contTipo,
+        tipo_contenido: contTipo === 'VIDEO' ? 'video' : 'articulo',
         cuerpo_texto: contCuerpo || null,
         url_recurso: contUrlRecurso || null,
         url_imagen: contUrlImagen || null,
@@ -212,7 +213,8 @@ export const AdminOBA = () => {
 
   const getImagenUrl = (c: EducationalContentResponse) => {
     if (c.url_imagen) return c.url_imagen;
-    return c.tipo_contenido === 'VIDEO'
+    const t = (c.tipo_contenido ?? '').toUpperCase().trim();
+    return t === 'VIDEO'
       ? 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=200&fit=crop'
       : 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400&h=200&fit=crop';
   };
@@ -320,13 +322,13 @@ export const AdminOBA = () => {
                 >
                   <div className={styles.imgWrap}>
                     <img src={getImagenUrl(c)} alt={c.titulo} className={styles.img} />
-                    <span className={styles.badge}>{c.tipo_contenido}</span>
+                    <span className={styles.badge}>{(c.tipo_contenido ?? '').toUpperCase()}</span>
                     {c.modulo_id && (
                       <span className={styles.badge} style={{ background: '#7C3AED', left: 'auto', right: '10px' }}>
                         {c.modulo_id === 1 ? 'M1 (Trimestre 1)' : c.modulo_id === 2 ? 'M2 (Trimestre 2)' : c.modulo_id === 3 ? 'M3 (Trimestre 3)' : 'M4 (Puerperio)'}
                       </span>
                     )}
-                    {c.tipo_contenido === 'VIDEO' && (
+                    {(c.tipo_contenido ?? '').toUpperCase().trim() === 'VIDEO' && (
                       <div className={styles.playBtn}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
                           <polygon points="5 3 19 12 5 21 5 3" />
@@ -622,7 +624,7 @@ export const AdminOBA = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '75vh', overflowY: 'auto', paddingRight: '4px' }}>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center', fontSize: '12px', color: '#6b7280', borderBottom: '1px solid #e5e7eb', paddingBottom: '10px' }}>
               <span style={{ background: '#f3f4f6', padding: '2px 8px', borderRadius: '12px', fontWeight: 600, color: '#374151' }}>
-                {previewContent.tipo_contenido}
+                {(previewContent.tipo_contenido ?? '').toUpperCase()}
               </span>
               {previewContent.modulo_id && (
                 <span style={{ background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
@@ -638,7 +640,7 @@ export const AdminOBA = () => {
               </p>
             )}
 
-            {previewContent.tipo_contenido === 'VIDEO' ? (
+            {(previewContent.tipo_contenido ?? '').toUpperCase().trim() === 'VIDEO' ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {previewContent.url_recurso ? (
                   previewContent.url_recurso.includes('youtube.com') || previewContent.url_recurso.includes('youtu.be') ? (
