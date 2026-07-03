@@ -75,6 +75,39 @@
 .pId         { font-weight: 600; font-size: 12px; color: #CA436E; min-width: 65px; }
 .pDetail     { font-size: 11px; color: #999; }
 
+/* ── PAGINACIÓN LISTA MATERNAS ── */
+.paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+.paginacionBtn {
+  background: #f0f0f0;
+  color: #555;
+  border: none;
+  border-radius: 14px;
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.paginacionBtn:hover:not(:disabled) { background: #e6e6e6; }
+.paginacionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.paginacionInfo {
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+}
+
 /* ── CAL PANEL HEADER ── */
 .calPanelHeader {
   display: flex;
@@ -240,4 +273,85 @@
   padding: 3px 10px;
   border-radius: 10px;
   width: fit-content;
+}
+
+/* ── SOLICITUDES DE CITAS (gestantes) ── */
+.solicitudesSection {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #f0f0f0;
+}
+.solicitudesList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.solicitudCard {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.solicitudInfo {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.solicitudActions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* ── ESTADO BADGES ── */
+.estadoBadge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 10px;
+  width: fit-content;
+}
+.estadoPendiente { background: #fff4e0; color: #b9770e; }
+.estadoConfirmada { background: #e6f7ec; color: #1a7f43; }
+.estadoCancelada { background: #fdecec; color: #dc2626; }
+
+.quickConfirmBtn {
+  background: #CA436E;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.2s;
+}
+.quickConfirmBtn:hover { opacity: 0.88; }
+
+.quickCancelBtn {
+  background: white;
+  color: #CA436E;
+  border: 1px solid #CA436E;
+  border-radius: 16px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.quickCancelBtn:hover { background: #fce8ef; }
+
+.quickConfirmBtn:disabled,
+.quickCancelBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
