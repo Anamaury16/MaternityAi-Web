@@ -57,7 +57,8 @@ export const ContentMain = () => {
 
   const [symptomsModalOpen, setSymptomsModalOpen] = useState(false);
   const { report: reportSymptoms, loading: symptomsLoading, error: symptomsError } = useSymptoms();
-  const { data: checklistData, loading: checklistLoading } = useChecklist();
+  const { data: checklistData, loading: checklistLoading, updateItem } = useChecklist();
+  const [showAllChecklist, setShowAllChecklist] = useState(false);
 
   const handleSymptomsSubmit = async (
     descripcion: string,
@@ -191,20 +192,105 @@ export const ContentMain = () => {
           </button>
 
           <div className={styles.preparacionSeccion}>
-            <h4>Preparacion para el parto</h4>
+            <h4>Preparación para el parto</h4>
             {checklistLoading ? (
-              <p style={{fontSize: '14px', color: '#666'}}>Cargando...</p>
+              <p style={{fontSize: '14px', color: '#666'}}>Cargando checklist...</p>
             ) : checklistData?.items?.length ? (
-              checklistData.items.slice(0, 2).map((item) => (
-                <div key={item.id} className={styles.prepItem}>
-                  <span className={styles.prepLabel}>
-                    {item.texto} {item.completado && '✅'}
-                  </span>
-                  <div className={styles.prepCard}></div>
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  {(showAllChecklist ? checklistData.items : checklistData.items.slice(0, 2)).map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => updateItem(item.id, { completado: !item.completado })}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        padding: '14px',
+                        background: item.completado ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : '#ffffff',
+                        border: item.completado ? '1px solid #bbf7d0' : '1px solid #e5e7eb',
+                        borderRadius: '16px',
+                        marginBottom: '10px',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '22px',
+                          height: '22px',
+                          borderRadius: '50%',
+                          border: item.completado ? '2px solid #22c55e' : '2px solid #9ca3af',
+                          background: item.completado ? '#22c55e' : 'transparent',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#ffffff',
+                          fontWeight: 'bold',
+                          fontSize: '12px',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {item.completado && '✓'}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: '13.5px',
+                            fontWeight: 500,
+                            color: item.completado ? '#166534' : '#1f2937',
+                            textDecoration: item.completado ? 'line-through' : 'none',
+                            lineHeight: '1.4',
+                          }}
+                        >
+                          {item.texto}
+                        </p>
+                        {item.semana_eg && (
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              marginTop: '6px',
+                              padding: '2px 8px',
+                              background: item.completado ? '#dcfce7' : '#f3f4f6',
+                              color: item.completado ? '#15803d' : '#4b5563',
+                              borderRadius: '12px',
+                              fontSize: '10.5px',
+                              fontWeight: 500,
+                            }}
+                          >
+                            Semana {item.semana_eg}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))
+
+                {checklistData.items.length > 2 && (
+                  <button
+                    onClick={() => setShowAllChecklist(!showAllChecklist)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#CA436E',
+                      fontWeight: 600,
+                      fontSize: '13px',
+                      marginTop: '8px',
+                      cursor: 'pointer',
+                      padding: '4px 0',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    {showAllChecklist ? 'Ver menos ↑' : `Ver todos (${checklistData.items.length}) ↓`}
+                  </button>
+                )}
+              </>
             ) : (
-              <p style={{fontSize: '14px', color: '#666'}}>No hay items pendientes</p>
+              <p style={{fontSize: '14px', color: '#666'}}>No hay ítems configurados</p>
             )}
           </div>
 

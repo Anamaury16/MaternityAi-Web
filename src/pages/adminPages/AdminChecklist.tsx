@@ -8,9 +8,11 @@ import {
   createChecklistItem,
   updateChecklistItem,
   updateChecklistItemStatus,
+  getCatalogItems,
   type ChecklistItemResponse,
   type ChecklistItemCreate,
   type ChecklistItemUpdate,
+  type CatalogoItem,
 } from '../../services/adminService';
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
@@ -53,6 +55,7 @@ const emptyForm = (): ChecklistItemCreate => ({
 export const AdminChecklist = () => {
   // Data
   const [items, setItems] = useState<ChecklistItemResponse[]>([]);
+  const [modulos, setModulos] = useState<CatalogoItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Toast
@@ -65,6 +68,23 @@ export const AdminChecklist = () => {
 
   // Form state
   const [form, setForm] = useState<ChecklistItemCreate>(emptyForm());
+
+  const getWeekOptions = () => {
+    if (form.modulo_id === null) {
+      return Array.from({ length: 42 }, (_, i) => i + 1);
+    }
+    const selectedModulo = modulos.find(m => Number(m.id) === form.modulo_id);
+    if (!selectedModulo) return [];
+    
+    const start = selectedModulo.semana_eg_inicio ?? 0;
+    const end = selectedModulo.semana_eg_fin ?? 0;
+    
+    const weeks = [];
+    for (let w = start; w <= end; w++) {
+      weeks.push(w);
+    }
+    return weeks;
+  };
 
   // Per-row toggle loading
   const [togglingId, setTogglingId] = useState<number | null>(null);
@@ -85,6 +105,9 @@ export const AdminChecklist = () => {
 
   useEffect(() => {
     fetchItems();
+    getCatalogItems('modulo-clinico')
+      .then(data => setModulos(data.filter(m => m.activo)))
+      .catch(err => console.error("Error loading clinical modules catalog:", err));
   }, [fetchItems]);
 
   // ── Open modal ───────────────────────────────────────────────────────────
@@ -271,7 +294,7 @@ export const AdminChecklist = () => {
                       {/* Módulo */}
                       <td>
                         {item.modulo_id != null ? (
-                          item.modulo_id
+                          modulos.find((m) => Number(m.id) === item.modulo_id)?.codigo ?? `M${item.modulo_id}`
                         ) : (
                           <span className={styles.nullBadge}>—</span>
                         )}
@@ -371,35 +394,46 @@ export const AdminChecklist = () => {
           <div className={styles.formGrid2}>
             <div className={modalStyles.field}>
               <label className={modalStyles.label} htmlFor="ci-modulo">
-                ID de Módulo
+                Módulo Clínico
               </label>
-              <input
+              <select
                 id="ci-modulo"
-                type="number"
-                min={1}
                 className={modalStyles.input}
-                placeholder="Ej. 1"
                 value={form.modulo_id ?? ''}
-                onChange={e =>
+                onChange={e => {
+                  const val = e.target.value === '' ? null : Number(e.target.value);
+                  const selectedModulo = modulos.find(m => Number(m.id) === val);
+                  let nextSemana = form.semana_eg;
+                  if (selectedModulo && typeof nextSemana === 'number') {
+                    const start = selectedModulo.semana_eg_inicio ?? 0;
+                    const end = selectedModulo.semana_eg_fin ?? 0;
+                    if (nextSemana < start || nextSemana > end) {
+                      nextSemana = null;
+                    }
+                  }
                   setForm({
                     ...form,
-                    modulo_id: e.target.value === '' ? null : Number(e.target.value),
-                  })
-                }
-              />
+                    modulo_id: val,
+                    semana_eg: nextSemana,
+                  });
+                }}
+              >
+                <option value="">Seleccione un módulo</option>
+                {modulos.map((m) => (
+                  <option key={m.id} value={Number(m.id)}>
+                    {m.codigo} - {m.nombre}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className={modalStyles.field}>
               <label className={modalStyles.label} htmlFor="ci-semana">
                 Semana EG
               </label>
-              <input
+              <select
                 id="ci-semana"
-                type="number"
-                min={1}
-                max={42}
                 className={modalStyles.input}
-                placeholder="1 – 42"
                 value={form.semana_eg ?? ''}
                 onChange={e =>
                   setForm({
@@ -407,7 +441,14 @@ export const AdminChecklist = () => {
                     semana_eg: e.target.value === '' ? null : Number(e.target.value),
                   })
                 }
-              />
+              >
+                <option value="">Sin semana</option>
+                {getWeekOptions().map(week => (
+                  <option key={week} value={week}>
+                    Semana {week}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

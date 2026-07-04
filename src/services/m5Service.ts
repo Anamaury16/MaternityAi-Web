@@ -70,6 +70,7 @@ export interface ChecklistItemResponse {
   orden: number | null;
   completado: boolean;
   fecha_completado: string | null;      // datetime ISO
+  semana_eg?: number | null;
 }
 
 export interface ChecklistResponse {

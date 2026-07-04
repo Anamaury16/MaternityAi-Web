@@ -8,6 +8,8 @@ export interface CatalogoItem {
   nombre: string;
   descripcion?: string | null;
   activo: boolean;
+  semana_eg_inicio?: number | null;
+  semana_eg_fin?: number | null;
 }
 
 export interface Catalogos {
@@ -706,3 +708,23 @@ export const updateChecklistItemStatus = async (
   });
   return response.data;
 };
+
+export interface GestanteChecklistItem {
+  id: number;
+  texto: string;
+  modulo_id: number | null;
+  semana_eg: number | null;
+  orden: number | null;
+  completado: boolean;
+  fecha_completado?: string | null;
+}
+
+export const getGestanteChecklist = async (
+  gestanteId: string
+): Promise<GestanteChecklistItem[]> => {
+  const response = await api.get<GestanteChecklistItem[]>(
+    `/api/v1/clinical/checklist-items/${gestanteId}`
+  );
+  return response.data;
+};
+

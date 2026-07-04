@@ -16,12 +16,14 @@ import {
   getGestanteAlarmSigns,
   getGestanteDailyQuestionsHistory,
   createGestanteEmergencyCall,
+  getGestanteChecklist,
   type GestanteResponse,
   type RoleOption,
   type ExamenResponse,
   type AlertaAdminResponse,
   type RespuestaConPreguntaResponse,
   type LlamadaEmergenciaCreate,
+  type GestanteChecklistItem,
 } from '../../services/adminService';
 import {
   getObstetricFormula,
@@ -203,6 +205,8 @@ export const AdminUsuarias = () => {
     return localStorage.getItem('selected_gestante_gmi') || 'XYZ1002';
   });
   const [gestantes, setGestantes] = useState<GestanteResponse[]>([]);
+  const [paginaMaternas, setPaginaMaternas] = useState(1);
+  const MATERNAS_POR_PAGINA = 10;
 
   useEffect(() => {
     if (selPaciente && selPaciente !== 'XYZ1002') {
@@ -324,6 +328,9 @@ export const AdminUsuarias = () => {
   const [showAlertas, setShowAlertas] = useState(false);
   const [showCuestionario, setShowCuestionario] = useState(false);
   const [showEmergencia, setShowEmergencia] = useState(false);
+  const [showChecklist, setShowChecklist] = useState(false);
+  const [checklistItems, setChecklistItems] = useState<GestanteChecklistItem[]>([]);
+  const [loadingChecklist, setLoadingChecklist] = useState(false);
   const [emergenciaForm, setEmergenciaForm] = useState<LlamadaEmergenciaCreate>({ motivo: '', destino: '', resultado: '' });
   const [emergenciaLoading, setEmergenciaLoading] = useState(false);
   const [emergenciaError, setEmergenciaError] = useState<string | null>(null);
@@ -386,6 +393,17 @@ export const AdminUsuarias = () => {
     (p.codigo_gmi || p.id).toLowerCase().includes(busqueda.toLowerCase())
   );
 
+  const totalPaginasMaternas = Math.max(1, Math.ceil(filtrados.length / MATERNAS_POR_PAGINA));
+  const paginaMaternasClamped = Math.min(paginaMaternas, totalPaginasMaternas);
+  const maternasPagina = filtrados.slice(
+    (paginaMaternasClamped - 1) * MATERNAS_POR_PAGINA,
+    paginaMaternasClamped * MATERNAS_POR_PAGINA
+  );
+
+  useEffect(() => {
+    setPaginaMaternas(1);
+  }, [busqueda, activeList]);
+
   const gestanteSeleccionada = gestantes.find(g => g.codigo_gmi === selPaciente);
 
   useEffect(() => {
@@ -393,6 +411,7 @@ export const AdminUsuarias = () => {
       setExams([]);
       setAlarmSigns([]);
       setDailyHistory([]);
+      setChecklistItems([]);
       return;
     }
     const gestanteId = gestanteSeleccionada.id;
@@ -400,6 +419,11 @@ export const AdminUsuarias = () => {
     getGestanteExams(gestanteId).then(setExams).catch(() => setExams([]));
     getGestanteAlarmSigns(gestanteId).then(setAlarmSigns).catch(() => setAlarmSigns([]));
     getGestanteDailyQuestionsHistory(gestanteId).then(setDailyHistory).catch(() => setDailyHistory([]));
+    setLoadingChecklist(true);
+    getGestanteChecklist(gestanteId)
+      .then(setChecklistItems)
+      .catch(() => setChecklistItems([]))
+      .finally(() => setLoadingChecklist(false));
   }, [gestanteSeleccionada?.id]);
 
   const abrirEmergencia = () => {
@@ -513,7 +537,7 @@ export const AdminUsuarias = () => {
 
           <div className={styles.pList}>
             {activeList === 'maternas' ? (
-              filtrados.map((p, i) => {
+              maternasPagina.map((p, i) => {
                 const getTrimestre = (semanas?: number | null) => {
                   if (!semanas) return 'N/A';
                   if (semanas <= 13) return 'Trimestre 1';
@@ -570,6 +594,30 @@ export const AdminUsuarias = () => {
               ))
             )}
           </div>
+
+          {activeList === 'maternas' && (
+            <div className={styles.paginacion}>
+              <button
+                type="button"
+                className={styles.paginacionBtn}
+                onClick={() => setPaginaMaternas(p => Math.max(1, p - 1))}
+                disabled={paginaMaternasClamped <= 1}
+              >
+                Anterior
+              </button>
+              <span className={styles.paginacionInfo}>
+                Página {paginaMaternasClamped} de {totalPaginasMaternas}
+              </span>
+              <button
+                type="button"
+                className={styles.paginacionBtn}
+                onClick={() => setPaginaMaternas(p => Math.min(totalPaginasMaternas, p + 1))}
+                disabled={paginaMaternasClamped >= totalPaginasMaternas}
+              >
+                Siguiente
+              </button>
+            </div>
+          )}
         </div>
 
         {/*parte central los detalles*/}
@@ -1034,6 +1082,9 @@ export const AdminUsuarias = () => {
             <button className={styles.cuestionarioBtn} onClick={() => setShowCuestionario(true)}>
               Revisar cuestionario diario
             </button>
+            <button className={styles.cuestionarioBtn} onClick={() => setShowChecklist(true)} style={{ marginTop: '10px' }}>
+              Revisar checklist de preparación
+            </button>
 
             <div className={styles.reporteCards}>
               <div className={styles.rcard} style={{ width: '75%', background: '#f9c0cf' }} />
@@ -1146,6 +1197,63 @@ export const AdminUsuarias = () => {
                 <p className={styles.infoRow}><strong>Fecha</strong> · {formatFecha(r.created_at)}</p>
               </div>
             ))
+          )}
+        </div>
+      </Modal>
+
+      {/* Modal: checklist de preparación para el parto */}
+      <Modal
+        isOpen={showChecklist}
+        onClose={() => setShowChecklist(false)}
+        title="Checklist de Preparación para el Parto"
+      >
+        <div className={modalStyles.form}>
+          {loadingChecklist ? (
+            <p className={styles.secDesc} style={{ margin: 0 }}>
+              Cargando checklist de la paciente...
+            </p>
+          ) : checklistItems.length === 0 ? (
+            <p className={styles.secDesc} style={{ margin: 0 }}>
+              No hay ítems registrados en el checklist de esta paciente.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '450px', overflowY: 'auto', paddingRight: '4px' }}>
+              {checklistItems.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px',
+                    background: item.completado ? '#f0fdf4' : '#f9f9f9',
+                    borderRadius: '12px',
+                    border: item.completado ? '1px solid #bbf7d0' : '1px solid #eee',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '18px',
+                      color: item.completado ? '#16a34a' : '#ccc',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {item.completado ? '✓' : '○'}
+                  </span>
+                  <div style={{ flex: 1 }}>
+                    <p className={styles.infoRow} style={{ margin: 0, fontWeight: 500, color: item.completado ? '#14532d' : '#333' }}>
+                      {item.texto}
+                    </p>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px', fontSize: '11px', color: '#666' }}>
+                      {item.semana_eg && <span>Semana {item.semana_eg}</span>}
+                      {item.fecha_completado && (
+                        <span>• Completado el: {formatFecha(item.fecha_completado)}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </Modal>

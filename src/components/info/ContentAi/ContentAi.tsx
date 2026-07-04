@@ -5,6 +5,14 @@ import { Historial } from './Historial/Historial';
 import { useChat } from '../../../hooks/ia/useChat';
 import { getMessagesByTopic, TOPIC_TAGS } from '../../../utils/iaHelpers';
 
+export interface ChatSession {
+  id: string;
+  topic: string;
+  title: string;
+  startTimestamp: string;
+  createdAt: number;
+}
+
 export const ContentAi = () => {
   const [activeTopic, setActiveTopic] = useState(0);
   const {
@@ -19,13 +27,194 @@ export const ContentAi = () => {
   } = useChat();
 
   const activeTopicTag = TOPIC_TAGS[activeTopic] || 'General';
-  const filteredMessages = getMessagesByTopic(messages, activeTopicTag);
+
+  // Sesiones de chat
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [deletedSessionIds, setDeletedSessionIds] = useState<string[]>([]);
+
+  // 1. Cargar datos iniciales de localStorage al montar
+  useEffect(() => {
+    const savedSessions = localStorage.getItem('maternity_chat_sessions');
+    const savedDeleted = localStorage.getItem('maternity_deleted_session_ids');
+    if (savedSessions) {
+      setSessions(JSON.parse(savedSessions));
+    }
+    if (savedDeleted) {
+      setDeletedSessionIds(JSON.parse(savedDeleted));
+    }
+  }, []);
+
+  // 2. Auto-inicializar sesiones pasadas si existen mensajes en la BD pero no sesiones locales
+  useEffect(() => {
+    if (isLoading || messages.length === 0) return;
+
+    const savedSessionsStr = localStorage.getItem('maternity_chat_sessions');
+    let currentSessions: ChatSession[] = savedSessionsStr ? JSON.parse(savedSessionsStr) : [];
+    let updated = false;
+
+    TOPIC_TAGS.forEach((tag) => {
+      const topicMsgs = getMessagesByTopic(messages, tag);
+      const hasSessionsForTag = currentSessions.some((s) => s.topic === tag);
+
+      if (topicMsgs.length > 0 && !hasSessionsForTag) {
+        const historicalSession: ChatSession = {
+          id: `session-default-${tag}`,
+          topic: tag,
+          title: `Conversación Histórica`,
+          startTimestamp: '1970-01-01T00:00:00.000Z',
+          createdAt: new Date(topicMsgs[0].created_at).getTime(),
+        };
+        currentSessions.push(historicalSession);
+        updated = true;
+      }
+    });
+
+    if (updated) {
+      setSessions(currentSessions);
+      localStorage.setItem('maternity_chat_sessions', JSON.stringify(currentSessions));
+    }
+  }, [messages, isLoading]);
+
+  // 3. Crear sesión inicial para temas sin sesiones activas, y auto-seleccionar la última sesión activa
+  useEffect(() => {
+    const topicSessions = sessions.filter(
+      (s) => s.topic === activeTopicTag && !deletedSessionIds.includes(s.id)
+    );
+
+    if (topicSessions.length === 0 && !isLoading) {
+      const newSessionId = `session-${activeTopicTag}-${Date.now()}`;
+      const newSession: ChatSession = {
+        id: newSessionId,
+        topic: activeTopicTag,
+        title: `Nueva conversación`,
+        startTimestamp: new Date().toISOString(),
+        createdAt: Date.now(),
+      };
+      const updated = [...sessions, newSession];
+      setSessions(updated);
+      localStorage.setItem('maternity_chat_sessions', JSON.stringify(updated));
+      setActiveSessionId(newSessionId);
+    } else if (
+      topicSessions.length > 0 &&
+      (!activeSessionId ||
+        !sessions.some((s) => s.id === activeSessionId && s.topic === activeTopicTag))
+    ) {
+      setActiveSessionId(topicSessions[topicSessions.length - 1].id);
+    }
+  }, [activeTopic, sessions, activeSessionId, isLoading, deletedSessionIds, activeTopicTag]);
+
+  // Obtener la sesión activa para el tema actual
+  const activeSession =
+    sessions.find(
+      (s) =>
+        s.id === activeSessionId &&
+        s.topic === activeTopicTag &&
+        !deletedSessionIds.includes(s.id)
+    ) || null;
+
+  // Filtrar los mensajes de la sesión activa
+  const getSessionMessages = (): any[] => {
+    if (!activeSession) return [];
+
+    const topicMessages = getMessagesByTopic(messages, activeTopicTag);
+    const nonDeletedSessions = sessions.filter(
+      (s) => s.topic === activeTopicTag && !deletedSessionIds.includes(s.id)
+    );
+
+    // Ordenar cronológicamente
+    const sorted = [...nonDeletedSessions].sort(
+      (a, b) => new Date(a.startTimestamp).getTime() - new Date(b.startTimestamp).getTime()
+    );
+
+    const activeIndex = sorted.findIndex((s) => s.id === activeSession.id);
+    if (activeIndex === -1) return [];
+
+
+    return topicMessages.filter((m) => {
+      const mTime = new Date(m.created_at).getTime();
+      // Encontrar a qué sesión pertenece el mensaje
+      const messageSession = sorted
+        .filter((s) => new Date(s.startTimestamp).getTime() <= mTime)
+        .sort((a, b) => new Date(b.startTimestamp).getTime() - new Date(a.startTimestamp).getTime())[0];
+
+      return messageSession && messageSession.id === activeSession.id;
+    });
+  };
+
+  const sessionMessages = getSessionMessages();
+
+  // Enviar mensaje y renombrar automáticamente si es el primero de la sesión
+  const handleSendMessage = async (text: string) => {
+    await sendMessage(text);
+
+    // Auto-renombrar si está en el valor por defecto
+    if (
+      activeSession &&
+      (activeSession.title === 'Nueva conversación' ||
+        activeSession.title === 'Nueva Conversación' ||
+        activeSession.title === 'Conversación Histórica')
+    ) {
+      const cleanText = text.replace(/^\[Tema:\s*[^\]]+\]\s*/, '');
+      const words = cleanText.split(/\s+/).filter(Boolean);
+      const titleCandidate = words.slice(0, 4).join(' ');
+      const newTitle =
+        titleCandidate.length > 25
+          ? titleCandidate.slice(0, 25) + '...'
+          : titleCandidate || 'Consulta';
+
+      const updatedSessions = sessions.map((s) => {
+        if (s.id === activeSession.id) {
+          return { ...s, title: newTitle };
+        }
+        return s;
+      });
+      setSessions(updatedSessions);
+      localStorage.setItem('maternity_chat_sessions', JSON.stringify(updatedSessions));
+    }
+  };
+
+  const handleCreateSession = () => {
+    const newSessionId = `session-${activeTopicTag}-${Date.now()}`;
+    const newSession: ChatSession = {
+      id: newSessionId,
+      topic: activeTopicTag,
+      title: `Nueva conversación`,
+      startTimestamp: new Date().toISOString(),
+      createdAt: Date.now(),
+    };
+    const updated = [...sessions, newSession];
+    setSessions(updated);
+    localStorage.setItem('maternity_chat_sessions', JSON.stringify(updated));
+    setActiveSessionId(newSessionId);
+  };
+
+  const handleDeleteSession = (sessionId: string) => {
+    const updatedDeleted = [...deletedSessionIds, sessionId];
+    setDeletedSessionIds(updatedDeleted);
+    localStorage.setItem('maternity_deleted_session_ids', JSON.stringify(updatedDeleted));
+
+    if (activeSessionId === sessionId) {
+      setActiveSessionId(null);
+    }
+  };
+
+  const handleClearAllHistory = async () => {
+    const success = await clearHistory();
+    if (success) {
+      const updated = sessions.filter((s) => s.topic !== activeTopicTag);
+      setSessions(updated);
+      localStorage.setItem('maternity_chat_sessions', JSON.stringify(updated));
+      setActiveSessionId(null);
+    }
+    return success;
+  };
 
   useEffect(() => {
     const pending = localStorage.getItem('pending_ai_question');
     if (pending) {
       localStorage.removeItem('pending_ai_question');
-      sendMessage(pending);
+      handleSendMessage(pending);
     }
   }, [sendMessage]);
 
@@ -35,18 +224,23 @@ export const ContentAi = () => {
         <Historial
           activeTopic={activeTopic}
           setActiveTopic={setActiveTopic}
-          clearHistory={clearHistory}
-          hasMessages={filteredMessages.length > 0}
+          clearHistory={handleClearAllHistory}
+          hasMessages={sessionMessages.length > 0}
+          sessions={sessions}
+          activeSessionId={activeSessionId}
+          setActiveSessionId={setActiveSessionId}
+          onCreateSession={handleCreateSession}
+          onDeleteSession={handleDeleteSession}
         />
       </div>
       <div className={styles.chat}>
         <ChatIA
-          messages={filteredMessages}
+          messages={sessionMessages}
           isLoading={isLoading}
           isSending={isSending}
           error={error}
-          sendMessage={sendMessage}
-          clearHistory={clearHistory}
+          sendMessage={handleSendMessage}
+          clearHistory={handleClearAllHistory}
           activeTopicTag={activeTopicTag}
           escalatedAlert={escalatedAlert}
           clearEscalatedAlert={clearEscalatedAlert}
