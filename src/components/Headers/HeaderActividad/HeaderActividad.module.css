@@ -168,3 +168,9 @@
   }
 }
 
+.perfilNoClick {
+  cursor: default !important;
+  pointer-events: none;
+}
+
+

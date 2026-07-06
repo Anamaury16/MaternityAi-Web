@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDailyQuestions } from '../../../../../hooks/clinical/useClinical';
-import { CuestionarioModal } from './Cuestionariomodal ';
+import { CuestionarioModal } from './Cuestionariomodal';
 import type { RespuestaItem } from '../../../../../services/clinicalService';
 import { SvgClipboard } from '../../../../Icons/IconsSystem';
 import styles from './Cuestionario.module.css';

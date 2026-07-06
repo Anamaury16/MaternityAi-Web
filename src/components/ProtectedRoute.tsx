@@ -13,7 +13,6 @@ const roleHomeMap: Record<string, string> = {
   gestante:      '/main',
   admin:         '/admin',
   clinico:       '/clinico',
-  investigador:  '/investigador',
   hospital:      '/hospital',
 };
 

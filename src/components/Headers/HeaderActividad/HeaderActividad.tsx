@@ -151,7 +151,10 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
           </>
         )}
 
-        <div onClick={() => navigate('/userprofile')} className={styles.perfil}>
+        <div 
+          onClick={activeRole === 'paciente' ? () => navigate('/userprofile') : undefined} 
+          className={`${styles.perfil} ${activeRole !== 'paciente' ? styles.perfilNoClick : ''}`}
+        >
           <div>
             <p className={styles.name}>{localStorage.getItem('user_name') || 'Usuario'}</p>
             <p className={styles.desc}>
@@ -201,9 +204,11 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
       )}
     </Modal>
     
-    <div className={styles.mobileNavWrapper}>
-      <MobileBottomNav />
-    </div>
+    {activeRole === 'paciente' && (
+      <div className={styles.mobileNavWrapper}>
+        <MobileBottomNav />
+      </div>
+    )}
     </>
   );
 };

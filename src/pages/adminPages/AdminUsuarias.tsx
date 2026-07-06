@@ -56,7 +56,7 @@ const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
       getRoles()
       .then((data) => {
         // Solo mostrar Admin, Clínico y Hospital en el selector de staff
-        setRoles(data.filter((r) => r.nombre !== 'gestante' && r.nombre !== 'investigador'));
+        setRoles(data.filter((r) => r.nombre !== 'gestante'));
       })
       .catch(() => {
         // Fallback con roles estáticos si el backend no responde
@@ -163,7 +163,6 @@ const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
           <span className={modalStyles.rolBadge}>
             {rolSeleccionado.nombre === 'admin' && '🛡️ Administrador del sistema'}
             {rolSeleccionado.nombre === 'clinico' && '🩺 Profesional de salud'}
-            {rolSeleccionado.nombre === 'investigador' && '🔬 Acceso a datos de investigación'}
             {rolSeleccionado.nombre === 'hospital' && '🏥 Personal Hospitalario (Alertas)'}
           </span>
         )}
@@ -496,7 +495,7 @@ export const AdminUsuarias = () => {
                 className={styles.addPacienteBtn}
                 style={{ flex: 1, background: '#7C3AED' }}
                 onClick={() => setModalOpen('staff')}
-                title="Crear usuario de staff (clínico, admin, investigador)"
+                title="Crear usuario de staff (clínico, admin, hospital)"
               >
                 + Staff
               </button>

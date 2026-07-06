@@ -64,7 +64,12 @@ export const ContentMain = () => {
     descripcion: string,
     severidad: 'leve' | 'moderado' | 'severo' | null,
   ) => {
-    await reportSymptoms({ descripcion, severidad: severidad ?? undefined });
+    let capitalizedSeveridad: 'Leve' | 'Moderado' | 'Severo' | undefined = undefined;
+    if (severidad === 'leve') capitalizedSeveridad = 'Leve';
+    else if (severidad === 'moderado') capitalizedSeveridad = 'Moderado';
+    else if (severidad === 'severo') capitalizedSeveridad = 'Severo';
+
+    await reportSymptoms({ descripcion, severidad: capitalizedSeveridad });
     setSymptomsModalOpen(false);
   };
 
