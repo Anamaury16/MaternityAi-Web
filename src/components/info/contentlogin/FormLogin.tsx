@@ -22,6 +22,20 @@ interface StaffLoginState {
   password: string;
 }
 
+const EyeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+const EyeOffIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+    <line x1="1" y1="1" x2="23" y2="23" />
+  </svg>
+);
+
 export const FormLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -88,6 +102,10 @@ export const FormLogin = () => {
     email: '',
     password: '',
   });
+
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showResetNewPassword, setShowResetNewPassword] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -233,13 +251,36 @@ export const FormLogin = () => {
                 {securityQuestion}
               </div>
 
-              <input
-                value={gestanteForm.respuesta_seguridad}
-                type="password"
-                placeholder="Tu respuesta secreta"
-                disabled={isLoading}
-                onChange={(e) => handleGestanteForm('respuesta_seguridad', e.target.value)}
-              />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%', marginTop: '8px' }}>
+                <input
+                  value={gestanteForm.respuesta_seguridad}
+                  type={showAnswer ? "text" : "password"}
+                  placeholder="Tu respuesta secreta"
+                  disabled={isLoading}
+                  onChange={(e) => handleGestanteForm('respuesta_seguridad', e.target.value)}
+                  style={{ width: '100%', paddingRight: '45px', marginTop: 0 }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAnswer(prev => !prev)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#888',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                  }}
+                >
+                  {showAnswer ? <EyeIcon /> : <EyeOffIcon />}
+                </button>
+              </div>
 
               <button
                 type="button"
@@ -268,13 +309,36 @@ export const FormLogin = () => {
           />
 
           <p>Contraseña</p>
-          <input
-            value={staffForm.password}
-            type="password"
-            placeholder="Tu contraseña"
-            disabled={isLoading}
-            onChange={(e) => handleStaffForm('password', e.target.value)}
-          />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%', marginTop: '8px' }}>
+            <input
+              value={staffForm.password}
+              type={showPassword ? "text" : "password"}
+              placeholder="Tu contraseña"
+              disabled={isLoading}
+              onChange={(e) => handleStaffForm('password', e.target.value)}
+              style={{ width: '100%', paddingRight: '45px', marginTop: 0 }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(prev => !prev)}
+              style={{
+                position: 'absolute',
+                right: '12px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#888',
+                top: '50%',
+                transform: 'translateY(-50%)',
+              }}
+            >
+              {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+            </button>
+          </div>
         </>
       )}
 
@@ -385,18 +449,40 @@ export const FormLogin = () => {
                   fontSize: '0.9rem', boxSizing: 'border-box',
                 }}
               />
-              <input
-                type="password"
-                placeholder="Nueva contraseña"
-                value={resetNewPassword}
-                onChange={(e) => { setResetNewPassword(e.target.value); setErrorMessage(null); }}
-                disabled={isLoadingReset}
-                style={{
-                  width: '100%', padding: '10px', borderRadius: '8px',
-                  border: '1px solid #ddd', marginBottom: '10px',
-                  fontSize: '0.9rem', boxSizing: 'border-box',
-                }}
-              />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%', marginBottom: '10px' }}>
+                <input
+                  type={showResetNewPassword ? "text" : "password"}
+                  placeholder="Nueva contraseña"
+                  value={resetNewPassword}
+                  onChange={(e) => { setResetNewPassword(e.target.value); setErrorMessage(null); }}
+                  disabled={isLoadingReset}
+                  style={{
+                    width: '100%', padding: '10px 45px 10px 10px', borderRadius: '8px',
+                    border: '1px solid #ddd', margin: 0,
+                    fontSize: '0.9rem', boxSizing: 'border-box',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowResetNewPassword(prev => !prev)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#888',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                  }}
+                >
+                  {showResetNewPassword ? <EyeIcon /> : <EyeOffIcon />}
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={handleResetConfirm}

@@ -570,6 +570,27 @@ export const getGestanteExams = async (gestanteId: string): Promise<ExamenRespon
   return response.data;
 };
 
+export const getGestanteExamById = async (
+  gestanteId: string,
+  examId: string
+): Promise<ExamenResponse> => {
+  const response = await api.get<ExamenResponse>(
+    `/api/v1/admin/gestantes/${gestanteId}/exams/${examId}`
+  );
+  return response.data;
+};
+
+export const createGestanteExam = async (
+  gestanteId: string,
+  data: any
+): Promise<ExamenResponse> => {
+  const response = await api.post<ExamenResponse>(
+    `/api/v1/admin/gestantes/${gestanteId}/exams`,
+    data
+  );
+  return response.data;
+};
+
 export const getGestanteAlarmSigns = async (gestanteId: string): Promise<AlertaAdminResponse[]> => {
   const response = await api.get<AlertaAdminResponse[]>(`/api/v1/admin/gestantes/${gestanteId}/alarm-signs`);
   return response.data;
@@ -603,6 +624,34 @@ export const createGestanteEmergencyCall = async (
   );
   return response.data;
 };
+
+export const getGestanteAppointments = async (
+  gestanteId: string
+): Promise<CitaAdminResponse[]> => {
+  const response = await api.get<CitaAdminResponse[]>(
+    `/api/v1/admin/gestantes/${gestanteId}/appointments`
+  );
+  return response.data;
+};
+
+// ─── Exportación ─────────────────────────────────────────────────────────────
+
+export const exportGestantes = async (format: 'xlsx' | 'csv' = 'xlsx'): Promise<Blob> => {
+  const response = await api.get('/api/v1/admin/export/gestantes', {
+    params: { format },
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
+export const exportIndicators = async (format: 'xlsx' | 'csv' = 'xlsx'): Promise<Blob> => {
+  const response = await api.get('/api/v1/admin/export/indicators', {
+    params: { format },
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
 
 // ─── IA (asistente clínico) ────────────────────────────────────────────────
 

@@ -17,6 +17,9 @@ import {
   getGestanteDailyQuestionsHistory,
   createGestanteEmergencyCall,
   getGestanteChecklist,
+  createGestanteExam,
+  exportGestantes,
+  exportIndicators,
   type GestanteResponse,
   type RoleOption,
   type ExamenResponse,
@@ -36,6 +39,20 @@ import {
   type PathologicalHistory as IPathologicalHistory,
 } from '../../services/m0Service';
 
+const EyeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+const EyeOffIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+    <line x1="1" y1="1" x2="23" y2="23" />
+  </svg>
+);
+
 // ─── Modal de creación de staff ──────────────────────────────────────────────
 
 const EMPTY_FORM: any = {
@@ -51,6 +68,7 @@ const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
       getRoles()
@@ -135,14 +153,37 @@ const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
 
       <div className={modalStyles.field}>
         <label className={modalStyles.label}>Contraseña *</label>
-        <input
-          className={modalStyles.input}
-          type="password"
-          placeholder="Mínimo 8 caracteres"
-          value={form.password}
-          onChange={(e) => handleChange('password', e.target.value)}
-          disabled={isLoading}
-        />
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <input
+            className={modalStyles.input}
+            type={showPassword ? "text" : "password"}
+            placeholder="Mínimo 8 caracteres"
+            value={form.password}
+            onChange={(e) => handleChange('password', e.target.value)}
+            disabled={isLoading}
+            style={{ width: '100%', paddingRight: '40px', margin: 0 }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(prev => !prev)}
+            style={{
+              position: 'absolute',
+              right: '12px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#888',
+              top: '50%',
+              transform: 'translateY(-50%)',
+            }}
+          >
+            {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+          </button>
+        </div>
       </div>
 
       <div className={modalStyles.field}>
@@ -191,6 +232,15 @@ const StaffCreateModal = ({ onClose }: { onClose: () => void }) => {
       </div>
     </form>
   );
+};
+
+const getRiesgoColor = (riesgo?: string | null) => {
+  if (!riesgo) return '#CA436E';
+  const r = riesgo.toLowerCase();
+  if (r.includes('rojo') || r.includes('alto')) return '#dc2626'; // rojo
+  if (r.includes('amarillo') || r.includes('medio')) return '#d97706'; // amarillo/ámbar
+  if (r.includes('verde') || r.includes('bajo')) return '#16a34a'; // verde
+  return '#CA436E';
 };
 
 // ─── Página principal ─────────────────────────────────────────────────────────
@@ -338,6 +388,21 @@ export const AdminUsuarias = () => {
   const [selStaff, setSelStaff] = useState<any>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
 
+  // States for exporting and registering exams
+  const [exporting, setExporting] = useState(false);
+  const [showAddExam, setShowAddExam] = useState(false);
+  const [addExamLoading, setAddExamLoading] = useState(false);
+  const [addExamError, setAddExamError] = useState<string | null>(null);
+  const [addExamForm, setAddExamForm] = useState({
+    tipo_examen_id: 1,
+    fecha_toma: new Date().toISOString().split('T')[0],
+    resultado: '',
+    resultado_numerico: '',
+    unidad: '',
+    semana_gestacion: '',
+    observaciones: '',
+  });
+
   const [roles, setRoles] = useState<RoleOption[]>([]);
   const [isEditingStaff, setIsEditingStaff] = useState(false);
   const [editForm, setEditForm] = useState({ nombre: '', rol_id: 0 });
@@ -448,6 +513,97 @@ export const AdminUsuarias = () => {
     }
   };
 
+  const handleExportData = async (format: 'xlsx' | 'csv') => {
+    setExporting(true);
+    try {
+      const blob = await exportGestantes(format);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gestantes_${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error(err);
+      alert('Error al exportar datos de gestantes.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportIndicatorsData = async () => {
+    setExporting(true);
+    try {
+      const blob = await exportIndicators('xlsx');
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `indicadores_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error(err);
+      alert('Error al exportar indicadores.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleCreateExam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!gestanteSeleccionada?.id) return;
+    setAddExamLoading(true);
+    setAddExamError(null);
+    try {
+      const payload: any = {
+        gestante_id: gestanteSeleccionada.id,
+        tipo_examen_id: Number(addExamForm.tipo_examen_id),
+        fecha_toma: addExamForm.fecha_toma,
+        resultado: addExamForm.resultado,
+      };
+      if (addExamForm.resultado_numerico !== '') {
+        payload.resultado_numerico = Number(addExamForm.resultado_numerico);
+      }
+      if (addExamForm.unidad !== '') {
+        payload.unidad = addExamForm.unidad;
+      }
+      if (addExamForm.semana_gestacion !== '') {
+        payload.semana_gestacion = Number(addExamForm.semana_gestacion);
+      }
+      if (addExamForm.observaciones !== '') {
+        payload.observaciones = addExamForm.observaciones;
+      }
+
+      await createGestanteExam(gestanteSeleccionada.id, payload);
+      
+      // Refrescar exámenes
+      const updatedExams = await getGestanteExams(gestanteSeleccionada.id);
+      setExams(updatedExams);
+      
+      // Cerrar y resetear
+      setShowAddExam(false);
+      setAddExamForm({
+        tipo_examen_id: 1,
+        fecha_toma: new Date().toISOString().split('T')[0],
+        resultado: '',
+        resultado_numerico: '',
+        unidad: '',
+        semana_gestacion: '',
+        observaciones: '',
+      });
+    } catch (err: any) {
+      console.error(err);
+      const msg = err.response?.data?.detail || 'Error al registrar el examen.';
+      setAddExamError(typeof msg === 'string' ? msg : 'Error al registrar el examen.');
+    } finally {
+      setAddExamLoading(false);
+    }
+  };
+
   const formatFecha = (iso?: string | null) => {
     if (!iso) return 'N/A';
     return new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -515,6 +671,35 @@ export const AdminUsuarias = () => {
                 onClick={() => setActiveList('staff')}
               >
                 Staff
+              </button>
+            </div>
+          )}
+
+          {activeList === 'maternas' && (
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+              <button
+                className={styles.exportBtn}
+                onClick={() => handleExportData('xlsx')}
+                disabled={exporting}
+                title="Exportar base de datos de gestantes (Excel)"
+              >
+                Excel
+              </button>
+              <button
+                className={styles.exportBtn}
+                onClick={() => handleExportData('csv')}
+                disabled={exporting}
+                title="Exportar base de datos de gestantes (CSV)"
+              >
+                CSV
+              </button>
+              <button
+                className={styles.exportBtn}
+                onClick={handleExportIndicatorsData}
+                disabled={exporting}
+                title="Exportar indicadores del programa (Excel)"
+              >
+                Indicadores
               </button>
             </div>
           )}
@@ -632,7 +817,7 @@ export const AdminUsuarias = () => {
             <p className={styles.infoRow}><strong>Ultima menstruacion</strong>  {gestanteSeleccionada?.fecha_ultima_menstruacion || 'N/A'}</p>
             <p className={styles.infoRow}>
               <strong>Nivel de riesgo</strong>
-              &nbsp;<span className={styles.sobrepeso}>{gestanteSeleccionada?.nivel_riesgo?.toUpperCase() || 'N/A'}</span>
+              &nbsp;<span className={styles.sobrepeso} style={{ color: getRiesgoColor(gestanteSeleccionada?.nivel_riesgo) }}>{gestanteSeleccionada?.nivel_riesgo?.toUpperCase() || 'N/A'}</span>
             </p>
 
             <p className={styles.ipsText}>
@@ -878,41 +1063,7 @@ export const AdminUsuarias = () => {
               )}
             </div>
 
-            <h2 className={styles.secTitle}>Análisis actual de la paciente</h2>
-            <p className={styles.secDesc}>
-              Para agregar un nuevo análisis dar click en el símbolo agregar
-              en la parte superior derecha del siguiente recuadro.
-              Dar click en el análisis para ver detalle o editar.
-            </p>
 
-            <div className={styles.analisisBox}>
-              <button className={styles.addBtn}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                  stroke="#CA436E" strokeWidth="2"
-                  strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="16" />
-                  <line x1="8" y1="12" x2="16" y2="12" />
-                </svg>
-              </button>
-              {exams.length === 0 ? (
-                <p className={styles.secDesc} style={{ margin: 0 }}>
-                  Sin análisis registrados para esta paciente.
-                </p>
-              ) : (
-                <div className={styles.analisisGrid}>
-                  {exams.map((e) => (
-                    <button
-                      key={e.id}
-                      className={`${styles.analisisBtn} ${selectedExam?.id === e.id ? styles.analisisBtnOn : ''}`}
-                      onClick={() => setSelectedExam(e)}
-                    >
-                      {(e.tipo_examen_nombre || `Examen #${e.tipo_examen_id}`).toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
         ) : (
           <div className={`${styles.panel} ${styles.panelScroll}`}>
@@ -1066,34 +1217,71 @@ export const AdminUsuarias = () => {
           </div>
         )}
 
-        {/*reporte diario en panel derecho*/}
+        {/* Columna derecha: Reporte diario y Análisis actual */}
         {activeList === 'maternas' ? (
-          <div className={`${styles.panel} ${styles.reportePanel}`}>
-            <h2 className={styles.panelTitle}>Reporte diario</h2>
-            <p className={styles.secDesc}>
-              En el siguiente recuadro aparecerán los reportes diario
-              que de la paciente, dar click a cada uno para ver el detalle
-            </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', height: '100%', minHeight: 0 }}>
+            {/* Tarjeta 1: Reporte diario */}
+            <div className={`${styles.panel} ${styles.reportePanel}`}>
+              <h2 className={styles.panelTitle}>Reporte diario</h2>
+              <p className={styles.secDesc}>
+                En el siguiente panel podrá consultar la información diaria de la paciente.
+                Haga clic en cada opción para ver el detalle.
+              </p>
 
-            <button className={styles.alertaBtn} onClick={() => setShowAlertas(true)}>
-              Signos de alerta ⚠️ {alarmSigns.length > 0 ? `(${alarmSigns.length})` : ''}
-            </button>
-            <button className={styles.cuestionarioBtn} onClick={() => setShowCuestionario(true)}>
-              Revisar cuestionario diario
-            </button>
-            <button className={styles.cuestionarioBtn} onClick={() => setShowChecklist(true)} style={{ marginTop: '10px' }}>
-              Revisar checklist de preparación
-            </button>
-
-            <div className={styles.reporteCards}>
-              <div className={styles.rcard} style={{ width: '75%', background: '#f9c0cf' }} />
-              <div className={styles.rcard} style={{ width: '65%', background: '#f9c0cf' }} />
-              <div className={styles.rcard} style={{ width: '50%', background: '#e8e8e8', marginLeft: 'auto' }} />
-              <div className={styles.rcard} style={{ width: '40%', background: '#f9c0cf' }} />
-              <div className={styles.rcard} style={{ width: '55%', background: '#e8e8e8', marginLeft: 'auto' }} />
+              <button className={styles.alertaBtn} onClick={() => setShowAlertas(true)}>
+                Signos de alerta ⚠️ {alarmSigns.length > 0 ? `(${alarmSigns.length})` : ''}
+              </button>
+              <button className={styles.cuestionarioBtn} onClick={() => setShowCuestionario(true)}>
+                Revisar cuestionario diario
+              </button>
+              <button className={styles.cuestionarioBtn} onClick={() => setShowChecklist(true)}>
+                Revisar checklist de preparación
+              </button>
             </div>
 
-            <input className={styles.reporteInput} placeholder="Click para escribir" />
+            {/* Tarjeta 2: Análisis actual */}
+            <div className={styles.panel} style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <h2 className={styles.panelTitle} style={{ margin: 0 }}>Análisis actual</h2>
+                <button
+                  className={styles.addBtn}
+                  style={{ position: 'static' }}
+                  onClick={() => setShowAddExam(true)}
+                  title="Registrar nuevo examen"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="#CA436E" strokeWidth="2"
+                    strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="16" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                  </svg>
+                </button>
+              </div>
+              <p className={styles.secDesc} style={{ marginBottom: '12px' }}>
+                Haga clic en un examen para ver su detalle.
+              </p>
+
+              <div className={styles.analisisBox} style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+                {exams.length === 0 ? (
+                  <p className={styles.secDesc} style={{ margin: 0 }}>
+                    Sin análisis registrados para esta paciente.
+                  </p>
+                ) : (
+                  <div className={styles.analisisGrid} style={{ gridTemplateColumns: '1fr' }}>
+                    {exams.map((e) => (
+                      <button
+                        key={e.id}
+                        className={`${styles.analisisBtn} ${selectedExam?.id === e.id ? styles.analisisBtnOn : ''}`}
+                        onClick={() => setSelectedExam(e)}
+                      >
+                        {(e.tipo_examen_nombre || `Examen #${e.tipo_examen_id}`).toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         ) : (
           <div className={styles.panel} style={{ background: 'transparent', boxShadow: 'none' }}></div>
@@ -1329,6 +1517,130 @@ export const AdminUsuarias = () => {
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* Modal: Registrar Examen */}
+      <Modal
+        isOpen={showAddExam}
+        onClose={() => setShowAddExam(false)}
+        title="Registrar Resultado de Examen"
+      >
+        <form onSubmit={handleCreateExam} className={modalStyles.form}>
+          <div className={modalStyles.field}>
+            <label className={modalStyles.label}>Tipo de Examen</label>
+            <select
+              value={addExamForm.tipo_examen_id}
+              onChange={e => setAddExamForm({ ...addExamForm, tipo_examen_id: Number(e.target.value) })}
+              required
+              className={modalStyles.input}
+              style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid #ddd' }}
+            >
+              <option value={1}>Hemograma</option>
+              <option value={2}>Uroanálisis</option>
+              <option value={3}>Glucosa en ayunas</option>
+              <option value={4}>Serología (VDRL)</option>
+              <option value={5}>VIH (Prueba rápida)</option>
+              <option value={6}>Toxoplasmosis IgG/IgM</option>
+              <option value={7}>Frotis vaginal</option>
+              <option value={8}>Cultivo rectal (Estreptococo)</option>
+              <option value={9}>Otros laboratorios</option>
+            </select>
+          </div>
+
+          <div className={modalStyles.field} style={{ marginTop: '12px' }}>
+            <label className={modalStyles.label}>Fecha de Toma</label>
+            <input
+              type="date"
+              value={addExamForm.fecha_toma}
+              onChange={e => setAddExamForm({ ...addExamForm, fecha_toma: e.target.value })}
+              required
+              className={modalStyles.input}
+            />
+          </div>
+
+          <div className={modalStyles.field} style={{ marginTop: '12px' }}>
+            <label className={modalStyles.label}>Resultado cualitativo</label>
+            <input
+              type="text"
+              value={addExamForm.resultado}
+              onChange={e => setAddExamForm({ ...addExamForm, resultado: e.target.value })}
+              required
+              placeholder="Ej: Normal, Negativo, Reactivo"
+              className={modalStyles.input}
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+            <div className={modalStyles.field} style={{ flex: 1 }}>
+              <label className={modalStyles.label}>Valor numérico (opcional)</label>
+              <input
+                type="number"
+                step="any"
+                value={addExamForm.resultado_numerico}
+                onChange={e => setAddExamForm({ ...addExamForm, resultado_numerico: e.target.value })}
+                placeholder="Ej: 12.5"
+                className={modalStyles.input}
+              />
+            </div>
+            <div className={modalStyles.field} style={{ flex: 1 }}>
+              <label className={modalStyles.label}>Unidad (opcional)</label>
+              <input
+                type="text"
+                value={addExamForm.unidad}
+                onChange={e => setAddExamForm({ ...addExamForm, unidad: e.target.value })}
+                placeholder="Ej: g/dL, mg/dL"
+                className={modalStyles.input}
+              />
+            </div>
+          </div>
+
+          <div className={modalStyles.field} style={{ marginTop: '12px' }}>
+            <label className={modalStyles.label}>Semana de Gestación (opcional)</label>
+            <input
+              type="number"
+              min="0"
+              max="50"
+              value={addExamForm.semana_gestacion}
+              onChange={e => setAddExamForm({ ...addExamForm, semana_gestacion: e.target.value })}
+              placeholder="Ej: 12"
+              className={modalStyles.input}
+            />
+          </div>
+
+          <div className={modalStyles.field} style={{ marginTop: '12px' }}>
+            <label className={modalStyles.label}>Observaciones (opcional)</label>
+            <textarea
+              value={addExamForm.observaciones}
+              onChange={e => setAddExamForm({ ...addExamForm, observaciones: e.target.value })}
+              placeholder="Detalles adicionales..."
+              rows={3}
+              className={modalStyles.input}
+              style={{ height: 'auto', fontFamily: 'inherit' }}
+            />
+          </div>
+
+          {addExamError && (
+            <p className={modalStyles.error} style={{ marginTop: '10px' }}>{addExamError}</p>
+          )}
+
+          <div className={modalStyles.actions} style={{ marginTop: '18px' }}>
+            <button
+              type="button"
+              onClick={() => setShowAddExam(false)}
+              className={modalStyles.cancelBtn}
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              disabled={addExamLoading}
+              className={modalStyles.submitBtn}
+              style={{ background: '#CA436E' }}
+            >
+              {addExamLoading ? 'Registrando...' : 'Registrar Examen'}
+            </button>
+          </div>
+        </form>
       </Modal>
     </div>
   );

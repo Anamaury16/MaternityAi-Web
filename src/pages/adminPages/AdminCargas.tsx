@@ -5,6 +5,8 @@ import {
   uploadExcel,
   getHistorialCargas,
   getDetalleCarga,
+  exportGestantes,
+  exportIndicators,
   type CargaExcelResponse,
   type CargaExcelDetalleResponse,
 } from '../../services/adminService';
@@ -54,6 +56,47 @@ export const AdminCargas = () => {
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExportData = async (format: 'xlsx' | 'csv') => {
+    setExporting(true);
+    try {
+      const blob = await exportGestantes(format);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `gestantes_${new Date().toISOString().split('T')[0]}.${format}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error(err);
+      alert('Error al exportar datos de gestantes.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleExportIndicatorsData = async () => {
+    setExporting(true);
+    try {
+      const blob = await exportIndicators('xlsx');
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `indicadores_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error(err);
+      alert('Error al exportar indicadores.');
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const fetchCargas = async () => {
     try {
@@ -118,6 +161,39 @@ export const AdminCargas = () => {
         <div className={styles.grid}>
           {/* Panel Izquierdo: Subir Excel e Historial */}
           <div className={`${styles.panel} ${styles.panelLeft}`}>
+            {/* Sección: Exportaciones */}
+            <div style={{ marginBottom: '20px' }}>
+              <h2 className={styles.panelTitle} style={{ marginBottom: '12px' }}>Exportar Datos</h2>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  className={styles.exportBtn}
+                  onClick={() => handleExportData('xlsx')}
+                  disabled={exporting}
+                  title="Exportar base de datos de gestantes (Excel)"
+                >
+                  Excel
+                </button>
+                <button
+                  className={styles.exportBtn}
+                  onClick={() => handleExportData('csv')}
+                  disabled={exporting}
+                  title="Exportar base de datos de gestantes (CSV)"
+                >
+                  CSV
+                </button>
+                <button
+                  className={styles.exportBtn}
+                  onClick={handleExportIndicatorsData}
+                  disabled={exporting}
+                  title="Exportar indicadores del programa (Excel)"
+                >
+                  Indicadores
+                </button>
+              </div>
+            </div>
+
+            <hr style={{ border: 'none', borderTop: '1px solid #eee', marginBottom: '20px', marginTop: '0' }} />
+
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
               <h2 className={styles.panelTitle} style={{ margin: 0 }}>Carga Masiva</h2>
               <a
