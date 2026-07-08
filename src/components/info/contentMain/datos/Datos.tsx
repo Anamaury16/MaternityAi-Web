@@ -53,7 +53,7 @@ export const Datos = ({ className }: Props) => {
           </div>
 
           <div className={styles.datos}>
-            <h4>ALTURA</h4>
+            <h4>ALTURA UTERINA</h4>
             <p>
               {ultimoRegistro?.altura_uterina || '--'} <span>cm</span>
             </p>

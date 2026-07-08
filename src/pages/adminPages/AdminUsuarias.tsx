@@ -38,6 +38,7 @@ import {
   type ObstetricFormula as IObstetricFormula,
   type PathologicalHistory as IPathologicalHistory,
 } from '../../services/m0Service';
+import { calculateCurrentWeeks, getFaseOrTrimestre } from '../../utils/gestationalAgeUtils';
 
 const EyeIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -722,12 +723,7 @@ export const AdminUsuarias = () => {
           <div className={styles.pList}>
             {activeList === 'maternas' ? (
               maternasPagina.map((p, i) => {
-                const getTrimestre = (semanas?: number | null) => {
-                  if (!semanas) return 'N/A';
-                  if (semanas <= 13) return 'Trimestre 1';
-                  if (semanas <= 27) return 'Trimestre 2';
-                  return 'Trimestre 3';
-                };
+                const currentWeeks = calculateCurrentWeeks(p.fecha_ultima_menstruacion);
                 return (
                 <div
                   key={p.id || i}
@@ -736,8 +732,8 @@ export const AdminUsuarias = () => {
                 >
                   <span className={styles.pId}>{p.codigo_gmi}</span>
                   <div>
-                    <div className={styles.pDetail}>Nro Semana · {p.semanas_eg_ingreso || 0}</div>
-                    <div className={styles.pDetail}>Fase · {getTrimestre(p.semanas_eg_ingreso)}</div>
+                    <div className={styles.pDetail}>Nro Semana · {currentWeeks}</div>
+                    <div className={styles.pDetail}>Fase · {getFaseOrTrimestre(currentWeeks)}</div>
                   </div>
                 </div>
               )})
@@ -812,7 +808,7 @@ export const AdminUsuarias = () => {
               EMBARAZO DE ALTO RIESGO SIN OTRA ESPECIFICACION
             </p>
 
-            <p className={styles.infoRow}><strong>Nro Semana</strong> · {gestanteSeleccionada?.semanas_eg_ingreso || 'N/A'}</p>
+            <p className={styles.infoRow}><strong>Nro Semana</strong> · {gestanteSeleccionada ? calculateCurrentWeeks(gestanteSeleccionada.fecha_ultima_menstruacion) : 'N/A'}</p>
             <p className={styles.infoRow}><strong>Fecha posible parto</strong>  {gestanteSeleccionada?.fecha_probable_parto || 'N/A'}</p>
             <p className={styles.infoRow}><strong>Ultima menstruacion</strong>  {gestanteSeleccionada?.fecha_ultima_menstruacion || 'N/A'}</p>
             <p className={styles.infoRow}>

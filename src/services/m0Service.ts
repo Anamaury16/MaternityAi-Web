@@ -414,8 +414,42 @@ export const getActiveModule = async (): Promise<ActiveModule> => {
     await mockDelay();
     return MOCK_ACTIVE_MODULE;
   }
-  const response = await api.get('/api/v1/m0/active-module');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m0/active-module');
+    return response.data;
+  } catch (error) {
+    // Fallback dinámico si el backend no puede determinar el módulo (ej. error 404 por superar las 42 semanas o NULL)
+    try {
+      const gestationalAge = await getGestationalAge();
+      const weeks = gestationalAge.semanas;
+      let modulo_id = 1;
+      let codigo = 'M1';
+      let nombre = 'Primer Trimestre';
+
+      if (weeks >= 14 && weeks <= 27) {
+        modulo_id = 2;
+        codigo = 'M2';
+        nombre = 'Segundo Trimestre';
+      } else if (weeks >= 28 && weeks <= 42) {
+        modulo_id = 3;
+        codigo = 'M3';
+        nombre = 'Tercer Trimestre - Crítico';
+      } else if (weeks > 42) {
+        modulo_id = 4;
+        codigo = 'M4';
+        nombre = 'Parto y Puerperio';
+      }
+
+      return {
+        modulo_id,
+        codigo,
+        nombre,
+        semana_gestacion_actual: weeks,
+      };
+    } catch (innerError) {
+      throw error;
+    }
+  }
 };
 
 // GET /api/v1/m0/module-history

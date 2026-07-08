@@ -12,6 +12,8 @@ import {
   type IARecommendationResponse,
 } from '../../services/adminService';
 
+import { calculateCurrentWeeks, getFaseOrTrimestre } from '../../utils/gestationalAgeUtils';
+
 const MENSAJE_ERROR_IA = 'No se pudo generar la respuesta de IA. Intenta nuevamente más tarde.';
 
 export const AdminIA = () => {
@@ -106,8 +108,10 @@ export const AdminIA = () => {
             </svg>
           </div>
 
-          <div className={styles.pList}>
-            {filtrados.map((p, i) => (
+           <div className={styles.pList}>
+            {filtrados.map((p, i) => {
+              const currentWeeks = calculateCurrentWeeks(p.fecha_ultima_menstruacion);
+              return (
               <div
                 key={p.id || i}
                 className={`${styles.pItem} ${p.codigo_gmi === selPaciente ? styles.pItemSel : ''}`}
@@ -115,11 +119,11 @@ export const AdminIA = () => {
               >
                 <span className={styles.pId}>{p.codigo_gmi}</span>
                 <div>
-                  <div className={styles.pDetail}>Nro Semana · {p.semanas_eg_ingreso || 0}</div>
-                  <div className={styles.pDetail}>Fase · {getTrimestre(p.semanas_eg_ingreso)}</div>
+                  <div className={styles.pDetail}>Nro Semana · {currentWeeks}</div>
+                  <div className={styles.pDetail}>Fase · {getFaseOrTrimestre(currentWeeks)}</div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         </div>
 
@@ -130,7 +134,7 @@ export const AdminIA = () => {
             Asistente de IA · GMI
           </p>
 
-          <p className={styles.infoRow}><strong>Nro Semana</strong> · {gestanteSeleccionada?.semanas_eg_ingreso || 'N/A'}</p>
+          <p className={styles.infoRow}><strong>Nro Semana</strong> · {gestanteSeleccionada ? calculateCurrentWeeks(gestanteSeleccionada.fecha_ultima_menstruacion) : 'N/A'}</p>
           <p className={styles.infoRow}><strong>Módulo activo</strong> · {resumen?.modulo_activo || 'N/A'}</p>
 
           <h2 className={styles.secTitle}>Resumen Clínico</h2>

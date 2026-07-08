@@ -13,13 +13,14 @@ import { useChecklist } from '../../../hooks/m5/usM5';
 import { PostpartumDashboard } from './postpartum/PostpartumDashboard';
 import { useBirthRecord } from '../../../hooks/m4/useM4';
 import { AlertasPanel } from '../../alertas/AlertasPanel';
+import { Modal } from '../../Modal';
 
 export const ContentMain = () => {
   const [alertsOpen, setAlertsOpen] = useState(false);
   const userName = localStorage.getItem('user_name') || 'Gestante';
   const displayId = userName.replace('Gestante ', '');
   const { data } = useGestationalAge();
-  const { data: birthData } = useBirthRecord();
+  const { data: birthData, create: createBirth, refresh: refreshBirthData } = useBirthRecord();
 
   const calcularDiasPosparto = () => {
     if (!birthData?.fecha_parto) return null;
@@ -60,6 +61,14 @@ export const ContentMain = () => {
   const { data: checklistData, loading: checklistLoading, updateItem } = useChecklist();
   const [showAllChecklist, setShowAllChecklist] = useState(false);
 
+  // Estados para el registro de parto desde M3
+  const [registerBirthOpen, setRegisterBirthOpen] = useState(false);
+  const [tipoParto, setTipoParto] = useState('Vaginal');
+  const [fechaParto, setFechaParto] = useState(new Date().toISOString().split('T')[0]);
+  const [complicacionesParto, setComplicacionesParto] = useState('');
+  const [uciMaterna, setUciMaterna] = useState(false);
+  const [saveBirthLoading, setSaveBirthLoading] = useState(false);
+
   const handleSymptomsSubmit = async (
     descripcion: string,
     severidad: 'leve' | 'moderado' | 'severo' | null,
@@ -71,6 +80,25 @@ export const ContentMain = () => {
 
     await reportSymptoms({ descripcion, severidad: capitalizedSeveridad });
     setSymptomsModalOpen(false);
+  };
+
+  const handleSaveBirthDirect = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveBirthLoading(true);
+    try {
+      await createBirth({
+        tipo_parto: tipoParto,
+        fecha_parto: fechaParto,
+        complicaciones: complicacionesParto || null,
+        uci_materna: uciMaterna,
+      });
+      await refreshBirthData();
+      setRegisterBirthOpen(false);
+    } catch (err) {
+      console.error("Error al registrar parto:", err);
+    } finally {
+      setSaveBirthLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -131,9 +159,15 @@ export const ContentMain = () => {
 
         </div>
         <section className={styles.right}>
-          {activeModule?.codigo === 'M4' && <PostpartumDashboard />}
+          {(activeModule?.codigo === 'M4' || birthData) && <PostpartumDashboard />}
           <Datos className={styles.datos} />
-          <Consejos className={styles.consejos} />
+          <Consejos 
+            className={styles.consejos} 
+            activeModule={activeModule}
+            birthData={birthData}
+            weeks={data?.semanas}
+            onRegisterBirth={() => setRegisterBirthOpen(true)}
+          />
           <Registros className={styles.registros} />
         </section>
       </div>
@@ -164,7 +198,7 @@ export const ContentMain = () => {
         )}
 
         <div className={styles.mobileCard}>
-          {activeModule?.codigo === 'M4' ? (
+          {(activeModule?.codigo === 'M4' || birthData) ? (
             <>
               <div className={styles.weeksCounter}>
                 <span className={styles.weekCenter}>{diasPosparto !== null ? `${diasPosparto}` : '--'}</span>
@@ -187,6 +221,30 @@ export const ContentMain = () => {
                 <div className={styles.mobileTrimestreLabel}>{activeModule.nombre}</div>
               )}
             </>
+          )}
+
+          {activeModule?.codigo !== 'M4' && !birthData && (activeModule?.codigo === 'M3' || (data?.semanas && data.semanas >= 28)) && (
+            <button 
+              onClick={() => setRegisterBirthOpen(true)}
+              style={{
+                background: 'linear-gradient(135deg, #ca436e 0%, #e05c87 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '20px',
+                padding: '12px 20px',
+                width: '100%',
+                fontSize: '15px',
+                fontWeight: '600',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                boxShadow: '0 4px 10px rgba(202, 67, 110, 0.25)',
+                marginBottom: '15px',
+                cursor: 'pointer'
+              }}
+            >
+              👶 ¿Ya nació tu bebé? Registrar Parto
+            </button>
           )}
 
           <button className={styles.sintomasBtn} onClick={() => setSymptomsModalOpen(true)}>
@@ -301,7 +359,7 @@ export const ContentMain = () => {
 
 
 
-          {activeModule?.codigo === 'M4' && (
+          {(activeModule?.codigo === 'M4' || birthData) && (
             <div style={{ width: '100%', margin: '20px 0 0 0' }}>
               <PostpartumDashboard />
             </div>
@@ -324,6 +382,84 @@ export const ContentMain = () => {
           onClose={() => setSymptomsModalOpen(false)}
           onSubmit={handleSymptomsSubmit}
         />
+      )}
+
+      {registerBirthOpen && (
+        <Modal 
+          isOpen={registerBirthOpen} 
+          onClose={() => setRegisterBirthOpen(false)} 
+          title="Registrar Nacimiento"
+        >
+          <form onSubmit={handleSaveBirthDirect} style={{ display: 'flex', flexDirection: 'column', gap: '15px', padding: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>Tipo de parto</label>
+              <select 
+                value={tipoParto} 
+                onChange={(e) => setTipoParto(e.target.value)}
+                style={{ padding: '10px', borderRadius: '10px', border: '1px solid #ccc', background: 'white' }}
+              >
+                <option value="Vaginal">Parto Vaginal Natural</option>
+                <option value="Cesárea">Cesárea</option>
+                <option value="Instrumentado">Vaginal Instrumentado (Fórceps/Espátulas)</option>
+              </select>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>Fecha de parto</label>
+              <input
+                type="date"
+                value={fechaParto}
+                max={new Date().toISOString().split('T')[0]}
+                onChange={(e) => setFechaParto(e.target.value)}
+                required
+                style={{ padding: '10px', borderRadius: '10px', border: '1px solid #ccc' }}
+              />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '5px 0' }}>
+              <input
+                type="checkbox"
+                id="uciMaternaDirect"
+                checked={uciMaterna}
+                onChange={(e) => setUciMaterna(e.target.checked)}
+                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+              />
+              <label htmlFor="uciMaternaDirect" style={{ fontSize: '14px', fontWeight: '500', color: '#333', cursor: 'pointer' }}>
+                ¿Requirió ingreso a UCI Materna?
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <label style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>Complicaciones (Opcional)</label>
+              <textarea
+                value={complicacionesParto}
+                onChange={(e) => setComplicacionesParto(e.target.value)}
+                placeholder="Describe si hubo alguna eventualidad durante el parto..."
+                rows={3}
+                style={{ padding: '10px', borderRadius: '10px', border: '1px solid #ccc', resize: 'vertical' }}
+              />
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={saveBirthLoading}
+              style={{
+                background: '#ca436e',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                padding: '12px',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                marginTop: '10px',
+                transition: 'background 0.2s',
+              }}
+            >
+              {saveBirthLoading ? 'Guardando...' : 'Registrar Parto'}
+            </button>
+          </form>
+        </Modal>
       )}
     </section>
   );

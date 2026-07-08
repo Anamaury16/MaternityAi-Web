@@ -15,6 +15,7 @@ import {
 } from '../../services/m0Service';
 import styles from './HospitalDashboard.module.css';
 import { resolveAlerta } from '../../services/iaService';
+import { calculateCurrentWeeks } from '../../utils/gestationalAgeUtils';
 
 // Interface representing an active consolidated alert card on the hospital side
 interface ActiveHospitalAlert {
@@ -180,7 +181,7 @@ export const HospitalDashboard = () => {
               estado: sign.estado || 'activa',
               prioridad: mappedPrio,
               nivelRiesgo: g.nivel_riesgo === 'alto' ? 'Alto' : g.nivel_riesgo === 'medio' ? 'Medio' : 'Bajo',
-              semanaGestacion: g.semanas_eg_ingreso || 12,
+              semanaGestacion: calculateCurrentWeeks(g.fecha_ultima_menstruacion) || 12,
               tipoAlerta: sign.tipo_alerta || 'Alerta Obstétrica',
               createdAt: sign.created_at || new Date().toISOString(),
               moduloOrigen: (sign as any).modulo_origen || 'seguimiento',

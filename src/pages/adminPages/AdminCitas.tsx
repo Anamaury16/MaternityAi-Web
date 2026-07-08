@@ -14,6 +14,8 @@ import {
   type CitaAdminResponse,
 } from '../../services/adminService';
 
+import { calculateCurrentWeeks, getFaseOrTrimestre } from '../../utils/gestationalAgeUtils';
+
 const DIAS_SEMANA = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
 
 const MESES = [
@@ -401,7 +403,9 @@ export const AdminCitas = () => {
             />
           </div>
           <div className={styles.pList}>
-            {maternasPagina.map((p, i) => (
+            {maternasPagina.map((p, i) => {
+              const currentWeeks = calculateCurrentWeeks(p.fecha_ultima_menstruacion);
+              return (
               <div
                 key={p.id || i}
                 className={`${styles.pItem} ${p.codigo_gmi === selPaciente ? styles.pItemSel : ''}`}
@@ -409,11 +413,11 @@ export const AdminCitas = () => {
               >
                 <span className={styles.pId}>{p.codigo_gmi}</span>
                 <div>
-                  <div className={styles.pDetail}>Nro Semana · {p.semanas_eg_ingreso || 0}</div>
-                  <div className={styles.pDetail}>Fase · {getTrimestre(p.semanas_eg_ingreso)}</div>
+                  <div className={styles.pDetail}>Nro Semana · {currentWeeks}</div>
+                  <div className={styles.pDetail}>Fase · {getFaseOrTrimestre(currentWeeks)}</div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
           <div className={styles.paginacion}>
             <button
