@@ -58,13 +58,6 @@ const formatFechaCorta = (iso: string) => {
   return `${d.getDate()} ${MESES_CORTOS[d.getMonth()]}`;
 };
 
-const getTrimestre = (semanas?: number | null) => {
-  if (!semanas) return 'N/A';
-  if (semanas <= 13) return 'Trimestre 1';
-  if (semanas <= 27) return 'Trimestre 2';
-  return 'Trimestre 3';
-};
-
 const ESTADOS_SOLICITUD = ['pendiente', 'programada'];
 
 const estadoLabel = (estado: string) => {
@@ -271,9 +264,13 @@ export const AdminCitas = () => {
     setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() + delta, 1));
   };
 
-  const filtrados = gestantes.filter(g =>
-    g.codigo_gmi.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const filtrados = gestantes
+    .filter(g => g.codigo_gmi.toLowerCase().includes(busqueda.toLowerCase()))
+    .sort((a, b) => {
+      const aAlerta = a.ultimo_estado_alerta === 'activa' ? 1 : 0;
+      const bAlerta = b.ultimo_estado_alerta === 'activa' ? 1 : 0;
+      return bAlerta - aAlerta;
+    });
 
   const totalPaginasMaternas = Math.max(1, Math.ceil(filtrados.length / MATERNAS_POR_PAGINA));
   const paginaMaternasClamped = Math.min(paginaMaternas, totalPaginasMaternas);
@@ -411,7 +408,27 @@ export const AdminCitas = () => {
                 className={`${styles.pItem} ${p.codigo_gmi === selPaciente ? styles.pItemSel : ''}`}
                 onClick={() => setSelPaciente(p.codigo_gmi)}
               >
-                <span className={styles.pId}>{p.codigo_gmi}</span>
+                <span className={styles.pId}>
+                  {p.codigo_gmi}
+                  {p.ultimo_estado_alerta === 'activa' && (
+                    <svg 
+                      width="14" 
+                      height="14" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="#ff4b72" 
+                      strokeWidth="2.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                      style={{ marginLeft: '8px', display: 'inline-block', verticalAlign: 'middle' }}
+                    >
+                      <title>Alerta Activa</title>
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                  )}
+                </span>
                 <div>
                   <div className={styles.pDetail}>Nro Semana · {currentWeeks}</div>
                   <div className={styles.pDetail}>Fase · {getFaseOrTrimestre(currentWeeks)}</div>

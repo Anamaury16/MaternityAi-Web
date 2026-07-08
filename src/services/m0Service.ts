@@ -446,7 +446,7 @@ export const getActiveModule = async (): Promise<ActiveModule> => {
         nombre,
         semana_gestacion_actual: weeks,
       };
-    } catch (innerError) {
+    } catch {
       throw error;
     }
   }

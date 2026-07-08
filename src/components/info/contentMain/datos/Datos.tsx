@@ -36,7 +36,7 @@ const obtenerDatosBebe = (semanas: number | undefined) => {
 export const Datos = ({ className }: Props) => {
   const { data: vitalsData } = useVitals();
   const { data: gestationalData } = useGestationalAge();
-  
+
   const ultimoRegistro = vitalsData.length > 0 ? vitalsData[vitalsData.length - 1] : null;
   const datosBebe = obtenerDatosBebe(gestationalData?.semanas);
 
@@ -53,7 +53,7 @@ export const Datos = ({ className }: Props) => {
           </div>
 
           <div className={styles.datos}>
-            <h4>ALTURA UTERINA</h4>
+            <h4>ALTURA</h4>
             <p>
               {ultimoRegistro?.altura_uterina || '--'} <span>cm</span>
             </p>
