@@ -13,6 +13,16 @@ export interface ChatSession {
   createdAt: number;
 }
 
+// Helper para parsear fechas naive del backend como UTC
+const parseDateAsUtc = (dateStr: string | undefined | null): Date => {
+  if (!dateStr) return new Date();
+  const normalized = (dateStr.endsWith('Z') || dateStr.includes('+') || (dateStr.lastIndexOf('-') > 10))
+    ? dateStr
+    : `${dateStr}Z`;
+  const parsed = new Date(normalized);
+  return isNaN(parsed.getTime()) ? new Date(dateStr) : parsed;
+};
+
 export const ContentAi = () => {
   const [activeTopic, setActiveTopic] = useState(0);
   const {
@@ -63,7 +73,7 @@ export const ContentAi = () => {
           topic: tag,
           title: `Conversación Histórica`,
           startTimestamp: '1970-01-01T00:00:00.000Z',
-          createdAt: new Date(topicMsgs[0].created_at).getTime(),
+          createdAt: parseDateAsUtc(topicMsgs[0].created_at).getTime(),
         };
         currentSessions.push(historicalSession);
         updated = true;
@@ -124,19 +134,18 @@ export const ContentAi = () => {
 
     // Ordenar cronológicamente
     const sorted = [...nonDeletedSessions].sort(
-      (a, b) => new Date(a.startTimestamp).getTime() - new Date(b.startTimestamp).getTime()
+      (a, b) => parseDateAsUtc(a.startTimestamp).getTime() - parseDateAsUtc(b.startTimestamp).getTime()
     );
 
     const activeIndex = sorted.findIndex((s) => s.id === activeSession.id);
     if (activeIndex === -1) return [];
 
-
     return topicMessages.filter((m) => {
-      const mTime = new Date(m.created_at).getTime();
+      const mTime = parseDateAsUtc(m.created_at).getTime();
       // Encontrar a qué sesión pertenece el mensaje
       const messageSession = sorted
-        .filter((s) => new Date(s.startTimestamp).getTime() <= mTime)
-        .sort((a, b) => new Date(b.startTimestamp).getTime() - new Date(a.startTimestamp).getTime())[0];
+        .filter((s) => parseDateAsUtc(s.startTimestamp).getTime() <= mTime)
+        .sort((a, b) => parseDateAsUtc(b.startTimestamp).getTime() - parseDateAsUtc(a.startTimestamp).getTime())[0];
 
       return messageSession && messageSession.id === activeSession.id;
     });
@@ -226,7 +235,7 @@ export const ContentAi = () => {
           setActiveTopic={setActiveTopic}
           clearHistory={handleClearAllHistory}
           hasMessages={sessionMessages.length > 0}
-          sessions={sessions}
+          sessions={sessions.filter((s) => !deletedSessionIds.includes(s.id))}
           activeSessionId={activeSessionId}
           setActiveSessionId={setActiveSessionId}
           onCreateSession={handleCreateSession}

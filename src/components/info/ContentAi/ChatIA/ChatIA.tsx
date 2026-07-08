@@ -14,6 +14,16 @@ const URGENCY_LABELS: Record<string, string> = {
   no_urgente: 'No urgente',
 };
 
+// Helper para parsear fechas naive del backend como UTC
+const parseDateAsUtc = (dateStr: string | undefined | null): Date => {
+  if (!dateStr) return new Date();
+  const normalized = (dateStr.endsWith('Z') || dateStr.includes('+') || (dateStr.lastIndexOf('-') > 10))
+    ? dateStr
+    : `${dateStr}Z`;
+  const parsed = new Date(normalized);
+  return isNaN(parsed.getTime()) ? new Date(dateStr) : parsed;
+};
+
 interface ChatIAProps {
   messages: ChatMessage[];
   isLoading: boolean;
@@ -205,7 +215,7 @@ export const ChatIA = ({
                 <div className={isUser ? styles.user : styles.Ai}>
                   {isUser ? <p>{msg.contenido}</p> : parseMarkdown(msg.contenido)}
                   <span className={styles.timeLabel}>
-                    {new Date(msg.created_at).toLocaleTimeString('es-ES', {
+                    {parseDateAsUtc(msg.created_at).toLocaleTimeString('es-ES', {
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
