@@ -131,13 +131,21 @@ const NuevaCitaModal = ({
   saving: boolean;
   error: string | null;
 }) => {
-  const [tipoCita, setTipoCita] = useState('');
+  const TIPOS_CITA = [
+    'Control Prenatal',
+    'Ecografía Obstétrica',
+    'Monitoreo Fetal',
+    'Consulta Nutricional',
+    'Laboratorios',
+    'Otro',
+  ];
+  const [tipoCita, setTipoCita] = useState('Control Prenatal');
   const [fechaHora, setFechaHora] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fechaHora) return;
-    await onCreate({ tipo_cita: tipoCita || null, fecha_hora: new Date(fechaHora).toISOString() });
+    if (!fechaHora || !tipoCita) return;
+    await onCreate({ tipo_cita: tipoCita, fecha_hora: new Date(fechaHora).toISOString() });
   };
 
   return (
@@ -146,14 +154,17 @@ const NuevaCitaModal = ({
         <h3 className={styles.modalTitle}>Solicitar nueva cita</h3>
         <form onSubmit={handleSubmit} className={styles.form}>
           <label className={styles.label}>
-            Tipo de cita
-            <input
+            Tipo de cita <span className={styles.required}>*</span>
+            <select
               className={styles.input}
-              type="text"
-              placeholder="Ej: Control prenatal"
               value={tipoCita}
               onChange={e => setTipoCita(e.target.value)}
-            />
+              required
+            >
+              {TIPOS_CITA.map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
           </label>
           <label className={styles.label}>
             Fecha y hora <span className={styles.required}>*</span>
@@ -170,7 +181,7 @@ const NuevaCitaModal = ({
             <button type="button" className={styles.btnCancel} onClick={onClose} disabled={saving}>
               Cancelar
             </button>
-            <button type="submit" className={styles.btnConfirm} disabled={saving || !fechaHora}>
+            <button type="submit" className={styles.btnConfirm} disabled={saving || !fechaHora || !tipoCita}>
               {saving ? 'Guardando…' : 'Solicitar'}
             </button>
           </div>

@@ -114,7 +114,7 @@ export const getMessagesByTopic = (messages: ChatMessage[], topicTag: string): C
       }
 
       if (currentTopic === topicTag) {
-        const cleanContent = msg.contenido.replace(/^\[Tema:\s*[^\]]+\]\s*(\([^\)]+\))?\s*/, '');
+        const cleanContent = msg.contenido.replace(/^\[Tema:\s*[^\]]+\]\s*(?:\(.*?\)\s*)?/, '');
         filtered.push({
           ...msg,
           contenido: cleanContent,

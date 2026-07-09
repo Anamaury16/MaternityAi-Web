@@ -142,10 +142,17 @@ export const ContentAi = () => {
 
     return topicMessages.filter((m) => {
       const mTime = parseDateAsUtc(m.created_at).getTime();
-      // Encontrar a qué sesión pertenece el mensaje
-      const messageSession = sorted
-        .filter((s) => parseDateAsUtc(s.startTimestamp).getTime() <= mTime)
-        .sort((a, b) => parseDateAsUtc(b.startTimestamp).getTime() - parseDateAsUtc(a.startTimestamp).getTime())[0];
+      // Partition the timeline to assign messages to sessions, shifting boundaries by 30 seconds to account for clock drift
+      const CLOCK_MARGIN = 30 * 1000;
+      
+      let messageSession = sorted[sorted.length - 1]; // Default to oldest session if before everything
+      for (let i = 0; i < sorted.length; i++) {
+        const sessionStartTime = parseDateAsUtc(sorted[i].startTimestamp).getTime() - CLOCK_MARGIN;
+        if (mTime >= sessionStartTime) {
+          messageSession = sorted[i]; // Since sorted is newest-first, this finds the most recent valid session
+          break;
+        }
+      }
 
       return messageSession && messageSession.id === activeSession.id;
     });
@@ -164,7 +171,8 @@ export const ContentAi = () => {
         activeSession.title === 'Nueva Conversación' ||
         activeSession.title === 'Conversación Histórica')
     ) {
-      const cleanText = text.replace(/^\[Tema:\s*[^\]]+\]\s*/, '');
+      // Remove topic tag and any system directive in parentheses
+      const cleanText = text.replace(/^\[Tema:\s*[^\]]+\]\s*(?:\(.*?\)\s*)?/, '');
       const words = cleanText.split(/\s+/).filter(Boolean);
       const titleCandidate = words.slice(0, 4).join(' ');
       const newTitle =
