@@ -124,10 +124,12 @@ const NuevaCitaModal = ({
   onClose,
   onCreate,
   saving,
+  error,
 }: {
   onClose: () => void;
   onCreate: (payload: CitaMedicaCreate) => Promise<void>;
   saving: boolean;
+  error: string | null;
 }) => {
   const [tipoCita, setTipoCita] = useState('');
   const [fechaHora, setFechaHora] = useState('');
@@ -136,7 +138,6 @@ const NuevaCitaModal = ({
     e.preventDefault();
     if (!fechaHora) return;
     await onCreate({ tipo_cita: tipoCita || null, fecha_hora: new Date(fechaHora).toISOString() });
-    onClose();
   };
 
   return (
@@ -164,6 +165,7 @@ const NuevaCitaModal = ({
               onChange={e => setFechaHora(e.target.value)}
             />
           </label>
+          {error && <p className={styles.modalError}>{error}</p>}
           <div className={styles.modalActions}>
             <button type="button" className={styles.btnCancel} onClick={onClose} disabled={saving}>
               Cancelar
@@ -186,6 +188,7 @@ export const CitasPanel = ({ horizontal = false }: Props) => {
   const { data, loading, error, create } = useCitas();
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const upcoming = data
     .filter(c => c.estado !== 'cancelada')
@@ -193,7 +196,16 @@ export const CitasPanel = ({ horizontal = false }: Props) => {
 
   const handleCreate = async (payload: CitaMedicaCreate) => {
     setSaving(true);
-    try { await create(payload); } finally { setSaving(false); }
+    setCreateError(null);
+    try {
+      await create(payload);
+      setShowModal(false);
+    } catch (err) {
+      console.error(err);
+      setCreateError('No se pudo solicitar la cita. Intenta nuevamente.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -206,22 +218,23 @@ export const CitasPanel = ({ horizontal = false }: Props) => {
       </div>
 
       <div className={horizontal ? styles.wrapperHorizontal : styles.wrapper}>
-        {loading ? (
+        {upcoming.length > 0 ? (
+          upcoming.map(c => <CitaCard key={c.id} cita={c} />)
+        ) : loading ? (
           Array.from({ length: 2 }).map((_, i) => <CitaCardSkeleton key={i} />)
         ) : error ? (
           <p className={styles.empty}>No se pudieron cargar las citas.</p>
-        ) : upcoming.length === 0 ? (
-          <p className={styles.empty}>No tienes citas programadas.</p>
         ) : (
-          upcoming.map(c => <CitaCard key={c.id} cita={c} />)
+          <p className={styles.empty}>No tienes citas programadas.</p>
         )}
       </div>
 
       {showModal && (
         <NuevaCitaModal
-          onClose={() => setShowModal(false)}
+          onClose={() => { setShowModal(false); setCreateError(null); }}
           onCreate={handleCreate}
           saving={saving}
+          error={createError}
         />
       )}
     </div>

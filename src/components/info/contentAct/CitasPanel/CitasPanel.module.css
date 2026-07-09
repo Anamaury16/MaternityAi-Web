@@ -352,6 +352,13 @@
 
 .required { color: #ca436e; }
 
+.modalError {
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 500;
+  margin: -6px 0 0;
+}
+
 .input {
   border: 1.5px solid #e8c8d4;
   border-radius: 10px;
