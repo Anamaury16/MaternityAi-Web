@@ -66,11 +66,11 @@ export const ContentAct = () => {
         </div>
 
         <h2 className={styles.mobileSectionTitle}>Mis Citas</h2>
-        <CitasPanel horizontal />
+        <CitasPanel horizontal hideTitle={true} />
 
         <h2 className={styles.mobileSectionTitle}>Alertas y Notificaciones</h2>
         <div className={styles.mobileSms}>
-          <NotificacionesPanel />
+          <NotificacionesPanel hideHeader={true} />
         </div>
       </div>
 

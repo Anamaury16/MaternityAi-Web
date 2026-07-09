@@ -32,7 +32,7 @@ const formatFecha = (dateStr: string | null) => {
   return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
 };
 
-export const NotificacionesPanel = () => {
+export const NotificacionesPanel = ({ hideHeader = false }: { hideHeader?: boolean }) => {
   const [activeTab, setActiveTab] = useState<Tab>('alertas');
 
   const { data: alertas,       loading: loadingAlertas, acknowledge } = useAlertas();
@@ -45,10 +45,12 @@ export const NotificacionesPanel = () => {
     <div className={styles.panel}>
 
       {/* Header */}
-      <div className={styles.panelHeader}>
-        <h1>Notificaciones</h1>
-        <p className={styles.panelSubtitle}>Alertas y mensajes de tu seguimiento</p>
-      </div>
+      {!hideHeader && (
+        <div className={styles.panelHeader}>
+          <h1>Notificaciones</h1>
+          <p className={styles.panelSubtitle}>Alertas y mensajes de tu seguimiento</p>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className={styles.tabs}>

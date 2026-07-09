@@ -19,9 +19,27 @@ export default defineConfig({
         theme_color: '#c2185b',
         background_color: '#ffffff',
         display: 'standalone',
+        orientation: 'portrait',
         start_url: '/',
         scope: '/',
         lang: 'es',
+        categories: ['medical', 'health', 'lifestyle'],
+        shortcuts: [
+          {
+            name: 'Chat con IA',
+            short_name: 'Chat IA',
+            description: 'Habla con el asistente de salud materna',
+            url: '/ai',
+            icons: [{ src: 'image/logo.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Control de Actividad',
+            short_name: 'Actividad',
+            description: 'Ver mis cuestionarios y citas',
+            url: '/actividad',
+            icons: [{ src: 'image/logo.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
         icons: [
           {
             src: 'image/logo.png',

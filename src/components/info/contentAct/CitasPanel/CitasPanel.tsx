@@ -180,9 +180,10 @@ const NuevaCitaModal = ({
 
 interface Props {
   horizontal?: boolean;
+  hideTitle?: boolean;
 }
 
-export const CitasPanel = ({ horizontal = false }: Props) => {
+export const CitasPanel = ({ horizontal = false, hideTitle = false }: Props) => {
   const { data, loading, error, create } = useCitas();
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -198,9 +199,16 @@ export const CitasPanel = ({ horizontal = false }: Props) => {
 
   return (
     <div className={styles.panelRoot}>
-      <div className={styles.panelHeader}>
-        <h1 className={styles.panelTitle}>Mis Citas</h1>
-        <button className={styles.btnSolicitar} onClick={() => setShowModal(true)}>
+      <div 
+        className={styles.panelHeader}
+        style={hideTitle ? { display: 'flex', justifyContent: 'flex-end', marginTop: '-44px', marginBottom: '14px', paddingRight: '20px' } : undefined}
+      >
+        {!hideTitle && <h1 className={styles.panelTitle}>Mis Citas</h1>}
+        <button 
+          className={styles.btnSolicitar} 
+          onClick={() => setShowModal(true)}
+          style={hideTitle ? { padding: '8px 16px', fontSize: '12px', borderRadius: '15px' } : undefined}
+        >
           + Solicitar cita
         </button>
       </div>

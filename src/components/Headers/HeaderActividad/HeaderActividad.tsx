@@ -63,7 +63,7 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
 
   return (
     <>
-    <header className={`${styles.container} ${currentPath === '/main' || currentPath === '/biblioteca' || currentPath === '/userprofile' ? styles.hideOnMobileMain : ''}`}>
+    <header className={`${styles.container} ${currentPath === '/main' ? styles.hideOnMobileMain : ''}`}>
       <div className={styles.logo}>
         <DegradedText text="MaternityAi" fontSize="23px" />
       </div>
