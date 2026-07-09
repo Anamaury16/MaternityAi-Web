@@ -12,10 +12,20 @@ import { DeleteAccount } from '../../profile/DeleteAccount';
 import { Terms } from './Right/Terms/Terms';
 import { logoutUser } from '../../../services/authService';
 import { useNavigate } from 'react-router-dom';
+import { useVitals } from '../../../hooks/clinical/useClinical';
+import { PwaInstallPrompt } from '../../pwa/PwaInstallPrompt';
 
 export const ContentUserProfile = () => {
   const [activeTab, setActiveTab] = useState<'perfil' | 'seguridad' | 'privacidad' | 'eliminar_cuenta'>('perfil');
   const navigate = useNavigate();
+
+  const { data: vitalsData } = useVitals();
+  const sortedVitals = vitalsData ? [...vitalsData].sort((a, b) => {
+    const dateA = a.created_at || '';
+    const dateB = b.created_at || '';
+    return dateB.localeCompare(dateA);
+  }) : [];
+  const latestVital = sortedVitals[0] || null;
 
   const handleLogout = async () => {
     await logoutUser();
@@ -66,7 +76,7 @@ export const ContentUserProfile = () => {
         <div className={styles.mobileHeader}>
           <div className={styles.greeting}>
             <p>Buenas tardes,</p>
-            <h2>{userId} 👋</h2>
+            <h2>{userId}</h2>
           </div>
         </div>
 
@@ -87,11 +97,31 @@ export const ContentUserProfile = () => {
             </div>
           </div>
 
-          <h3 className={styles.sectionTitle}>Mis datos</h3>
+          <h3 className={styles.sectionTitle}>Mis datos clínicos</h3>
           <div className={styles.pinkContainer}>
-            <div className={styles.emptyCard}></div>
-            <div className={styles.emptyCard}></div>
-            <div className={styles.emptyCard}></div>
+            <div className={styles.babyCard}>
+              <span>PRESIÓN</span>
+              <strong>
+                {latestVital?.presion_sistolica && latestVital?.presion_diastolica
+                  ? `${latestVital.presion_sistolica}/${latestVital.presion_diastolica}`
+                  : '--/--'}
+                <small style={{ display: 'block', fontSize: '9px', fontWeight: 'normal', color: '#888', marginTop: '2px' }}>mmHg</small>
+              </strong>
+            </div>
+            <div className={styles.babyCard}>
+              <span>PESO</span>
+              <strong>
+                {latestVital?.peso_kg ? `${latestVital.peso_kg}` : '--'}
+                <small style={{ display: 'block', fontSize: '9px', fontWeight: 'normal', color: '#888', marginTop: '2px' }}>kg</small>
+              </strong>
+            </div>
+            <div className={styles.babyCard}>
+              <span>LPM BEBÉ</span>
+              <strong>
+                {latestVital?.fcf ? `${latestVital.fcf}` : '--'}
+                <small style={{ display: 'block', fontSize: '9px', fontWeight: 'normal', color: '#888', marginTop: '2px' }}>lpm</small>
+              </strong>
+            </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '10px' }}>
@@ -152,6 +182,8 @@ export const ContentUserProfile = () => {
             >
               Cerrar sesión
             </button>
+
+            <PwaInstallPrompt forceShow />
           </div>
         </div>
       </div>

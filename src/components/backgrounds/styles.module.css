@@ -8,6 +8,12 @@
   overflow: hidden;
 }
 
+@media (max-width: 1024px) {
+  .background {
+    display: none;
+  }
+}
+
 /* ---- Blobs difuminados ---- */
 .blob {
   position: absolute;

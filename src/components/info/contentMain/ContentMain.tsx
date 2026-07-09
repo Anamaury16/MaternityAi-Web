@@ -14,9 +14,16 @@ import { PostpartumDashboard } from './postpartum/PostpartumDashboard';
 import { useBirthRecord } from '../../../hooks/m4/useM4';
 import { AlertasPanel } from '../../alertas/AlertasPanel';
 import { Modal } from '../../Modal';
+import { RiskSummaryCard } from './RiskSummaryCard/RiskSummaryCard';
+import { useRiskSummary } from '../../../hooks/ia/useRiskSummary';
+import { PwaInstallPrompt } from '../../pwa/PwaInstallPrompt';
 
 export const ContentMain = () => {
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const [isRiskModalOpen, setIsRiskModalOpen] = useState(false);
+  const { summary } = useRiskSummary();
+  const riskLevel = summary?.nivel_riesgo || 'verde';
+
   const userName = localStorage.getItem('user_name') || 'Gestante';
   const displayId = userName.replace('Gestante ', '');
   const { data } = useGestationalAge();
@@ -120,7 +127,7 @@ export const ContentMain = () => {
         <div className={styles.informacion_usuario}>
           <div className="">
             <p style={{margin: 0}}>{mensajeTiempo()}, </p>
-            <h1 className="">{userName} 👋</h1>
+            <h1 className="">{userName}</h1>
             {activeModule?.codigo === 'M4' ? (
               <>
                 <div className={styles.seccion_informacion}>
@@ -178,15 +185,47 @@ export const ContentMain = () => {
           <div className={styles.mobileHeaderContent}>
             <div className={styles.mobileGreeting}>
               {mensajeTiempo()},<br />
-              <strong>{displayId}</strong> 👋
+              <strong>{displayId}</strong>
             </div>
-            <div 
-              className={styles.mobileBell} 
-              onClick={() => setAlertsOpen(!alertsOpen)} 
-              style={{ cursor: 'pointer' }}
-            >
-              <SvgBell />
-              <span className={styles.notificationDot}></span>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <button 
+                onClick={() => setIsRiskModalOpen(true)}
+                title="Semáforo de Riesgo IA"
+                aria-label="Semáforo de Riesgo IA"
+                style={{
+                  background: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+                }}
+              >
+                <span style={{
+                  width: '12px',
+                  height: '12px',
+                  borderRadius: '50%',
+                  display: 'inline-block',
+                  backgroundColor: riskLevel === 'rojo' ? '#ef4444' : riskLevel === 'amarillo' ? '#f59e0b' : '#10b981',
+                  boxShadow: riskLevel === 'rojo' 
+                    ? '0 0 8px #ef4444' 
+                    : riskLevel === 'amarillo' 
+                    ? '0 0 8px #f59e0b' 
+                    : '0 0 8px #10b981',
+                }} />
+              </button>
+              <div 
+                className={styles.mobileBell} 
+                onClick={() => setAlertsOpen(!alertsOpen)} 
+                style={{ cursor: 'pointer' }}
+              >
+                <SvgBell />
+                <span className={styles.notificationDot}></span>
+              </div>
             </div>
           </div>
         </div>
@@ -198,6 +237,7 @@ export const ContentMain = () => {
         )}
 
         <div className={styles.mobileCard}>
+          <PwaInstallPrompt />
           {(activeModule?.codigo === 'M4' || birthData) ? (
             <>
               <div className={styles.weeksCounter}>
@@ -207,6 +247,22 @@ export const ContentMain = () => {
               {activeModule && (
                 <div className={styles.mobileTrimestreLabel}>{activeModule.nombre}</div>
               )}
+              {/* Progreso del Puerperio/Recuperación (Minimalista) */}
+              <div style={{ width: '100%', padding: '0 8px', marginBottom: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#888', marginBottom: '4px', fontWeight: '500' }}>
+                  <span>Día {diasPosparto || 0} de 42</span>
+                  <span style={{ color: '#ca436e', fontWeight: '600' }}>{diasPosparto !== null ? Math.min(Math.round((diasPosparto / 42) * 100), 100) : 0}%</span>
+                </div>
+                <div style={{ width: '100%', height: '4px', backgroundColor: 'rgba(223, 93, 134, 0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    width: `${diasPosparto !== null ? Math.min((diasPosparto / 42) * 100, 100) : 0}%`, 
+                    height: '100%', 
+                    background: 'linear-gradient(90deg, #df5d86, #ca436e)',
+                    borderRadius: '2px',
+                    transition: 'width 0.5s ease-out'
+                  }} />
+                </div>
+              </div>
             </>
           ) : (
             <>
@@ -220,6 +276,22 @@ export const ContentMain = () => {
               {activeModule && (
                 <div className={styles.mobileTrimestreLabel}>{activeModule.nombre}</div>
               )}
+              {/* Progreso de la Gestación (Minimalista) */}
+              <div style={{ width: '100%', padding: '0 8px', marginBottom: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#888', marginBottom: '4px', fontWeight: '500' }}>
+                  <span>Semana {data?.semanas || 28} de 40</span>
+                  <span style={{ color: '#ca436e', fontWeight: '600' }}>{data?.semanas ? Math.min(Math.round((data.semanas / 40) * 100), 100) : 70}%</span>
+                </div>
+                <div style={{ width: '100%', height: '4px', backgroundColor: 'rgba(223, 93, 134, 0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    width: `${data?.semanas ? Math.min((data.semanas / 40) * 100, 100) : 70}%`, 
+                    height: '100%', 
+                    background: 'linear-gradient(90deg, #df5d86, #ca436e)',
+                    borderRadius: '2px',
+                    transition: 'width 0.5s ease-out'
+                  }} />
+                </div>
+              </div>
             </>
           )}
 
@@ -227,23 +299,24 @@ export const ContentMain = () => {
             <button 
               onClick={() => setRegisterBirthOpen(true)}
               style={{
-                background: 'linear-gradient(135deg, #ca436e 0%, #e05c87 100%)',
-                color: 'white',
-                border: 'none',
+                background: 'transparent',
+                color: '#ca436e',
+                border: '1.5px solid rgba(202, 67, 110, 0.4)',
                 borderRadius: '20px',
-                padding: '12px 20px',
+                padding: '11px 20px',
                 width: '100%',
-                fontSize: '15px',
+                fontSize: '14px',
                 fontWeight: '600',
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                boxShadow: '0 4px 10px rgba(202, 67, 110, 0.25)',
                 marginBottom: '15px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                boxSizing: 'border-box'
               }}
             >
-              👶 ¿Ya nació tu bebé? Registrar Parto
+              ¿Ya nació tu bebé? Registrar Parto
             </button>
           )}
 
@@ -255,7 +328,32 @@ export const ContentMain = () => {
           </button>
 
           <div className={styles.preparacionSeccion}>
-            <h4>Preparación para el parto</h4>
+            <h4 style={{ marginBottom: '8px' }}>Preparación para el parto</h4>
+            {(() => {
+              const completedChecklistItems = checklistData?.items?.filter(item => item.completado).length || 0;
+              const totalChecklistItems = checklistData?.items?.length || 0;
+              const checklistProgressPercent = totalChecklistItems > 0 
+                ? Math.round((completedChecklistItems / totalChecklistItems) * 100) 
+                : 0;
+
+              return totalChecklistItems > 0 ? (
+                <div style={{ width: '100%', marginBottom: '14px', padding: '0 4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#888', marginBottom: '4px', fontWeight: '500' }}>
+                    <span>Tareas</span>
+                    <span style={{ color: '#df5d86', fontWeight: '600' }}>{checklistProgressPercent}% ({completedChecklistItems}/{totalChecklistItems})</span>
+                  </div>
+                  <div style={{ width: '100%', height: '4px', backgroundColor: 'rgba(223, 93, 134, 0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ 
+                      width: `${checklistProgressPercent}%`, 
+                      height: '100%', 
+                      background: 'linear-gradient(90deg, #df5d86 0%, #ca436e 100%)',
+                      borderRadius: '2px',
+                      transition: 'width 0.4s ease-out'
+                    }} />
+                  </div>
+                </div>
+              ) : null;
+            })()}
             {checklistLoading ? (
               <p style={{fontSize: '14px', color: '#666'}}>Cargando checklist...</p>
             ) : checklistData?.items?.length ? (
@@ -374,6 +472,18 @@ export const ContentMain = () => {
 
         </div>
       </div>
+
+      {isRiskModalOpen && (
+        <Modal 
+          isOpen={isRiskModalOpen} 
+          onClose={() => setIsRiskModalOpen(false)} 
+          title="Semáforo de Riesgo IA"
+        >
+          <div style={{ padding: '5px' }}>
+            <RiskSummaryCard />
+          </div>
+        </Modal>
+      )}
 
       {symptomsModalOpen && (
         <ReporteModal

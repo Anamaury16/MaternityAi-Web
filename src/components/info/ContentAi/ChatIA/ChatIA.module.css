@@ -683,3 +683,183 @@
 .alertCloseBtn:hover {
   color: #9b2c2c;
 }
+
+/* Estilos para el selector de temas y el historial en móvil */
+.mobileTopicsBar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileTopicsBar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
+
+  .mobileTopicsScroll {
+    display: flex;
+    flex: 1;
+    overflow-x: auto;
+    gap: 8px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 2px 0;
+  }
+
+  .mobileTopicsScroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobileTopicTab {
+    white-space: nowrap;
+    background-color: #f1f5f9;
+    border: none;
+    color: #64748b;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .mobileActiveTopicTab {
+    background: linear-gradient(135deg, #df5d86 0%, #ca436e 100%);
+    color: white;
+    box-shadow: 0 3px 8px rgba(223, 93, 134, 0.25);
+  }
+
+  .mobileHistoryBtn {
+    background: #f1f5f9;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #475569;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+  }
+
+  .mobileHistoryBtn:active {
+    transform: scale(0.92);
+    background-color: #e2e8f0;
+  }
+
+  /* Modal de Historial en móvil */
+  .mobileHistoryModalContent {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 10px 5px;
+    max-height: 70vh;
+    box-sizing: border-box;
+  }
+
+  .mobileNewSessionBtn {
+    background: linear-gradient(135deg, #df5d86 0%, #ca436e 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(202, 67, 110, 0.2);
+    width: 100%;
+    transition: all 0.2s;
+  }
+
+  .mobileNewSessionBtn:active {
+    transform: scale(0.98);
+  }
+
+  .mobileSessionsList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    max-height: 45vh;
+    padding-right: 4px;
+  }
+
+  .mobileSessionItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    gap: 10px;
+  }
+
+  .mobileActiveSessionItem {
+    background: #fff1f5;
+    border-color: rgba(223, 93, 134, 0.3);
+  }
+
+  .mobileSessionTitleWrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #334155;
+    font-size: 13.5px;
+    font-weight: 500;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .mobileSessionTitle {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobileActiveSessionItem .mobileSessionTitleWrapper {
+    color: #ca436e;
+    font-weight: 600;
+  }
+
+  .mobileDeleteSessionBtn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .mobileDeleteSessionBtn:hover {
+    color: #ef4444;
+    background-color: #fee2e2;
+  }
+
+  .mobileNoSessions {
+    text-align: center;
+    color: #64748b;
+    font-size: 13px;
+    margin: 20px 0;
+  }
+}

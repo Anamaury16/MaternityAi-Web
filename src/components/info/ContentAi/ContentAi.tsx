@@ -253,6 +253,13 @@ export const ContentAi = () => {
           activeTopicTag={activeTopicTag}
           escalatedAlert={escalatedAlert}
           clearEscalatedAlert={clearEscalatedAlert}
+          activeTopic={activeTopic}
+          setActiveTopic={setActiveTopic}
+          sessions={sessions.filter((s) => !deletedSessionIds.includes(s.id))}
+          activeSessionId={activeSessionId}
+          setActiveSessionId={setActiveSessionId}
+          onCreateSession={handleCreateSession}
+          onDeleteSession={handleDeleteSession}
         />
       </div>
     </section>

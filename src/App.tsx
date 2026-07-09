@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { OfflineBanner } from './components/pwa/OfflineBanner';
 
 // Lazy load pages for code splitting
 const HomePage = lazy(() => import('./pages/HomePage').then(module => ({ default: module.HomePage })));
@@ -25,6 +26,7 @@ const HospitalDashboard = lazy(() => import('./pages/hospitalPages/HospitalDashb
 function App() {
   return (
     <>
+      <OfflineBanner />
       <BrowserRouter>
         <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', color: '#CA436E', fontSize: '24px' }}>Cargando...</div>}>
           <Routes>

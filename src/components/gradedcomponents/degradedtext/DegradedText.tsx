@@ -6,13 +6,13 @@ interface DegradedTextProps {
 }
 export const DegradedText = ({ text, fontSize }: DegradedTextProps) => {
   return (
-    <a
+    <span
       className={style.text}
       style={{
         fontSize: fontSize,
       }}
     >
       {text}
-    </a>
+    </span>
   );
 };
