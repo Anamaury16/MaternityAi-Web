@@ -234,7 +234,7 @@ export const AdminOBA = () => {
   return (
     <div className={styles.root}>
       {/*header con tabs*/}
-      <HeaderActividad rol="medico" tabActivo="OBA" />
+      <HeaderActividad rol="medico" tabActivo="OVA" />
 
       {/* Mensaje de error general */}
       {error && (
@@ -248,7 +248,7 @@ export const AdminOBA = () => {
 
         {/*categoriass en el panel izquierdo*/}
         <div className={styles.panel}>
-          <p className={styles.panelTitle}>Categorías OBA</p>
+          <p className={styles.panelTitle}>Categorías OVA</p>
           <div className={styles.catList}>
             {loading && categorias.length === 0 ? (
               <p className={styles.emptyMsg}>Cargando...</p>

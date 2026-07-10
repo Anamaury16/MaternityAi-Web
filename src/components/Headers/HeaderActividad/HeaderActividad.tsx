@@ -93,7 +93,7 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
         {activeRole === 'medico' && (
           <>
             <Link to={'/clinico/usuarias'} className={styles.link}>Usuarias</Link>
-            <Link to={'/clinico/oba'} className={styles.link}>OBA</Link>
+            <Link to={'/clinico/oba'} className={styles.link}>OVA</Link>
             <Link to={'/clinico/citas'} className={styles.link}>Citas</Link>
           </>
         )}

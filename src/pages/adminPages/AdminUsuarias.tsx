@@ -20,6 +20,7 @@ import {
   createGestanteExam,
   exportGestantes,
   exportIndicators,
+  getGestanteVitals,
   type GestanteResponse,
   type RoleOption,
   type ExamenResponse,
@@ -27,6 +28,7 @@ import {
   type RespuestaConPreguntaResponse,
   type LlamadaEmergenciaCreate,
   type GestanteChecklistItem,
+  type SignosVitalesResponse,
 } from '../../services/adminService';
 import {
   getObstetricFormula,
@@ -372,11 +374,13 @@ export const AdminUsuarias = () => {
 
   // ── Panel médico (exámenes, alertas, cuestionario, emergencia) ──
   const [exams, setExams] = useState<ExamenResponse[]>([]);
+  const [vitals, setVitals] = useState<SignosVitalesResponse[]>([]);
   const [alarmSigns, setAlarmSigns] = useState<AlertaAdminResponse[]>([]);
   const [dailyHistory, setDailyHistory] = useState<RespuestaConPreguntaResponse[]>([]);
   const [selectedExam, setSelectedExam] = useState<ExamenResponse | null>(null);
   const [showAlertas, setShowAlertas] = useState(false);
   const [showCuestionario, setShowCuestionario] = useState(false);
+  const [showVitals, setShowVitals] = useState(false);
   const [showEmergencia, setShowEmergencia] = useState(false);
   const [showChecklist, setShowChecklist] = useState(false);
   const [checklistItems, setChecklistItems] = useState<GestanteChecklistItem[]>([]);
@@ -478,6 +482,7 @@ export const AdminUsuarias = () => {
   useEffect(() => {
     if (!gestanteSeleccionada?.id) {
       setExams([]);
+      setVitals([]);
       setAlarmSigns([]);
       setDailyHistory([]);
       setChecklistItems([]);
@@ -486,6 +491,7 @@ export const AdminUsuarias = () => {
     const gestanteId = gestanteSeleccionada.id;
     setSelectedExam(null);
     getGestanteExams(gestanteId).then(setExams).catch(() => setExams([]));
+    getGestanteVitals(gestanteId).then(setVitals).catch(() => setVitals([]));
     getGestanteAlarmSigns(gestanteId).then(setAlarmSigns).catch(() => setAlarmSigns([]));
     getGestanteDailyQuestionsHistory(gestanteId).then(setDailyHistory).catch(() => setDailyHistory([]));
     setLoadingChecklist(true);
@@ -1257,6 +1263,9 @@ export const AdminUsuarias = () => {
               <button className={styles.cuestionarioBtn} onClick={() => setShowChecklist(true)}>
                 Revisar checklist de preparación
               </button>
+              <button className={styles.cuestionarioBtn} onClick={() => setShowVitals(true)}>
+                Ver signos vitales registrados 🩺
+              </button>
             </div>
 
             {/* Tarjeta 2: Análisis actual */}
@@ -1376,6 +1385,38 @@ export const AdminUsuarias = () => {
                 {a.prioridad && <p className={styles.infoRow}><strong>Prioridad</strong> · {a.prioridad}</p>}
                 {a.modulo_origen && <p className={styles.infoRow}><strong>Módulo</strong> · {a.modulo_origen}</p>}
                 <p className={styles.infoRow}><strong>Fecha</strong> · {formatFecha(a.created_at)}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </Modal>
+
+      {/* Modal: signos vitales */}
+      <Modal
+        isOpen={showVitals}
+        onClose={() => setShowVitals(false)}
+        title="Historial de Signos Vitales"
+      >
+        <div className={modalStyles.form} style={{ maxHeight: '70vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          {vitals.length === 0 ? (
+            <p className={styles.secDesc} style={{ margin: 0 }}>
+              No hay registros de signos vitales para esta paciente.
+            </p>
+          ) : (
+            vitals.map((v) => (
+              <div key={v.id} style={{ padding: '14px', background: '#fcfcfc', borderRadius: '12px', border: '1px solid #eaeaea', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0', paddingBottom: '6px', marginBottom: '8px', color: '#CA436E', fontWeight: 600, fontSize: '13px' }}>
+                  <span>Control: {formatFecha(v.fecha_control)}</span>
+                  <span>IMC: {v.imc ?? '--'}</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' }}>
+                  <p className={styles.infoRow} style={{ margin: 0 }}><strong>Tensión Arterial:</strong> {v.presion_sistolica && v.presion_diastolica ? `${v.presion_sistolica}/${v.presion_diastolica} mmHg` : '--'}</p>
+                  <p className={styles.infoRow} style={{ margin: 0 }}><strong>FC Fetal (FCF):</strong> {v.fcf ? `${v.fcf} lpm` : '--'}</p>
+                  <p className={styles.infoRow} style={{ margin: 0 }}><strong>Peso:</strong> {v.peso_kg ? `${v.peso_kg} kg` : '--'}</p>
+                  <p className={styles.infoRow} style={{ margin: 0 }}><strong>Talla:</strong> {v.talla_cm ? `${v.talla_cm} cm` : '--'}</p>
+                  <p className={styles.infoRow} style={{ margin: 0 }}><strong>Altura Uterina:</strong> {v.altura_uterina ? `${v.altura_uterina} cm` : '--'}</p>
+                  <p className={styles.infoRow} style={{ margin: 0 }}><strong>Est. Nutricional:</strong> {v.estado_nutricional_id ? `ID ${v.estado_nutricional_id}` : '--'}</p>
+                </div>
               </div>
             ))
           )}

@@ -512,6 +512,21 @@ export const cancelarAppointment = async (id: string): Promise<CitaAdminResponse
 
 // ─── Panel Médico (detalle de gestante) ───────────────────────────────────────
 
+export interface SignosVitalesResponse {
+  id: string;
+  control_prenatal_id: string;
+  fecha_control: string;
+  peso_kg: number;
+  talla_cm?: number | null;
+  imc?: number | null;
+  estado_nutricional_id?: number | null;
+  altura_uterina?: number | null;
+  presion_sistolica?: number | null;
+  presion_diastolica?: number | null;
+  fcf?: number | null;
+  created_at?: string | null;
+}
+
 export interface ExamenResponse {
   id: string;
   tipo_examen_id: number;
@@ -567,6 +582,11 @@ export interface LlamadaEmergenciaCreate {
 
 export const getGestanteExams = async (gestanteId: string): Promise<ExamenResponse[]> => {
   const response = await api.get<ExamenResponse[]>(`/api/v1/admin/gestantes/${gestanteId}/exams`);
+  return response.data;
+};
+
+export const getGestanteVitals = async (gestanteId: string): Promise<SignosVitalesResponse[]> => {
+  const response = await api.get<SignosVitalesResponse[]>(`/api/v1/admin/gestantes/${gestanteId}/vitals`);
   return response.data;
 };
 
@@ -773,6 +793,73 @@ export const getGestanteChecklist = async (
 ): Promise<GestanteChecklistItem[]> => {
   const response = await api.get<GestanteChecklistItem[]>(
     `/api/v1/clinical/checklist-items/${gestanteId}`
+  );
+  return response.data;
+};
+
+// ─── Inteligencia Artificial (Staff) ─────────────────────────────────────────
+
+export interface ChatMensajeStaffResponse {
+  id: string;
+  rol: string;
+  contenido: string;
+  created_at: string;
+}
+
+export interface ChatHistorialStaffResponse {
+  codigo_gmi: string;
+  mensajes: ChatMensajeStaffResponse[];
+  total: number;
+}
+
+export interface AlertaStaffResponse {
+  id: string;
+  gestante_id: string;
+  tipo_alerta_id: number;
+  tipo_alerta_nombre: string | null;
+  prioridad_id: number;
+  prioridad_codigo: string | null;
+  estado: string;
+  modulo_origen: string | null;
+  descripcion: string | null;
+  clasificacion_riesgo_id: string | null;
+  resuelta_por: string | null;
+  fecha_resolucion: string | null;
+  created_at: string | null;
+}
+
+export interface ExplainabilityResponse {
+  assessment_id: string;
+  nivel_riesgo: 'verde' | 'amarillo' | 'rojo';
+  explicacion: string;
+  factores_determinantes: string[];
+  datos_utilizados: string[];
+}
+
+export const getGestanteExplainabilityStaff = async (
+  gestanteId: string,
+  assessmentId: string
+): Promise<ExplainabilityResponse> => {
+  const response = await api.get<ExplainabilityResponse>(
+    `/api/v1/ia/gestantes/${gestanteId}/explainability/${assessmentId}`
+  );
+  return response.data;
+};
+
+export const getGestanteChatHistoryStaff = async (
+  gestanteId: string
+): Promise<ChatHistorialStaffResponse> => {
+  const response = await api.get<ChatHistorialStaffResponse>(
+    `/api/v1/ia/gestantes/${gestanteId}/chat/history`
+  );
+  return response.data;
+};
+
+export const getGestanteAlertsStaff = async (
+  gestanteId: string
+): Promise<AlertaStaffResponse[]> => {
+  const response = await api.get<AlertaStaffResponse[]>(
+    `/api/v1/ia/gestantes/${gestanteId}/alerts`
   );
   return response.data;
 };

@@ -54,6 +54,15 @@ export interface ExplainabilityResponse {
   datos_utilizados: string[];
 }
 
+// ---- Recommendations ----
+
+export interface RecommendationResponse {
+  semana_gestacion: number;
+  modulo: string;
+  recomendaciones: string[];
+  mensaje_motivacional: string;
+}
+
 // ---- Respuesta genérica ----
 
 export interface DetailResponse {
@@ -221,5 +230,24 @@ export const resolveAlerta = async (
   const response = await api.patch(`/api/v1/ia/alerts/${alertaId}/resolve`, {
     observaciones,
   });
+  return response.data;
+};
+
+// GET /api/v1/ia/recommendations
+export const getIaRecommendations = async (): Promise<RecommendationResponse> => {
+  if (USE_MOCKS) {
+    await mockDelay();
+    return {
+      semana_gestacion: 28,
+      modulo: 'M2',
+      recomendaciones: [
+        'Mantén una hidratación constante consumiendo al menos 2.5 litros de agua al día.',
+        'Realiza estiramientos suaves por las mañanas para aliviar la tensión lumbar.',
+        'No olvides tomar tus suplementos de calcio e hierro de acuerdo a las indicaciones médicas.'
+      ],
+      mensaje_motivacional: '¡Estás haciendo un trabajo increíble cuidando de ti y de tu bebé! Cada semana es un paso más hacia tu meta.'
+    };
+  }
+  const response = await api.get('/api/v1/ia/recommendations');
   return response.data;
 };

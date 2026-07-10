@@ -87,7 +87,7 @@
   opacity: 0.88;
 }
 
-/* ── OBA GRID ── */
+/* ── OVA GRID ── */
 .obaGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -99,7 +99,7 @@
   margin-top: 20px;
 }
 
-/* ── OBA CARD ── */
+/* ── OVA CARD ── */
 .obaCard {
   border: 1px solid #eee;
   border-radius: 14px;

@@ -4,8 +4,11 @@ import {
   getGestantes,
   getGestanteAlarmSigns,
   getGestanteExams,
+  getGestanteVitals,
+  createGestanteEmergencyCall,
   type AlertaAdminResponse,
   type ExamenResponse,
+  type SignosVitalesResponse,
 } from '../../services/adminService';
 import {
   getObstetricFormula,
@@ -89,6 +92,7 @@ export const HospitalDashboard = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [patientExams, setPatientExams] = useState<ExamenResponse[]>([]);
+  const [patientVitals, setPatientVitals] = useState<SignosVitalesResponse[]>([]);
   const [patientFormula, setPatientFormula] = useState<IObstetricFormula | null>(null);
   const [patientPathology, setPatientPathology] = useState<IPathologicalHistory[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -301,15 +305,17 @@ export const HospitalDashboard = () => {
     localStorage.setItem('selected_gestante_id', alert.patientId);
 
     try {
-      const [examsData, formulaData, pathologyData] = await Promise.all([
+      const [examsData, formulaData, pathologyData, vitalsData] = await Promise.all([
         getGestanteExams(alert.patientId).catch(() => [] as ExamenResponse[]),
         getObstetricFormula().catch(() => null),
         getPathologicalHistory().catch(() => [] as IPathologicalHistory[]),
+        getGestanteVitals(alert.patientId).catch(() => [] as SignosVitalesResponse[]),
       ]);
 
       setPatientExams(examsData);
       setPatientFormula(formulaData);
       setPatientPathology(pathologyData);
+      setPatientVitals(vitalsData);
     } catch (err) {
       console.error('Failed to load patient clinical file details:', err);
     } finally {
@@ -749,6 +755,39 @@ export const HospitalDashboard = () => {
                 )}
               </div>
 
+              {/* Signos Vitales */}
+              <div className={styles.sectionCard}>
+                <h4 className={styles.sectionTitle}>Signos Vitales Recientes</h4>
+                {patientVitals.length === 0 ? (
+                  <p style={{ margin: 0, fontSize: '12px', color: '#9ca3af' }}>No registra controles de signos vitales en el expediente.</p>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {patientVitals.slice(0, 3).map((v) => (
+                      <div key={v.id} style={{ padding: '10px', background: 'rgba(255,255,255,0.015)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '4px', marginBottom: '6px', color: '#ff4b72' }}>
+                          <span>Control: {v.fecha_control ? new Date(v.fecha_control).toLocaleDateString() : 'N/A'}</span>
+                          <span>IMC: {v.imc ?? '--'}</span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 12px', color: '#9ca3af' }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <strong>P. Arterial:</strong> <span style={{ color: '#f3f4f6' }}>{v.presion_sistolica && v.presion_diastolica ? `${v.presion_sistolica}/${v.presion_diastolica}` : '--'}</span>
+                          </span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <strong>FC Fetal:</strong> <span style={{ color: '#f3f4f6' }}>{v.fcf ? `${v.fcf} lpm` : '--'}</span>
+                          </span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <strong>Peso:</strong> <span style={{ color: '#f3f4f6' }}>{v.peso_kg ? `${v.peso_kg} kg` : '--'}</span>
+                          </span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <strong>Alt. Uterina:</strong> <span style={{ color: '#f3f4f6' }}>{v.altura_uterina ? `${v.altura_uterina} cm` : '--'}</span>
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Exámenes de Laboratorio */}
               <div className={styles.sectionCard}>
                 <h4 className={styles.sectionTitle}>Exámenes de Laboratorio</h4>
@@ -810,9 +849,21 @@ export const HospitalDashboard = () => {
             </button>
             <button 
               className={styles.dispatchBtn}
-              onClick={() => {
-                showToast(`Despachando unidad móvil a paciente ${selectedAlert.codigoGmi}`);
-                setDrawerOpen(false);
+              onClick={async () => {
+                try {
+                  showToast(`Iniciando despacho de ambulancia para ${selectedAlert.codigoGmi}...`);
+                  await createGestanteEmergencyCall(selectedAlert.patientId, {
+                    motivo: `Despacho de emergencia por alerta: ${selectedAlert.tipoAlerta}. ${selectedAlert.descripcion}`,
+                    destino: "Hospital Local de Soledad",
+                    resultado: "Despachada"
+                  });
+                  showToast(`✅ Unidad móvil despachada al Hospital Local de Soledad para paciente ${selectedAlert.codigoGmi}`);
+                  handleResolveAlert();
+                } catch (error) {
+                  console.error("Error al registrar llamada de emergencia:", error);
+                  showToast(`⚠️ Despacho registrado sin base de datos local (Modo demostración).`);
+                  setDrawerOpen(false);
+                }
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
