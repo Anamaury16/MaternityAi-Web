@@ -86,7 +86,7 @@ export const HospitalDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'critical' | 'moderate' | 'informative'>('all');
   const [soundEnabled, setSoundEnabled] = useState(false);
-  
+
   // Drawer states
   const [selectedAlert, setSelectedAlert] = useState<ActiveHospitalAlert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -173,9 +173,9 @@ export const HospitalDashboard = () => {
           }
 
           alarmSigns.forEach((sign) => {
-            const mappedPrio: 'Crítica' | 'Moderada' | 'Informativa' = 
+            const mappedPrio: 'Crítica' | 'Moderada' | 'Informativa' =
               sign.prioridad === 'Alta' || sign.prioridad === 'Critica' || g.nivel_riesgo === 'alto' ? 'Crítica' :
-              sign.prioridad === 'Media' || sign.prioridad === 'Moderada' ? 'Moderada' : 'Informativa';
+                sign.prioridad === 'Media' || sign.prioridad === 'Moderada' ? 'Moderada' : 'Informativa';
 
             activeAlertList.push({
               id: sign.id || `alert-${g.id}`,
@@ -210,7 +210,7 @@ export const HospitalDashboard = () => {
           playEmergencyChime();
           showToast('¡Nueva Alerta Obstétrica Recibida!');
         }
-        
+
         // Merge simulated alerts that aren't resolved yet
         const simulatedList = prevAlerts.filter(a => a.id.startsWith('sim-'));
         const merged = [...simulatedList, ...activeAlertList];
@@ -228,7 +228,7 @@ export const HospitalDashboard = () => {
   // Initial load
   useEffect(() => {
     loadAlerts();
-    
+
     // Immediate reception simulation - poll backend every 8 seconds
     const interval = setInterval(() => {
       loadAlerts(true);
@@ -275,7 +275,7 @@ export const HospitalDashboard = () => {
   const handleSimulateAlert = () => {
     const randomIndex = Math.floor(Math.random() * SIMULATION_ALERTS.length);
     const mock = SIMULATION_ALERTS[randomIndex];
-    
+
     const newSimAlert: ActiveHospitalAlert = {
       id: `sim-${Date.now()}`,
       patientId: `sim-patient-${Date.now()}`,
@@ -355,16 +355,16 @@ export const HospitalDashboard = () => {
 
   // Filter alerts by search query and category tab selection
   const filteredAlerts = alerts.filter(a => {
-    const matchesSearch = 
+    const matchesSearch =
       a.codigoGmi.toLowerCase().includes(searchQuery.toLowerCase()) ||
       a.tipoAlerta.toLowerCase().includes(searchQuery.toLowerCase()) ||
       a.descripcion.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesFilter = 
+    const matchesFilter =
       activeFilter === 'all' ? true :
-      activeFilter === 'critical' ? a.prioridad === 'Crítica' :
-      activeFilter === 'moderate' ? a.prioridad === 'Moderada' :
-      a.prioridad === 'Informativa';
+        activeFilter === 'critical' ? a.prioridad === 'Crítica' :
+          activeFilter === 'moderate' ? a.prioridad === 'Moderada' :
+            a.prioridad === 'Informativa';
 
     return matchesSearch && matchesFilter;
   });
@@ -404,7 +404,7 @@ export const HospitalDashboard = () => {
       )}
 
       <div className={styles.container}>
-        
+
         {/* Metric widgets */}
         <div className={styles.metricsGrid}>
           <div className={styles.metricCard}>
@@ -453,7 +453,7 @@ export const HospitalDashboard = () => {
             </div>
             <div className={styles.metricInfo}>
               <h3>En Canal de Escucha</h3>
-              <p className={styles.metricValue}>Hospital Colombia</p>
+              <p className={styles.metricValue}>Hospital Puerto Colombia</p>
             </div>
           </div>
         </div>
@@ -468,7 +468,7 @@ export const HospitalDashboard = () => {
             <p>Canal exclusivo de recepción inmediata y despacho de ambulancias en Soledad / Puerto Colombia</p>
           </div>
           <div className={styles.actionsSection}>
-            <button 
+            <button
               className={`${styles.soundBtn} ${soundEnabled ? styles.soundBtnActive : ''}`}
               onClick={handleToggleSound}
             >
@@ -491,7 +491,7 @@ export const HospitalDashboard = () => {
                 </>
               )}
             </button>
-            <button 
+            <button
               className={styles.simulateBtn}
               onClick={handleSimulateAlert}
             >
@@ -505,14 +505,14 @@ export const HospitalDashboard = () => {
 
         {/* Dashboard core grid */}
         <div className={styles.dashboardGrid}>
-          
+
           {/* Filters Sidebar */}
           <div className={styles.sidebarFilter}>
             <div className={styles.filterGroup}>
               <h4 className={styles.filterTitle}>Buscar Paciente</h4>
               <div className={styles.searchWrapper}>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   className={styles.searchInput}
                   placeholder="ID-GMI o síntoma..."
                   value={searchQuery}
@@ -527,14 +527,14 @@ export const HospitalDashboard = () => {
 
             <div className={styles.filterGroup}>
               <h4 className={styles.filterTitle}>Filtrar por Prioridad</h4>
-              <button 
+              <button
                 className={`${styles.filterBtn} ${activeFilter === 'all' ? styles.filterBtnActive : ''}`}
                 onClick={() => setActiveFilter('all')}
               >
                 <span>Todas las Alertas</span>
                 <span className={styles.filterBadge}>{alerts.length}</span>
               </button>
-              <button 
+              <button
                 className={`${styles.filterBtn} ${activeFilter === 'critical' ? styles.filterBtnActive : ''}`}
                 onClick={() => setActiveFilter('critical')}
               >
@@ -546,7 +546,7 @@ export const HospitalDashboard = () => {
                 </span>
                 <span className={styles.filterBadge}>{criticalCount}</span>
               </button>
-              <button 
+              <button
                 className={`${styles.filterBtn} ${activeFilter === 'moderate' ? styles.filterBtnActive : ''}`}
                 onClick={() => setActiveFilter('moderate')}
               >
@@ -589,7 +589,7 @@ export const HospitalDashboard = () => {
                 const isSelected = selectedAlert?.id === alert.id;
 
                 return (
-                  <div 
+                  <div
                     key={alert.id}
                     className={`${styles.alertCard} ${styleClass} ${isSelected ? styles.alertSelected : ''}`}
                     onClick={() => handleOpenDetails(alert)}
@@ -603,7 +603,7 @@ export const HospitalDashboard = () => {
                         <span className={styles.gestationInfo}>Semana {alert.semanaGestacion} EG</span>
                       </div>
                     </div>
-                    
+
                     <p className={styles.cardBody}>
                       <strong>{alert.tipoAlerta}</strong>: {alert.descripcion}
                     </p>
@@ -616,7 +616,7 @@ export const HospitalDashboard = () => {
                         </svg>
                         Recibida a las {formatTime(alert.createdAt)}
                       </span>
-                      <span style={{ 
+                      <span style={{
                         color: alert.nivelRiesgo === 'Alto' ? '#ff4b72' : alert.nivelRiesgo === 'Medio' ? '#f59e0b' : '#10b981',
                         fontWeight: 600,
                         fontSize: '11px'
@@ -633,11 +633,11 @@ export const HospitalDashboard = () => {
       </div>
 
       {/* Side Slide-in Clinical Drawer */}
-      <div 
-        className={`${styles.drawerOverlay} ${drawerOpen ? styles.drawerOverlayOpen : ''}`} 
+      <div
+        className={`${styles.drawerOverlay} ${drawerOpen ? styles.drawerOverlayOpen : ''}`}
         onClick={() => setDrawerOpen(false)}
       />
-      
+
       <div className={`${styles.drawer} ${drawerOpen ? styles.drawerOpen : ''}`}>
         <div className={styles.drawerHeader}>
           {selectedAlert && (
@@ -847,7 +847,7 @@ export const HospitalDashboard = () => {
               </svg>
               <span>Marcar Atendida</span>
             </button>
-            <button 
+            <button
               className={styles.dispatchBtn}
               onClick={async () => {
                 try {

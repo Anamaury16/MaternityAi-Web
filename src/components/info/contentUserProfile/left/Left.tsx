@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { logoutUser } from '../../../../services/authService';
+import { useAuth } from '../../../../context/AuthContext';
 import styles from './Left.module.css';
 
 interface LeftProps {
@@ -9,9 +9,10 @@ interface LeftProps {
 
 export const Left = ({ activeTab, setActiveTab }: LeftProps) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const handleLogout = async () => {
-    await logoutUser();
+    await logout();
     navigate('/login');
   };
 

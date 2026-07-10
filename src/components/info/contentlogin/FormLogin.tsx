@@ -163,6 +163,7 @@ export const FormLogin = () => {
         const staffData = await loginStaff(staffForm);
         login(staffData); // actualiza el AuthContext
         localStorage.setItem('user_name', staffForm.email);
+        localStorage.setItem('has_logged_in_before', 'true');
         setSuccessMessage('Sesión iniciada correctamente.');
         // Redirige al dashboard correspondiente al rol
         const from = location.state?.from?.pathname;
@@ -182,6 +183,7 @@ export const FormLogin = () => {
         const gestanteData = await loginUser(gestanteForm);
         login(gestanteData); // actualiza el AuthContext
         localStorage.setItem('user_name', `Gestante ${gestanteForm.codigo_gmi}`);
+        localStorage.setItem('has_logged_in_before', 'true');
         setSuccessMessage('Sesión iniciada correctamente.');
         navigate('/main', { replace: true });
       }

@@ -10,7 +10,7 @@ import { GestationalAge } from '../../profile/GestationalAge';
 import { SecurityQuestionUpdate } from '../../profile/SecurityQuestionUpdate';
 import { DeleteAccount } from '../../profile/DeleteAccount';
 import { Terms } from './Right/Terms/Terms';
-import { logoutUser } from '../../../services/authService';
+import { useAuth } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useVitals } from '../../../hooks/clinical/useClinical';
 import { PwaInstallPrompt } from '../../pwa/PwaInstallPrompt';
@@ -18,6 +18,7 @@ import { PwaInstallPrompt } from '../../pwa/PwaInstallPrompt';
 export const ContentUserProfile = () => {
   const [activeTab, setActiveTab] = useState<'perfil' | 'seguridad' | 'privacidad' | 'eliminar_cuenta'>('perfil');
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const { data: vitalsData } = useVitals();
   const sortedVitals = vitalsData ? [...vitalsData].sort((a, b) => {
@@ -28,7 +29,7 @@ export const ContentUserProfile = () => {
   const latestVital = sortedVitals[0] || null;
 
   const handleLogout = async () => {
-    await logoutUser();
+    await logout();
     navigate('/login');
   };
 

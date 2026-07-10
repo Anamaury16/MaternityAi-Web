@@ -60,10 +60,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('role');
+  const logout = useCallback(async () => {
+    try {
+      const authService = await import('../services/authService');
+      await authService.logoutUser();
+    } catch (e) {
+      console.error('Failed to log out from server, clearing local storage:', e);
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('role');
+    }
     setUser({ role: null, isAuthenticated: false });
   }, []);
 

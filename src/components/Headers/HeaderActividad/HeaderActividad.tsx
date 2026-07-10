@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { DegradedText } from '../../gradedcomponents/degradedtext/DegradedText';
-import { logoutUser } from '../../../services/authService';
+import { useAuth } from '../../../context/AuthContext';
 import styles from './HeaderActividad.module.css';
 import { MobileBottomNav } from '../MobileBottomNav';
 import { AlertasPanel } from '../../alertas/AlertasPanel';
@@ -18,6 +18,7 @@ interface HeaderActividadProps {
 export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
   const currentPath = location.pathname;
 
   const rawRole = localStorage.getItem('role') || rol;
@@ -43,7 +44,7 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
   }, [activeRole]);
 
   const handleLogout = async () => {
-    await logoutUser();
+    await logout();
     navigate('/login');
   };
 
