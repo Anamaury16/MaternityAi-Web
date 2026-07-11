@@ -61,6 +61,7 @@ function App() {
               <Route path="/clinico/usuarias" element={<AdminUsuarias />} />
               <Route path="/clinico/citas" element={<AdminCitas />} />
               <Route path="/clinico/oba" element={<AdminOBA />} />
+              <Route path="/clinico/ia" element={<AdminIA />} />
             </Route>
 
             {/* ── Rutas para Hospital ── */}
