@@ -1,33 +1,106 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './recomendaciones.module.css';
-import { useRecommendations } from '../../../../../hooks/clinical/useClinical';
+import { getIaRecommendations, type RecommendationResponse } from '../../../../../services/iaService';
+import type { ActiveModule } from '../../../../../services/m0Service';
 
-const RECOMENDACIONES_DIARIAS: string[][] = [
-  ["Duerma al menos 8 horas para mantener su energía.", "Tome pausas activas y descanse con pies elevados.", "Evite cafeína en exceso, prefiera infusiones permitidas.", "Planifique la semana con su red de apoyo."],
-  ["Asista puntualmente a sus controles prenatales.", "Planifique un menú saludable para la semana.", "Realice una caminata ligera de 20 a 30 minutos.", "Registre su peso y verifique el rango recomendado."],
-  ["Evite levantar objetos pesados o esfuerzos bruscos.", "Realice ejercicios de respiración para la ansiedad.", "Consuma alimentos ricos en hierro: espinacas, lentejas.", "Mantenga postura adecuada al sentarse y trabajar."],
-  ["Asegure consumo adecuado de calcio diario.", "Coma porciones pequeñas 5 o 6 veces al día.", "Use ropa holgada y calzado cómodo.", "Beba al menos 2 litros de agua al día."],
-  ["Evite la automedicación; consulte a su médico.", "Realice ejercicios de suelo pélvico (Kegel).", "Consuma fibra: frutas, verduras, cereales integrales.", "Evite permanecer de pie por períodos prolongados."],
-  ["Aprenda a identificar los signos de alarma.", "Prepare los documentos médicos en bolso accesible.", "Desconéctese de pantallas antes de dormir.", "Consuma pescados ricos en Omega-3."],
-  ["Háblele o cántele a su bebé para conectar.", "Evite comidas grasas o muy condimentadas.", "Tome un baño de agua tibia para relajar músculos.", "Disfrute actividades de bajo impacto en familia."],
+// Recomendaciones de respaldo curadas por módulo (para cuando la IA no está disponible)
+const FALLBACK_POR_MODULO: Record<string, string[]> = {
+  M0: [
+    'Asista a su primera cita prenatal antes de la semana 10.',
+    'Inicie ácido fólico 400 mcg diarios de inmediato.',
+    'Evite automedicarse durante el primer mes del embarazo.',
+  ],
+  M1: [
+    'Realice todos los exámenes de primer trimestre indicados.',
+    'Consuma alimentos ricos en hierro: espinacas, lentejas, carnes.',
+    'Duerma de lado izquierdo para mejorar la circulación.',
+  ],
+  M2: [
+    'Registre los movimientos fetales a partir de la semana 20.',
+    'Aplique la vacuna de influenza si aún no lo ha hecho.',
+    'Realice ejercicios de bajo impacto como caminatas o natación.',
+  ],
+  M3: [
+    'Prepare su bolsa para la clínica desde la semana 36.',
+    'Elabore su plan de parto con su médico o enfermera.',
+    'Cuente mínimo 10 movimientos fetales en 2 horas cada día.',
+  ],
+  M4: [
+    'Inicie la lactancia materna en la primera hora postparto.',
+    'Asista al control postparto en los primeros 7 días.',
+    'Descanse cuando el bebé duerma y acepte ayuda de su red.',
+  ],
+};
+
+const FALLBACK_DEFAULT = [
+  'Aprenda a identificar los signos de alarma.',
+  'Mantenga su carnet prenatal siempre a la mano.',
+  'Descanse al menos 8 horas diarias y tome pausas activas.',
 ];
 
-export const Recomendaciones = React.memo(() => {
-  const { data, loading } = useRecommendations();
-  const dia = new Date().getDay();
-  const lista: string[] = RECOMENDACIONES_DIARIAS[dia] ?? data?.recomendaciones ?? [];
+interface Props {
+  activeModule: ActiveModule | null;
+}
 
-  if (loading && lista.length === 0) return null;
+export const Recomendaciones = React.memo(({ activeModule }: Props) => {
+  const [data, setData] = useState<RecommendationResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Solo llama a la IA cuando hay módulo activo
+    if (!activeModule) return;
+
+    let cancelled = false;
+    setLoading(true);
+
+    getIaRecommendations()
+      .then(res => {
+        if (!cancelled) setData(res);
+      })
+      .catch(() => {
+        // Si falla la IA, dejamos data en null → se usa fallback
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [activeModule]);
+
+  // Determina qué mostrar: IA → fallback por módulo → fallback genérico
+  const codigo = activeModule?.codigo ?? '';
+  const lista: string[] = data?.recomendaciones?.slice(0, 3)
+    ?? FALLBACK_POR_MODULO[codigo]
+    ?? FALLBACK_DEFAULT;
+
+  const mensajeMotivacional = data?.mensaje_motivacional ?? null;
 
   return (
     <section className={styles.recomendaciones}>
       <p className={styles.sideLabel}>RECOMENDACIÓN DEL DÍA</p>
-      {lista.slice(0, 3).map((rec, i) => (
-        <div key={i} className={styles.rec}>
-          <span className={styles.recDot} />
-          {rec}
-        </div>
-      ))}
+      {activeModule && (
+        <p className={styles.moduleHint}>{activeModule.nombre} · Semana {activeModule.semana_gestacion_actual}</p>
+      )}
+
+      {loading ? (
+        <>
+          <div className={styles.skeletonLine} />
+          <div className={styles.skeletonLine} style={{ width: '80%' }} />
+          <div className={styles.skeletonLine} style={{ width: '90%' }} />
+        </>
+      ) : (
+        <>
+          {lista.map((rec, i) => (
+            <div key={i} className={styles.rec}>
+              <span className={styles.recDot} />
+              {rec}
+            </div>
+          ))}
+          {mensajeMotivacional && (
+            <p className={styles.motivacional}>💗 {mensajeMotivacional}</p>
+          )}
+        </>
+      )}
     </section>
   );
 });

@@ -260,13 +260,8 @@ export const getContentByModule = async (): Promise<ContenidoEducativoResponse[]
     await mockDelay();
     return MOCK_CONTENIDOS;
   }
-  try {
-    const response = await api.get('/api/v1/m5/content');
-    return response.data ?? [];
-  } catch (err) {
-    console.warn("getContentByModule failed, falling back to mock:", err);
-    return MOCK_CONTENIDOS;
-  }
+  const response = await api.get('/api/v1/m5/content');
+  return response.data ?? [];
 };
 
 // GET /content/categories

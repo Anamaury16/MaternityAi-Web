@@ -29,11 +29,23 @@ export const Posts = React.memo(({ data, loading, error }: Props) => {
   }
 
   if (error) {
-    return <p className={styles.error}>Error al cargar el contenido educativo.</p>;
+    return (
+      <div className={styles.emptyState}>
+        <span className={styles.emptyIcon}>⚠️</span>
+        <p className={styles.emptyTitle}>No se pudo cargar el contenido</p>
+        <p className={styles.emptySubtitle}>Verifica tu conexión o intenta de nuevo más tarde.</p>
+      </div>
+    );
   }
 
   if (data.length === 0) {
-    return <p className={styles.empty}>No se encontraron resultados.</p>;
+    return (
+      <div className={styles.emptyState}>
+        <span className={styles.emptyIcon}>📚</span>
+        <p className={styles.emptyTitle}>Aún no hay contenido disponible</p>
+        <p className={styles.emptySubtitle}>El equipo de salud está preparando recursos educativos para tu etapa de gestación. ¡Pronto tendrás materiales aquí!</p>
+      </div>
+    );
   }
 
   return (

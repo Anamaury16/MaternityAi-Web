@@ -27,6 +27,7 @@ import {
   type AutoevaluacionResponse,
   type AutoevaluacionDetalleResponse,
 } from '../../services/m5Service';
+import { getActiveModule, type ActiveModule } from '../../services/m0Service';
 
 // ---------------------------------------------------------------------------
 // Hook base genérico interno
@@ -73,8 +74,19 @@ function useAsyncState<T>(initialData: T | null = null): [
 
 export const useEducationalContent = () => {
   const [state, run] = useAsyncState<ContenidoEducativoResponse[]>([]);
+  const [activeModule, setActiveModule] = useState<ActiveModule | null>(null);
 
-  const fetch = useCallback(() => run(getContentByModule), [run]);
+  const fetch = useCallback(async () => {
+    // 1. Sincronizar módulo activo desde FUM (actualiza modulo_activo_id en BD)
+    try {
+      const modulo = await getActiveModule();
+      setActiveModule(modulo);
+    } catch {
+      // Si falla, igual intentamos traer el contenido
+    }
+    // 2. Traer contenido ya filtrado por módulo activo
+    await run(getContentByModule);
+  }, [run]);
 
   useEffect(() => { fetch(); }, [fetch]);
 
@@ -82,6 +94,7 @@ export const useEducationalContent = () => {
     data: state.data ?? [],
     loading: state.loading,
     error: state.error,
+    activeModule,
     refresh: fetch,
   };
 };

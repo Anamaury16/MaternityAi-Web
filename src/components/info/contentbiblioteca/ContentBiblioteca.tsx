@@ -22,7 +22,7 @@ const normalizeTipoContenido = (tipo: string | null | undefined): string => {
 };
 
 export const ContentBiblioteca = () => {
-  const { data, loading, error } = useEducationalContent();
+  const { data, loading, error, activeModule } = useEducationalContent();
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('todos');
 
@@ -77,11 +77,11 @@ export const ContentBiblioteca = () => {
         <aside className={styles.sidebar}>
 
           <div className={styles.sideSection}>
-            <PreguntasFrecuentes />
+            <PreguntasFrecuentes activeModule={activeModule} />
           </div>
 
           <div className={styles.sideSection}>
-            <Recomendaciones />
+            <Recomendaciones activeModule={activeModule} />
           </div>
 
         </aside>
@@ -89,9 +89,16 @@ export const ContentBiblioteca = () => {
         {/* MAIN CONTENT */}
         <main className={styles.main}>
           <div className={styles.resultsHeader}>
-            <span className={styles.resultsCount}>
-              {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
-            </span>
+            <div className={styles.resultsHeaderLeft}>
+              <span className={styles.resultsCount}>
+                {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
+              </span>
+              {activeModule && (
+                <span className={styles.moduleBadge}>
+                  📍 {activeModule.nombre} · Semana {activeModule.semana_gestacion_actual}
+                </span>
+              )}
+            </div>
             <div className={styles.filterRow}>
               {TIPOS.map(t => {
                 const count = t.key === 'todos'
@@ -134,8 +141,8 @@ export const ContentBiblioteca = () => {
       </div>
 
       <div className={styles.mobileSide}>
-        <PreguntasFrecuentes />
-        <Recomendaciones />
+        <PreguntasFrecuentes activeModule={activeModule} />
+        <Recomendaciones activeModule={activeModule} />
       </div>
 
     </div>
