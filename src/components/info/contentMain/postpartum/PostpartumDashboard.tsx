@@ -50,11 +50,11 @@ const ShieldIcon = () => (
 
 interface PostpartumDashboardProps {
   inModal?: boolean;
-  onEditBaby?: () => void;
   onEditBirth?: () => void;
+  onBirthSaved?: () => void;
 }
 
-export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModal, onEditBaby, onEditBirth }) => {
+export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModal, onEditBirth, onBirthSaved }) => {
   const [activeTab, setActiveTab] = useState<'parto' | 'bebes' | 'evolucion' | 'planificacion'>('parto');
 
   // Hooks de datos
@@ -88,8 +88,16 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
   const [anticonceptivoId, setAnticonceptivoId] = useState('1');
   const [anticonceptivoFecha, setAnticonceptivoFecha] = useState(new Date().toISOString().split('T')[0]);
 
-  // Efecto para precargar los datos de parto y del bebé
-  const currentBaby = newborns && newborns.length > 0 ? newborns[newborns.length - 1] : null;
+  const [isAddingNewborn, setIsAddingNewborn] = useState(false);
+
+  const resetNewbornForm = () => {
+    setBebeVivo(true);
+    setBebePeso('');
+    setBebeTalla('');
+    setBebeUci(false);
+    setBebeObs('');
+  };
+
   const hasSwitchedTab = useRef(false);
 
   useEffect(() => {
@@ -108,15 +116,6 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
     }
   }, [birthData]);
 
-  useEffect(() => {
-    if (currentBaby) {
-      setBebeVivo(currentBaby.vivo);
-      setBebePeso(currentBaby.peso_gramos ? String(currentBaby.peso_gramos) : '');
-      setBebeTalla(currentBaby.talla_cm ? String(currentBaby.talla_cm) : '');
-      setBebeUci(currentBaby.uci_neonatal);
-      setBebeObs(currentBaby.observaciones || '');
-    }
-  }, [currentBaby]);
 
   // Manejadores de envíos
   const handleSaveBirth = async (e: React.FormEvent) => {
@@ -174,12 +173,16 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
       }
     }
     refreshBirth();
+    window.dispatchEvent(new CustomEvent('maternity-active-module-changed'));
+    window.dispatchEvent(new CustomEvent('refresh-risk-summary'));
+    if (onBirthSaved) {
+      onBirthSaved();
+    }
   };
 
   const handleAddNewborn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!birthData) return;
-    const isNew = !newborns || newborns.length === 0;
     await createNewborn({
       vivo: bebeVivo,
       peso_gramos: bebePeso ? parseInt(bebePeso) : null,
@@ -191,41 +194,25 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
     // Sincronizar vivos / mortinatos en fórmula obstétrica
     if (obstetricFormula) {
       try {
-        if (isNew) {
-          await updateObstetricFormula({
-            gestaciones: obstetricFormula.gestaciones || 0,
-            partos: obstetricFormula.partos || 0,
-            cesareas: obstetricFormula.cesareas || 0,
-            abortos: obstetricFormula.abortos || 0,
-            vivos: (obstetricFormula.vivos || 0) + (bebeVivo ? 1 : 0),
-            mortinatos: (obstetricFormula.mortinatos || 0) + (bebeVivo ? 0 : 1),
-          });
-        } else if (!isNew && currentBaby && bebeVivo !== currentBaby.vivo) {
-          let newVivos = obstetricFormula.vivos || 0;
-          let newMortinatos = obstetricFormula.mortinatos || 0;
-          if (currentBaby.vivo && !bebeVivo) {
-            newVivos = Math.max(0, newVivos - 1);
-            newMortinatos = newMortinatos + 1;
-          } else if (!currentBaby.vivo && bebeVivo) {
-            newMortinatos = Math.max(0, newMortinatos - 1);
-            newVivos = newVivos + 1;
-          }
-          await updateObstetricFormula({
-            gestaciones: obstetricFormula.gestaciones || 0,
-            partos: obstetricFormula.partos || 0,
-            cesareas: obstetricFormula.cesareas || 0,
-            abortos: obstetricFormula.abortos || 0,
-            vivos: newVivos,
-            mortinatos: newMortinatos,
-          });
-        }
+        await updateObstetricFormula({
+          gestaciones: obstetricFormula.gestaciones || 0,
+          partos: obstetricFormula.partos || 0,
+          cesareas: obstetricFormula.cesareas || 0,
+          abortos: obstetricFormula.abortos || 0,
+          vivos: (obstetricFormula.vivos || 0) + (bebeVivo ? 1 : 0),
+          mortinatos: (obstetricFormula.mortinatos || 0) + (bebeVivo ? 0 : 1),
+        });
         await fetchObstetricFormula();
       } catch (err) {
         console.error("Error al actualizar fórmula obstétrica en recién nacido:", err);
       }
     }
+    resetNewbornForm();
+    setIsAddingNewborn(false);
     refreshNewborns();
+    window.dispatchEvent(new CustomEvent('refresh-risk-summary'));
   };
+
 
   const handleAddPostpartum = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -239,6 +226,7 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
     setPuerperioCompl('');
     setPuerperioObs('');
     refreshPostpartum();
+    window.dispatchEvent(new CustomEvent('refresh-risk-summary'));
   };
 
   const handleAddContraception = async (e: React.FormEvent) => {
@@ -248,6 +236,7 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
       fecha_aplicacion: anticonceptivoFecha,
     });
     refreshContraception();
+    window.dispatchEvent(new CustomEvent('refresh-risk-summary'));
   };
 
   return (
@@ -383,57 +372,56 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
           <div className={styles.pane}>
             <h4 className={styles.formTitle}>Bebés Registrados</h4>
             {newborns.length > 0 ? (
-              <>
-                <div className={styles.newbornList}>
-                  {(() => {
-                    const baby = newborns[newborns.length - 1]; // Mostrar solo el recién nacido más reciente
-                    return (
-                      <div key={baby.id} className={styles.babyCard}>
-                        <div className={styles.babyIcon}>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#df5d86' }}>
-                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                          </svg>
-                        </div>
-                        <div className={styles.babyDetails}>
-                          <h5>{baby.vivo ? 'Recién Nacido Activo' : 'Óbito fetal'}</h5>
-                          <p>
-                            <strong>Peso:</strong> {baby.peso_gramos ? `${baby.peso_gramos} g` : 'No registrado'} |{' '}
-                            <strong>Talla:</strong> {baby.talla_cm ? `${baby.talla_cm} cm` : 'No registrada'}
-                          </p>
-                          <p>
-                            <strong>UCI Neonatal:</strong> {baby.uci_neonatal ? 'Sí' : 'No'}
-                          </p>
-                          {baby.observaciones && <p className={styles.babyNotes}>"{baby.observaciones}"</p>}
-                        </div>
-                      </div>
-                    );
-                  })()}
-                </div>
-                
-                {!inModal && (
-                  <div style={{ marginTop: '20px', textAlign: 'center', padding: '20px', backgroundColor: 'rgba(223, 93, 134, 0.04)', borderRadius: '15px', border: '1px dashed rgba(223, 93, 134, 0.3)' }}>
-                    <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#555', fontWeight: '500' }}>
-                      ¿Qué datos deseas actualizar del bebé?
-                    </p>
-                    <button
-                      type="button"
-                      onClick={onEditBaby}
-                      className={styles.submitBtn}
-                      style={{ margin: '0 auto', maxWidth: '250px', display: 'block' }}
-                    >
-                      Actualizar datos del bebé
-                    </button>
+              <div className={styles.newbornList}>
+                {newborns.map((baby, index) => (
+                  <div key={baby.id || index} className={styles.babyCard}>
+                    <div className={styles.babyIcon}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#df5d86' }}>
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                    </div>
+                    <div className={styles.babyDetails}>
+                      <h5>{baby.vivo ? `Bebé #${index + 1} - Recién Nacido Activo` : `Bebé #${index + 1} - Óbito fetal`}</h5>
+                      <p>
+                        <strong>Peso:</strong> {baby.peso_gramos ? `${baby.peso_gramos} g` : 'No registrado'} |{' '}
+                        <strong>Talla:</strong> {baby.talla_cm ? `${baby.talla_cm} cm` : 'No registrada'}
+                      </p>
+                      <p>
+                        <strong>UCI Neonatal:</strong> {baby.uci_neonatal ? 'Sí' : 'No'}
+                      </p>
+                      {baby.observaciones && <p className={styles.babyNotes}>"{baby.observaciones}"</p>}
+                    </div>
                   </div>
-                )}
-              </>
+                ))}
+              </div>
             ) : (
               <p className={styles.emptyText}>No has agregado recién nacidos todavía.</p>
             )}
 
-            {(newborns.length === 0 || inModal) && (
+            {newborns.length > 0 && !isAddingNewborn && (
+              <div style={{ textAlign: 'center', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetNewbornForm();
+                    setIsAddingNewborn(true);
+                  }}
+                  className={styles.submitBtn}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', margin: '0 auto' }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                  </svg>
+                  Registrar otro recién nacido
+                </button>
+              </div>
+            )}
+
+            {(newborns.length === 0 || isAddingNewborn) && (
               <form onSubmit={handleAddNewborn} className={styles.form}>
-                <h4 className={styles.formTitle}>{newborns.length > 0 ? 'Actualizar datos del bebé' : 'Agregar Recién Nacido'}</h4>
+                <h4 className={styles.formTitle}>Agregar Recién Nacido</h4>
                 <div className={styles.fieldGroupCheckbox}>
                   <input
                     type="checkbox"
@@ -485,9 +473,27 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
                     placeholder="Detalles sobre el nacimiento de tu bebé..."
                   />
                 </div>
-                <button type="submit" className={styles.submitBtn} disabled={newbornLoading}>
-                  {newbornLoading ? 'Guardando...' : newborns.length > 0 ? 'Actualizar datos del bebé' : 'Agregar Bebé'}
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button type="submit" className={styles.submitBtn} style={{ flex: 1 }} disabled={newbornLoading}>
+                    {newbornLoading ? 'Guardando...' : 'Agregar Bebé'}
+                  </button>
+                  {newborns.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsAddingNewborn(false)}
+                      className={styles.submitBtn}
+                      style={{
+                        background: '#f3e5e8',
+                        color: '#9c4460',
+                        boxShadow: 'none',
+                        border: '1px solid #e2ccd3',
+                        flex: 1
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                </div>
               </form>
             )}
           </div>

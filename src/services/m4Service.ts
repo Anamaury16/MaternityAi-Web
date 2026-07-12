@@ -1,4 +1,5 @@
 import api, { USE_MOCKS } from './api';
+import axios from 'axios';
 
 // ---------------------------------------------------------------------------
 // Interfaces — alineadas 1:1 con schemas.py del módulo M4
@@ -220,13 +221,20 @@ export const createBirthRecord = async (data: BirthRecordCreate): Promise<BirthR
 };
 
 // GET /birth-record
-export const getBirthRecord = async (): Promise<BirthRecordResponse> => {
+export const getBirthRecord = async (): Promise<BirthRecordResponse | null> => {
   if (USE_MOCKS) {
     await mockDelay();
     return MOCK_BIRTH_RECORD;
   }
-  const response = await api.get('/api/v1/m4/birth-record');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m4/birth-record');
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
 };
 
 // PUT /birth-record
@@ -274,8 +282,15 @@ export const getNewborns = async (): Promise<NewbornResponse[]> => {
     await mockDelay();
     return MOCK_NEWBORNS;
   }
-  const response = await api.get('/api/v1/m4/newborn');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m4/newborn');
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return [];
+    }
+    throw error;
+  }
 };
 
 // ---- Puerperio ----
@@ -304,8 +319,15 @@ export const getPostpartum = async (): Promise<PostpartumResponse[]> => {
     await mockDelay();
     return MOCK_POSTPARTUM;
   }
-  const response = await api.get('/api/v1/m4/postpartum');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m4/postpartum');
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return [];
+    }
+    throw error;
+  }
 };
 
 // GET /postpartum-evolution
@@ -342,6 +364,13 @@ export const getContraception = async (): Promise<ContraceptionResponse[]> => {
     await mockDelay();
     return MOCK_CONTRACEPTION;
   }
-  const response = await api.get('/api/v1/m4/contraception');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m4/contraception');
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return [];
+    }
+    throw error;
+  }
 };

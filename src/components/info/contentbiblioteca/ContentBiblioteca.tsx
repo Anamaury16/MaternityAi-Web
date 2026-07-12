@@ -95,7 +95,10 @@ export const ContentBiblioteca = () => {
               </span>
               {activeModule && (
                 <span className={styles.moduleBadge}>
-                  📍 {activeModule.nombre} · Semana {activeModule.semana_gestacion_actual}
+                  📍 {activeModule.nombre}
+                  {activeModule.semana_gestacion_actual !== undefined && activeModule.semana_gestacion_actual !== null
+                    ? ` · Semana ${activeModule.semana_gestacion_actual}`
+                    : ''}
                 </span>
               )}
             </div>

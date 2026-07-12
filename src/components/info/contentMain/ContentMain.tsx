@@ -4,7 +4,7 @@ import styles from './ContentMain.module.css';
 import { Datos } from './datos/Datos';
 import { Registros } from './registros/Registros';
 import { SvgBell, SvgSparkle } from '../../Icons/IconsSystem';
-import { getActiveModule } from '../../../services/m0Service';
+import { getActiveModule, type ActiveModule } from '../../../services/m0Service';
 import { useGestationalAge } from '../../../hooks/m0/useM0';
 
 import { ReporteModal } from './registros/reportarsignos/ReporteModal';
@@ -26,8 +26,8 @@ export const ContentMain = () => {
 
   const userName = localStorage.getItem('user_name') || 'Gestante';
   const displayId = userName.replace('Gestante ', '');
-  const { data } = useGestationalAge();
-  const { data: birthData } = useBirthRecord();
+  const { data, refresh: refreshGestationalAge } = useGestationalAge();
+  const { data: birthData, refresh: refreshBirth } = useBirthRecord();
 
   const calcularDiasPosparto = () => {
     if (!birthData?.fecha_parto) return null;
@@ -56,12 +56,7 @@ export const ContentMain = () => {
     return './image/etapas/parto.png';
   };
 
-  const [activeModule, setActiveModule] = useState<{
-    modulo_id: number;
-    codigo: string;
-    nombre: string;
-    semana_gestacion_actual: number;
-  } | null>(null);
+  const [activeModule, setActiveModule] = useState<ActiveModule | null>(null);
 
   const [symptomsModalOpen, setSymptomsModalOpen] = useState(false);
   const { report: reportSymptoms, loading: symptomsLoading, error: symptomsError } = useSymptoms();
@@ -84,16 +79,23 @@ export const ContentMain = () => {
     setSymptomsModalOpen(false);
   };
 
+  const loadData = async () => {
+    try {
+      refreshBirth();
+      refreshGestationalAge();
+      const activeData = await getActiveModule();
+      setActiveModule(activeData);
+    } catch (err) {
+      console.error("Error loading active module:", err);
+    }
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const activeData = await getActiveModule();
-        setActiveModule(activeData);
-      } catch (err) {
-        console.error("Error loading active module:", err);
-      }
-    };
     loadData();
+    window.addEventListener('maternity-active-module-changed', loadData);
+    return () => {
+      window.removeEventListener('maternity-active-module-changed', loadData);
+    };
   }, []);
 
   return (
@@ -496,11 +498,14 @@ export const ContentMain = () => {
       {registerBirthOpen && (
         <Modal 
           isOpen={registerBirthOpen} 
-          onClose={() => setRegisterBirthOpen(false)} 
+          onClose={() => {
+            setRegisterBirthOpen(false);
+            loadData();
+          }} 
           title="Control de Posparto"
         >
           <div style={{ padding: '10px' }}>
-            <PostpartumDashboard inModal={true} />
+            <PostpartumDashboard inModal={true} onBirthSaved={loadData} />
           </div>
         </Modal>
       )}

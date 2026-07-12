@@ -40,9 +40,17 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (activeRole === 'paciente') {
-      getActiveModule().then(setActiveModule).catch(console.error);
-    }
+    const loadModule = () => {
+      if (activeRole === 'paciente') {
+        getActiveModule().then(setActiveModule).catch(console.error);
+      }
+    };
+    loadModule();
+
+    window.addEventListener('maternity-active-module-changed', loadModule);
+    return () => {
+      window.removeEventListener('maternity-active-module-changed', loadModule);
+    };
   }, [activeRole]);
 
   const handleLogout = async () => {

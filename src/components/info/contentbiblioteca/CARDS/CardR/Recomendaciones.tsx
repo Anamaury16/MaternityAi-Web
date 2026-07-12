@@ -79,7 +79,12 @@ export const Recomendaciones = React.memo(({ activeModule }: Props) => {
     <section className={styles.recomendaciones}>
       <p className={styles.sideLabel}>RECOMENDACIÓN DEL DÍA</p>
       {activeModule && (
-        <p className={styles.moduleHint}>{activeModule.nombre} · Semana {activeModule.semana_gestacion_actual}</p>
+        <p className={styles.moduleHint}>
+          {activeModule.nombre}
+          {activeModule.semana_gestacion_actual !== undefined && activeModule.semana_gestacion_actual !== null
+            ? ` · Semana ${activeModule.semana_gestacion_actual}`
+            : ''}
+        </p>
       )}
 
       {loading ? (

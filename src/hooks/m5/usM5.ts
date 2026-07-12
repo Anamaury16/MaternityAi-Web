@@ -88,7 +88,16 @@ export const useEducationalContent = () => {
     await run(getContentByModule);
   }, [run]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    fetch();
+    const handleModuleChange = () => {
+      fetch();
+    };
+    window.addEventListener('maternity-active-module-changed', handleModuleChange);
+    return () => {
+      window.removeEventListener('maternity-active-module-changed', handleModuleChange);
+    };
+  }, [fetch]);
 
   return {
     data: state.data ?? [],

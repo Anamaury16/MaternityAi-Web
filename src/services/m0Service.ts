@@ -1,4 +1,5 @@
 import api, { USE_MOCKS } from './api';
+import { getBirthRecord } from './m4Service';
 
 // ---------------------------------------------------------------------------
 // Interfaces — alineadas 1:1 con schemas.py del backend
@@ -96,7 +97,7 @@ export interface ActiveModule {
   modulo_id: number;
   codigo: string;
   nombre: string;
-  semana_gestacion_actual: number;
+  semana_gestacion_actual?: number | null;
 }
 
 // ---- Historial de Módulo ----
@@ -414,6 +415,22 @@ export const getActiveModule = async (): Promise<ActiveModule> => {
     await mockDelay();
     return MOCK_ACTIVE_MODULE;
   }
+
+  // Verificar si ya tiene parto registrado para forzar módulo M4
+  try {
+    const birth = await getBirthRecord();
+    if (birth && birth.id) {
+      return {
+        modulo_id: 4,
+        codigo: 'M4',
+        nombre: 'Parto y Puerperio',
+        semana_gestacion_actual: undefined
+      };
+    }
+  } catch (err) {
+    // Si no hay parto (404) o hay error, continuamos con el flujo normal
+  }
+
   try {
     const response = await api.get('/api/v1/m0/active-module');
     return response.data;
