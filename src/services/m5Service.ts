@@ -349,10 +349,7 @@ export const getChecklist = async (): Promise<ChecklistResponse> => {
   }
   try {
     const response = await api.get('/api/v1/m5/checklist');
-    if (response.data && response.data.items && response.data.items.length > 0) {
-      return response.data;
-    }
-    return MOCK_CHECKLIST;
+    return response.data;
   } catch (err) {
     console.warn("getChecklist failed, falling back to mock data:", err);
     return MOCK_CHECKLIST;

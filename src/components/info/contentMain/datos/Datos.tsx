@@ -5,12 +5,13 @@ import styles from './datos.module.css';
 
 interface Props {
   className?: string;
+  activeModule?: { codigo: string; nombre: string } | null;
 }
 
-export const Datos = ({ className }: Props) => {
+export const Datos = ({ className, activeModule }: Props) => {
   const { data: vitalsData } = useVitals();
   const { data: gestationalData } = useGestationalAge();
-  const { data: newborns } = useNewborns();
+  const { data: newborns } = useNewborns(activeModule?.codigo === 'M4');
 
   const ultimoRegistro = vitalsData.length > 0 ? vitalsData[vitalsData.length - 1] : null;
 
@@ -18,13 +19,13 @@ export const Datos = ({ className }: Props) => {
   // De lo contrario, la información del bebé se muestra vacía/con guiones.
   const datosBebe = newborns.length > 0
     ? {
-        tamaño: newborns[0].talla_cm !== null && newborns[0].talla_cm !== undefined ? newborns[0].talla_cm.toString() : '--',
-        gramos: newborns[0].peso_gramos !== null && newborns[0].peso_gramos !== undefined ? newborns[0].peso_gramos.toLocaleString('es-ES') : '--'
-      }
+      tamaño: newborns[0].talla_cm !== null && newborns[0].talla_cm !== undefined ? newborns[0].talla_cm.toString() : '--',
+      gramos: newborns[0].peso_gramos !== null && newborns[0].peso_gramos !== undefined ? newborns[0].peso_gramos.toLocaleString('es-ES') : '--'
+    }
     : {
-        tamaño: '--',
-        gramos: '--'
-      };
+      tamaño: '--',
+      gramos: '--'
+    };
 
   return (
     <section className={`${styles.container} ${className ?? ''}`}>

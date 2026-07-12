@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext';
 import { Consejos } from './consejos/Consejos';
 import styles from './ContentMain.module.css';
 import { Datos } from './datos/Datos';
@@ -19,15 +21,28 @@ import { useRiskSummary } from '../../../hooks/ia/useRiskSummary';
 import { PwaInstallPrompt } from '../../pwa/PwaInstallPrompt';
 
 export const ContentMain = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [alertsOpen, setAlertsOpen] = useState(false);
+  const [activeModule, setActiveModule] = useState<ActiveModule | null>(null);
   const [isRiskModalOpen, setIsRiskModalOpen] = useState(false);
   const { summary } = useRiskSummary();
   const riskLevel = summary?.nivel_riesgo || 'verde';
 
+  const handleNuevoEmbarazo = async () => {
+    const confirm = window.confirm(
+      "Para iniciar el monitoreo de tu nueva gestación, cerraremos tu sesión actual y te redirigiremos al formulario de registro donde obtendrás tu nuevo código de seguimiento. ¿Deseas continuar?"
+    );
+    if (confirm) {
+      await logout();
+      navigate('/register');
+    }
+  };
+
   const userName = localStorage.getItem('user_name') || 'Gestante';
   const displayId = userName.replace('Gestante ', '');
   const { data, refresh: refreshGestationalAge } = useGestationalAge();
-  const { data: birthData, refresh: refreshBirth } = useBirthRecord();
+  const { data: birthData, refresh: refreshBirth } = useBirthRecord(activeModule?.codigo === 'M3' || activeModule?.codigo === 'M4');
 
   const calcularDiasPosparto = () => {
     if (!birthData?.fecha_parto) return null;
@@ -56,7 +71,7 @@ export const ContentMain = () => {
     return './image/etapas/parto.png';
   };
 
-  const [activeModule, setActiveModule] = useState<ActiveModule | null>(null);
+
 
   const [symptomsModalOpen, setSymptomsModalOpen] = useState(false);
   const { report: reportSymptoms, loading: symptomsLoading, error: symptomsError } = useSymptoms();
@@ -118,12 +133,42 @@ export const ContentMain = () => {
                 {activeModule && (
                   <div className={styles.trimestreLabelOuter}>{activeModule.nombre}</div>
                 )}
+                <div 
+                  className={styles.nuevoEmbarazoContainer} 
+                  style={{ 
+                    marginTop: '20px', 
+                    padding: '16px', 
+                    background: 'rgba(223, 93, 134, 0.05)', 
+                    borderRadius: '16px', 
+                    border: '1px dashed #df5d86', 
+                    textAlign: 'center' 
+                  }}
+                >
+                  <p style={{ margin: '0 0 10px 0', fontSize: '13px', color: '#666', fontWeight: '500' }}>¿Nuevamente embarazada?</p>
+                  <button 
+                    onClick={handleNuevoEmbarazo}
+                    style={{ 
+                      background: '#df5d86', 
+                      color: 'white', 
+                      border: 'none', 
+                      borderRadius: '20px', 
+                      padding: '8px 16px', 
+                      fontSize: '12px', 
+                      fontWeight: '600', 
+                      cursor: 'pointer', 
+                      boxShadow: '0 2px 4px rgba(223, 93, 134, 0.2)', 
+                      transition: 'background 0.2s' 
+                    }}
+                  >
+                    Registrar nueva gestación
+                  </button>
+                </div>
               </>
             ) : (
               <>
                 <div className={styles.seccion_informacion}>
                   <div className={styles.semanas}>
-                    <h2>{data?.semanas || '--'}/40</h2>
+                    <h2>{data?.semanas ?? '--'}/40</h2>
                     <p>Semanas</p>
                   </div>
                   <img alt="foto trimestre" src={getEtapaImage(activeModule?.codigo, data?.semanas)} loading="lazy" decoding="async" />
@@ -144,7 +189,7 @@ export const ContentMain = () => {
 
         </div>
         <section className={styles.right}>
-          <Datos className={styles.datos} />
+          <Datos className={styles.datos} activeModule={activeModule} />
           <Consejos 
             className={styles.consejos} 
             activeModule={activeModule}
@@ -273,46 +318,73 @@ export const ContentMain = () => {
             </>
           ) : (
             <>
-              <div className={styles.weeksCounter}>
-                <span className={styles.weekSide}>{data?.semanas ? data.semanas - 1 : 27}</span>
-                <span className={styles.weekCenter}>{data?.semanas || 28}</span>
-                <span className={styles.weekSide}>{data?.semanas ? data.semanas + 1 : 29}</span>
-                <span className={styles.weekSide}>{data?.semanas ? data.semanas + 2 : 30}</span>
-              </div>
-              <div className={styles.weeksLabel}>Semanas</div>
-              {activeModule && (
-                <div className={styles.mobileTrimestreLabel}>{activeModule.nombre}</div>
-              )}
-              {/* Progreso de la Gestación (Minimalista) */}
-              <div style={{ width: '100%', padding: '0 8px', marginBottom: '15px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#888', marginBottom: '4px', fontWeight: '500' }}>
-                  <span>Semana {data?.semanas || 28} de 40</span>
-                  <span style={{ color: '#ca436e', fontWeight: '600' }}>{data?.semanas ? Math.min(Math.round((data.semanas / 40) * 100), 100) : 70}%</span>
-                </div>
-                <div style={{ width: '100%', height: '4px', backgroundColor: 'rgba(223, 93, 134, 0.08)', borderRadius: '2px', overflow: 'hidden' }}>
-                  <div style={{ 
-                    width: `${data?.semanas ? Math.min((data.semanas / 40) * 100, 100) : 70}%`, 
-                    height: '100%', 
-                    background: 'linear-gradient(90deg, #df5d86, #ca436e)',
-                    borderRadius: '2px',
-                    transition: 'width 0.5s ease-out'
-                  }} />
-                </div>
-              </div>
+              {(() => {
+                const hasWeeks = data?.semanas !== undefined && data?.semanas !== null;
+                const currentWeeks = hasWeeks ? data.semanas : 28;
+                const side1 = hasWeeks ? Math.max(0, data.semanas - 1) : 27;
+                const side2 = hasWeeks ? data.semanas + 1 : 29;
+                const side3 = hasWeeks ? data.semanas + 2 : 30;
+                const progressPercent = hasWeeks ? Math.min(Math.round((data.semanas / 40) * 100), 100) : 70;
+
+                return (
+                  <>
+                    <div className={styles.weeksCounter}>
+                      <span className={styles.weekSide}>{side1}</span>
+                      <span className={styles.weekCenter}>{currentWeeks}</span>
+                      <span className={styles.weekSide}>{side2}</span>
+                      <span className={styles.weekSide}>{side3}</span>
+                    </div>
+                    <div className={styles.weeksLabel}>Semanas</div>
+                    {activeModule && (
+                      <div className={styles.mobileTrimestreLabel}>{activeModule.nombre}</div>
+                    )}
+                    {/* Progreso de la Gestación (Minimalista) */}
+                    <div style={{ width: '100%', padding: '0 8px', marginBottom: '15px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#888', marginBottom: '4px', fontWeight: '500' }}>
+                        <span>Semana {currentWeeks} de 40</span>
+                        <span style={{ color: '#ca436e', fontWeight: '600' }}>{progressPercent}%</span>
+                      </div>
+                      <div style={{ width: '100%', height: '4px', backgroundColor: 'rgba(223, 93, 134, 0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+                        <div style={{ 
+                          width: `${progressPercent}%`, 
+                          height: '100%', 
+                          background: 'linear-gradient(90deg, #df5d86, #ca436e)',
+                          borderRadius: '2px',
+                          transition: 'width 0.5s ease-out'
+                        }} />
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </>
           )}
 
           {/* Botón superior de acceso rápido para parto o bebé en el móvil */}
-          <div style={{ width: '100%', padding: '0 8px', marginBottom: '15px' }}>
+          <div style={{ width: '100%', padding: '0 8px', marginBottom: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {activeModule?.codigo === 'M4' || birthData ? (
-              <button 
-                onClick={() => {
-                  setRegisterBirthOpen(true);
-                }}
-                className={styles.topActionBtn}
-              >
-                🍼 Control de Posparto
-              </button>
+              <>
+                <button 
+                  onClick={() => {
+                    setRegisterBirthOpen(true);
+                  }}
+                  className={styles.topActionBtn}
+                >
+                  🍼 Control de Posparto
+                </button>
+                <button 
+                  onClick={handleNuevoEmbarazo}
+                  className={styles.topActionBtn}
+                  style={{
+                    background: 'white',
+                    color: '#df5d86',
+                    border: '1px dashed #df5d86',
+                    boxShadow: 'none'
+                  }}
+                >
+                  👶 Registrar Nueva Gestación
+                </button>
+              </>
             ) : (
               (activeModule?.codigo === 'M3' || (data?.semanas && data.semanas >= 28)) && (
                 <button 

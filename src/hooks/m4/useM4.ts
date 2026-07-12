@@ -65,10 +65,13 @@ function useAsyncState<T>(initialData: T | null = null): [
 // useBirthRecord
 // ---------------------------------------------------------------------------
 
-export const useBirthRecord = () => {
-  const [state, run] = useAsyncState<BirthRecordResponse>();
+export const useBirthRecord = (enabled = true) => {
+  const [state, run] = useAsyncState<BirthRecordResponse | null>(null);
 
-  const fetch = useCallback(() => run(getBirthRecord), [run]);
+  const fetch = useCallback(() => {
+    if (!enabled) return;
+    run(getBirthRecord);
+  }, [run, enabled]);
 
   const create = useCallback(
     (payload: BirthRecordCreate) => run(() => createBirthRecord(payload)),
@@ -98,10 +101,13 @@ export const useBirthRecord = () => {
 // useNewborns
 // ---------------------------------------------------------------------------
 
-export const useNewborns = () => {
+export const useNewborns = (enabled = true) => {
   const [state, run] = useAsyncState<NewbornResponse[]>([]);
 
-  const fetch = useCallback(() => run(getNewborns), [run]);
+  const fetch = useCallback(() => {
+    if (!enabled) return;
+    run(getNewborns);
+  }, [run, enabled]);
 
   const create = useCallback(
     async (payload: NewbornCreate) => {

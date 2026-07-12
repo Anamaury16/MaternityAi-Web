@@ -99,7 +99,7 @@ export const Consejos = ({ className, activeModule, birthData, weeks, onRegister
       )}
 
       {/* Banner de parto */}
-      {activeModule?.codigo !== 'M4' && !birthData && (activeModule?.codigo === 'M3' || (weeks && weeks >= 28)) && (
+      {!!(activeModule?.codigo !== 'M4' && !birthData && (activeModule?.codigo === 'M3' || (weeks !== null && weeks !== undefined && weeks >= 28))) && (
         <div style={{
           background: 'linear-gradient(135deg, #fff0f5 0%, #ffe4e1 100%)',
           border: '1px solid #ffd1dc',
