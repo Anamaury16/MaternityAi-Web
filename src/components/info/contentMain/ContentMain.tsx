@@ -334,6 +334,7 @@ export const ContentMain = () => {
             </div>
           </button>
 
+          {activeModule?.codigo !== 'M4' && (
           <div className={styles.preparacionSeccion}>
             <h4 style={{ marginBottom: '8px' }}>Preparación para el parto</h4>
             {(() => {
@@ -461,6 +462,7 @@ export const ContentMain = () => {
               <p style={{fontSize: '14px', color: '#666'}}>No hay ítems configurados</p>
             )}
           </div>
+          )}
 
 
 

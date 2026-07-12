@@ -12,6 +12,8 @@ interface Props {
 export const Consejos = ({ className, activeModule, birthData, weeks, onRegisterBirth }: Props) => {
   const { data, loading, updateItem } = useChecklist();
 
+  if (activeModule?.codigo === 'M4') return null;
+
   const completados = data?.items.filter(i => i.completado).length ?? 0;
   const total       = data?.items.length ?? 0;
   const porcentaje  = total > 0 ? Math.round((completados / total) * 100) : 0;
