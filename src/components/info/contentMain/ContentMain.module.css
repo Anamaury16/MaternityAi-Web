@@ -1,5 +1,5 @@
 .container {
-  margin: 20px 0;
+  margin: 10px 0;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -31,10 +31,10 @@
   }
 
   & .right {
-    margin-top: 40px;
+    margin-top: 15px;
     display: grid;
-    gap: 15px;
-    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-rows: auto auto;
     align-items: start;
     grid-template-areas:
@@ -46,6 +46,7 @@
     & .registros {
       transition: all 0.3s ease;
       animation: slideUp 0.8s ease-out backwards;
+      min-width: 0;
     }
 
     & .datos:hover,
@@ -402,4 +403,32 @@
   font-weight: 700;
   margin-top: 15px;
   text-transform: capitalize;
+}
+
+.topActionBtn {
+  background: linear-gradient(135deg, #df5d86 0%, #ca436e 100%);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 12px 24px;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(223, 93, 134, 0.25);
+  box-sizing: border-box;
+}
+
+.topActionBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(223, 93, 134, 0.35);
+}
+
+.topActionBtn:active {
+  transform: translateY(0);
 }

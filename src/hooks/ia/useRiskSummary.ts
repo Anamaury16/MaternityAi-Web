@@ -1,34 +1,48 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getRiskSummary, type RiskSummaryResponse } from '../../services/iaService';
 
-const SESSION_CACHE_KEY = 'gmi_risk_summary_cache';
+const getCacheKey = () => {
+  const role = localStorage.getItem('role');
+  const isStaff = role === 'clinico' || role === 'admin' || role === 'hospital';
+  if (isStaff) {
+    const selectedGestanteId = localStorage.getItem('selected_gestante_id') || 'none';
+    return `gmi_risk_summary_cache_staff_${selectedGestanteId}`;
+  }
+  const userName = localStorage.getItem('user_name') || 'self';
+  return `gmi_risk_summary_cache_gestante_${userName}`;
+};
 
 export const useRiskSummary = () => {
-  const [summary, setSummary] = useState<RiskSummaryResponse | null>(() => {
-    // Intentar inicializar con datos cacheados de la sesión actual
-    const cached = sessionStorage.getItem(SESSION_CACHE_KEY);
-    if (cached) {
+  const [cacheKey, setCacheKey] = useState(getCacheKey());
+  const [summary, setSummary] = useState<RiskSummaryResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Sincronizar cacheKey cuando cambia el localStorage sin desmontar el hook
+  useEffect(() => {
+    const currentKey = getCacheKey();
+    if (currentKey !== cacheKey) {
+      setCacheKey(currentKey);
+    }
+  });
+
+  const loadSummary = useCallback(async (forceUpdate = false, currentKey = cacheKey) => {
+    const cached = sessionStorage.getItem(currentKey);
+    if (cached && !forceUpdate) {
       try {
-        return JSON.parse(cached);
+        setSummary(JSON.parse(cached));
+        return;
       } catch (e) {
         console.error('Error parsing risk summary cache:', e);
       }
     }
-    return null;
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const loadSummary = useCallback(async (forceUpdate = false) => {
-    // Si ya tenemos datos cacheados y no se fuerza la actualización, no hacemos nada
-    if (summary && !forceUpdate) return;
 
     setIsLoading(true);
     setError(null);
     try {
       const response = await getRiskSummary();
       setSummary(response);
-      sessionStorage.setItem(SESSION_CACHE_KEY, JSON.stringify(response));
+      sessionStorage.setItem(currentKey, JSON.stringify(response));
     } catch (err: any) {
       console.error('Error fetching risk summary:', err);
       setError(
@@ -37,30 +51,31 @@ export const useRiskSummary = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [summary]);
+  }, [cacheKey]);
 
-  // Carga inicial (respeta caché si existe)
+  // Carga inicial y cuando cambia el cacheKey (limpia estado anterior)
   useEffect(() => {
-    loadSummary(false);
-  }, []);
+    setSummary(null);
+    loadSummary(false, cacheKey);
+  }, [cacheKey, loadSummary]);
 
   // Listener para eventos de recarga en tiempo real (ej. desde chat o triage)
   useEffect(() => {
     const handleRefresh = () => {
-      sessionStorage.removeItem(SESSION_CACHE_KEY);
-      loadSummary(true);
+      sessionStorage.removeItem(cacheKey);
+      loadSummary(true, cacheKey);
     };
 
     window.addEventListener('refresh-risk-summary', handleRefresh);
     return () => {
       window.removeEventListener('refresh-risk-summary', handleRefresh);
     };
-  }, [loadSummary]);
+  }, [loadSummary, cacheKey]);
 
   return {
     summary,
     isLoading,
     error,
-    updateEvaluation: () => loadSummary(true),
+    updateEvaluation: () => loadSummary(true, cacheKey),
   };
 };

@@ -9,6 +9,7 @@ import { RiskSummaryCard } from '../../info/contentMain/RiskSummaryCard/RiskSumm
 import { Modal } from '../../Modal';
 import { ProgressChecklist } from '../../info/contentMain/progressChecklist/ProgressChecklist';
 import { getActiveModule } from '../../../services/m0Service';
+import { PostpartumDashboard } from '../../info/contentMain/postpartum/PostpartumDashboard';
 
 interface HeaderActividadProps {
   rol?: 'paciente' | 'medico' | 'admin' | 'hospital';
@@ -30,6 +31,7 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
   const [alertsOpen, setAlertsOpen] = useState(false);
   const [isRiskModalOpen, setIsRiskModalOpen] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
+  const [isBabyModalOpen, setIsBabyModalOpen] = useState(false);
   const [activeModule, setActiveModule] = useState<{
     modulo_id: number;
     codigo: string;
@@ -141,6 +143,21 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
               </svg>
             </button>
             <button 
+              onClick={() => setIsBabyModalOpen(true)}
+              className={styles.bellBtn}
+              style={{ marginRight: '5px' }}
+              aria-label="Mi Bebé / Parto"
+              title="Mi Bebé / Parto"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 12h.01" />
+                <path d="M15 12h.01" />
+                <path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5" />
+                <path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 5 6.3" />
+                <path d="M12 2v2" />
+              </svg>
+            </button>
+            <button 
               onClick={() => setAlertsOpen(!alertsOpen)}
               className={`${styles.bellBtn} ${alertsOpen ? styles.bellActive : ''}`}
               aria-label="Alertas y Notificaciones"
@@ -205,7 +222,19 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
         />
       )}
     </Modal>
-    
+
+    {isBabyModalOpen && (
+      <Modal 
+        isOpen={isBabyModalOpen} 
+        onClose={() => setIsBabyModalOpen(false)} 
+        title="Control de Posparto"
+      >
+        <div style={{ padding: '10px' }}>
+          <PostpartumDashboard inModal={true} />
+        </div>
+      </Modal>
+    )}
+
     {activeRole === 'paciente' && (
       <div className={styles.mobileNavWrapper}>
         <MobileBottomNav />

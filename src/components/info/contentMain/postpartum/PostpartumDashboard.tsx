@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useBirthRecord, useNewborns, usePostpartum, useContraception } from '../../../../hooks/m4/useM4';
+import { useObstetricFormula } from '../../../../hooks/m0/useM0';
 import styles from './PostpartumDashboard.module.css';
 
 const METODOS_ANTICONCEPTIVOS = [
@@ -47,7 +48,13 @@ const ShieldIcon = () => (
   </svg>
 );
 
-export const PostpartumDashboard: React.FC = () => {
+interface PostpartumDashboardProps {
+  inModal?: boolean;
+  onEditBaby?: () => void;
+  onEditBirth?: () => void;
+}
+
+export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModal, onEditBaby, onEditBirth }) => {
   const [activeTab, setActiveTab] = useState<'parto' | 'bebes' | 'evolucion' | 'planificacion'>('parto');
 
   // Hooks de datos
@@ -55,6 +62,11 @@ export const PostpartumDashboard: React.FC = () => {
   const { data: newborns, create: createNewborn, loading: newbornLoading, refresh: refreshNewborns } = useNewborns();
   const { list: postpartumList, evolution, create: createPostpartum, loading: postpartumLoading, refresh: refreshPostpartum } = usePostpartum();
   const { data: contraceptionList, create: createContraception, loading: contraceptionLoading, refresh: refreshContraception } = useContraception();
+  const { data: obstetricFormula, update: updateObstetricFormula, refresh: fetchObstetricFormula } = useObstetricFormula();
+
+  useEffect(() => {
+    fetchObstetricFormula();
+  }, [fetchObstetricFormula]);
 
   // Estados de formularios
   const [tipoParto, setTipoParto] = useState('Vaginal');
@@ -76,6 +88,36 @@ export const PostpartumDashboard: React.FC = () => {
   const [anticonceptivoId, setAnticonceptivoId] = useState('1');
   const [anticonceptivoFecha, setAnticonceptivoFecha] = useState(new Date().toISOString().split('T')[0]);
 
+  // Efecto para precargar los datos de parto y del bebé
+  const currentBaby = newborns && newborns.length > 0 ? newborns[newborns.length - 1] : null;
+  const hasSwitchedTab = useRef(false);
+
+  useEffect(() => {
+    if (birthData && !hasSwitchedTab.current) {
+      setActiveTab('bebes');
+      hasSwitchedTab.current = true;
+    }
+  }, [birthData]);
+
+  useEffect(() => {
+    if (birthData) {
+      setTipoParto(birthData.tipo_parto);
+      setFechaParto(birthData.fecha_parto);
+      setComplicacionesParto(birthData.complicaciones || '');
+      setUciMaterna(birthData.uci_materna);
+    }
+  }, [birthData]);
+
+  useEffect(() => {
+    if (currentBaby) {
+      setBebeVivo(currentBaby.vivo);
+      setBebePeso(currentBaby.peso_gramos ? String(currentBaby.peso_gramos) : '');
+      setBebeTalla(currentBaby.talla_cm ? String(currentBaby.talla_cm) : '');
+      setBebeUci(currentBaby.uci_neonatal);
+      setBebeObs(currentBaby.observaciones || '');
+    }
+  }, [currentBaby]);
+
   // Manejadores de envíos
   const handleSaveBirth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,10 +127,51 @@ export const PostpartumDashboard: React.FC = () => {
       complicaciones: complicacionesParto || null,
       uci_materna: uciMaterna,
     };
+    const isNew = !birthData;
     if (birthData) {
       await updateBirth(payload);
     } else {
       await createBirth(payload);
+    }
+    
+    // Sincronizar fórmula obstétrica
+    if (obstetricFormula) {
+      try {
+        if (isNew) {
+          const isCesarea = tipoParto === 'Cesárea';
+          await updateObstetricFormula({
+            gestaciones: (obstetricFormula.gestaciones || 0) + 1,
+            partos: (obstetricFormula.partos || 0) + (isCesarea ? 0 : 1),
+            cesareas: (obstetricFormula.cesareas || 0) + (isCesarea ? 1 : 0),
+            abortos: obstetricFormula.abortos || 0,
+            vivos: obstetricFormula.vivos || 0,
+            mortinatos: obstetricFormula.mortinatos || 0,
+          });
+        } else if (birthData && tipoParto !== birthData.tipo_parto) {
+          const wasCesarea = birthData.tipo_parto === 'Cesárea';
+          const isCesarea = tipoParto === 'Cesárea';
+          let newPartos = obstetricFormula.partos || 0;
+          let newCesareas = obstetricFormula.cesareas || 0;
+          if (wasCesarea && !isCesarea) {
+            newCesareas = Math.max(0, newCesareas - 1);
+            newPartos = newPartos + 1;
+          } else if (!wasCesarea && isCesarea) {
+            newPartos = Math.max(0, newPartos - 1);
+            newCesareas = newCesareas + 1;
+          }
+          await updateObstetricFormula({
+            gestaciones: obstetricFormula.gestaciones || 0,
+            partos: newPartos,
+            cesareas: newCesareas,
+            abortos: obstetricFormula.abortos || 0,
+            vivos: obstetricFormula.vivos || 0,
+            mortinatos: obstetricFormula.mortinatos || 0,
+          });
+        }
+        await fetchObstetricFormula();
+      } catch (err) {
+        console.error("Error al actualizar fórmula obstétrica:", err);
+      }
     }
     refreshBirth();
   };
@@ -96,6 +179,7 @@ export const PostpartumDashboard: React.FC = () => {
   const handleAddNewborn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!birthData) return;
+    const isNew = !newborns || newborns.length === 0;
     await createNewborn({
       vivo: bebeVivo,
       peso_gramos: bebePeso ? parseInt(bebePeso) : null,
@@ -103,9 +187,43 @@ export const PostpartumDashboard: React.FC = () => {
       uci_neonatal: bebeUci,
       observaciones: bebeObs || null,
     });
-    setBebePeso('');
-    setBebeTalla('');
-    setBebeObs('');
+
+    // Sincronizar vivos / mortinatos en fórmula obstétrica
+    if (obstetricFormula) {
+      try {
+        if (isNew) {
+          await updateObstetricFormula({
+            gestaciones: obstetricFormula.gestaciones || 0,
+            partos: obstetricFormula.partos || 0,
+            cesareas: obstetricFormula.cesareas || 0,
+            abortos: obstetricFormula.abortos || 0,
+            vivos: (obstetricFormula.vivos || 0) + (bebeVivo ? 1 : 0),
+            mortinatos: (obstetricFormula.mortinatos || 0) + (bebeVivo ? 0 : 1),
+          });
+        } else if (!isNew && currentBaby && bebeVivo !== currentBaby.vivo) {
+          let newVivos = obstetricFormula.vivos || 0;
+          let newMortinatos = obstetricFormula.mortinatos || 0;
+          if (currentBaby.vivo && !bebeVivo) {
+            newVivos = Math.max(0, newVivos - 1);
+            newMortinatos = newMortinatos + 1;
+          } else if (!currentBaby.vivo && bebeVivo) {
+            newMortinatos = Math.max(0, newMortinatos - 1);
+            newVivos = newVivos + 1;
+          }
+          await updateObstetricFormula({
+            gestaciones: obstetricFormula.gestaciones || 0,
+            partos: obstetricFormula.partos || 0,
+            cesareas: obstetricFormula.cesareas || 0,
+            abortos: obstetricFormula.abortos || 0,
+            vivos: newVivos,
+            mortinatos: newMortinatos,
+          });
+        }
+        await fetchObstetricFormula();
+      } catch (err) {
+        console.error("Error al actualizar fórmula obstétrica en recién nacido:", err);
+      }
+    }
     refreshNewborns();
   };
 
@@ -194,9 +312,19 @@ export const PostpartumDashboard: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <div className={styles.editSection}>
-                  <p className={styles.helperText}>¿Hubo algún error? Puedes actualizar los datos abajo.</p>
-                </div>
+                {!inModal && (
+                  <div className={styles.editSection} style={{ marginTop: '15px', textAlign: 'center' }}>
+                    <p className={styles.helperText} style={{ marginBottom: '10px' }}>¿Hubo algún error? Puedes actualizar los datos del parto.</p>
+                    <button
+                      type="button"
+                      onClick={onEditBirth}
+                      className={styles.submitBtn}
+                      style={{ margin: '0 auto', maxWidth: '250px', display: 'block' }}
+                    >
+                      Editar Registro de Parto
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className={styles.infoAlert}>
@@ -204,47 +332,49 @@ export const PostpartumDashboard: React.FC = () => {
               </div>
             )}
 
-            <form onSubmit={handleSaveBirth} className={styles.form}>
-              <h4 className={styles.formTitle}>{birthData ? 'Editar Registro de Parto' : 'Registrar Datos de Parto'}</h4>
-              <div className={styles.fieldGroup}>
-                <label>Tipo de parto</label>
-                <select value={tipoParto} onChange={(e) => setTipoParto(e.target.value)}>
-                  <option value="Vaginal">Parto Vaginal Natural</option>
-                  <option value="Cesárea">Cesárea</option>
-                  <option value="Instrumentado">Vaginal Instrumentado (Fórceps/Espátulas)</option>
-                </select>
-              </div>
-              <div className={styles.fieldGroup}>
-                <label>Fecha de parto</label>
-                <input
-                  type="date"
-                  value={fechaParto}
-                  max={new Date().toISOString().split('T')[0]}
-                  onChange={(e) => setFechaParto(e.target.value)}
-                  required
-                />
-              </div>
-              <div className={styles.fieldGroupCheckbox}>
-                <input
-                  type="checkbox"
-                  id="uciMaterna"
-                  checked={uciMaterna}
-                  onChange={(e) => setUciMaterna(e.target.checked)}
-                />
-                <label htmlFor="uciMaterna">¿Requirió ingreso a UCI Materna?</label>
-              </div>
-              <div className={styles.fieldGroup}>
-                <label>Complicaciones (Opcional)</label>
-                <textarea
-                  value={complicacionesParto}
-                  onChange={(e) => setComplicacionesParto(e.target.value)}
-                  placeholder="Describe si hubo alguna eventualidad durante el parto..."
-                />
-              </div>
-              <button type="submit" className={styles.submitBtn} disabled={birthLoading}>
-                {birthLoading ? 'Guardando...' : birthData ? 'Actualizar Parto' : 'Registrar Parto'}
-              </button>
-            </form>
+            {(!birthData || inModal) && (
+              <form onSubmit={handleSaveBirth} className={styles.form}>
+                <h4 className={styles.formTitle}>{birthData ? 'Editar Registro de Parto' : 'Registrar Datos de Parto'}</h4>
+                <div className={styles.fieldGroup}>
+                  <label>Tipo de parto</label>
+                  <select value={tipoParto} onChange={(e) => setTipoParto(e.target.value)}>
+                    <option value="Vaginal">Parto Vaginal Natural</option>
+                    <option value="Cesárea">Cesárea</option>
+                    <option value="Instrumentado">Vaginal Instrumentado (Fórceps/Espátulas)</option>
+                  </select>
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label>Fecha de parto</label>
+                  <input
+                    type="date"
+                    value={fechaParto}
+                    max={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setFechaParto(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className={styles.fieldGroupCheckbox}>
+                  <input
+                    type="checkbox"
+                    id="uciMaterna"
+                    checked={uciMaterna}
+                    onChange={(e) => setUciMaterna(e.target.checked)}
+                  />
+                  <label htmlFor="uciMaterna">¿Requirió ingreso a UCI Materna?</label>
+                </div>
+                <div className={styles.fieldGroup}>
+                  <label>Complicaciones (Opcional)</label>
+                  <textarea
+                    value={complicacionesParto}
+                    onChange={(e) => setComplicacionesParto(e.target.value)}
+                    placeholder="Describe si hubo alguna eventualidad durante el parto..."
+                  />
+                </div>
+                <button type="submit" className={styles.submitBtn} disabled={birthLoading}>
+                  {birthLoading ? 'Guardando...' : birthData ? 'Actualizar Parto' : 'Registrar Parto'}
+                </button>
+              </form>
+            )}
           </div>
         )}
 
@@ -253,90 +383,113 @@ export const PostpartumDashboard: React.FC = () => {
           <div className={styles.pane}>
             <h4 className={styles.formTitle}>Bebés Registrados</h4>
             {newborns.length > 0 ? (
-              <div className={styles.newbornList}>
-                {newborns.map((baby) => (
-                  <div key={baby.id} className={styles.babyCard}>
-                    <div className={styles.babyIcon}>
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#df5d86' }}>
-                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                        <circle cx="12" cy="7" r="4" />
-                      </svg>
-                    </div>
-                    <div className={styles.babyDetails}>
-                      <h5>{baby.vivo ? 'Recién Nacido Activo' : 'Óbito fetal'}</h5>
-                      <p>
-                        <strong>Peso:</strong> {baby.peso_gramos ? `${baby.peso_gramos} g` : 'No registrado'} |{' '}
-                        <strong>Talla:</strong> {baby.talla_cm ? `${baby.talla_cm} cm` : 'No registrada'}
-                      </p>
-                      <p>
-                        <strong>UCI Neonatal:</strong> {baby.uci_neonatal ? 'Sí' : 'No'}
-                      </p>
-                      {baby.observaciones && <p className={styles.babyNotes}>"{baby.observaciones}"</p>}
-                    </div>
+              <>
+                <div className={styles.newbornList}>
+                  {(() => {
+                    const baby = newborns[newborns.length - 1]; // Mostrar solo el recién nacido más reciente
+                    return (
+                      <div key={baby.id} className={styles.babyCard}>
+                        <div className={styles.babyIcon}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#df5d86' }}>
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                          </svg>
+                        </div>
+                        <div className={styles.babyDetails}>
+                          <h5>{baby.vivo ? 'Recién Nacido Activo' : 'Óbito fetal'}</h5>
+                          <p>
+                            <strong>Peso:</strong> {baby.peso_gramos ? `${baby.peso_gramos} g` : 'No registrado'} |{' '}
+                            <strong>Talla:</strong> {baby.talla_cm ? `${baby.talla_cm} cm` : 'No registrada'}
+                          </p>
+                          <p>
+                            <strong>UCI Neonatal:</strong> {baby.uci_neonatal ? 'Sí' : 'No'}
+                          </p>
+                          {baby.observaciones && <p className={styles.babyNotes}>"{baby.observaciones}"</p>}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+                
+                {!inModal && (
+                  <div style={{ marginTop: '20px', textAlign: 'center', padding: '20px', backgroundColor: 'rgba(223, 93, 134, 0.04)', borderRadius: '15px', border: '1px dashed rgba(223, 93, 134, 0.3)' }}>
+                    <p style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#555', fontWeight: '500' }}>
+                      ¿Qué datos deseas actualizar del bebé?
+                    </p>
+                    <button
+                      type="button"
+                      onClick={onEditBaby}
+                      className={styles.submitBtn}
+                      style={{ margin: '0 auto', maxWidth: '250px', display: 'block' }}
+                    >
+                      Actualizar datos del bebé
+                    </button>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             ) : (
               <p className={styles.emptyText}>No has agregado recién nacidos todavía.</p>
             )}
 
-            <form onSubmit={handleAddNewborn} className={styles.form}>
-              <h4 className={styles.formTitle}>Agregar Recién Nacido</h4>
-              <div className={styles.fieldGroupCheckbox}>
-                <input
-                  type="checkbox"
-                  id="bebeVivo"
-                  checked={bebeVivo}
-                  onChange={(e) => setBebeVivo(e.target.checked)}
-                />
-                <label htmlFor="bebeVivo">Nacido Vivo</label>
-              </div>
-              {bebeVivo && (
-                <>
-                  <div className={styles.row}>
-                    <div className={styles.fieldGroup}>
-                      <label>Peso (gramos)</label>
-                      <input
-                        type="number"
-                        placeholder="Ej. 3200"
-                        value={bebePeso}
-                        onChange={(e) => setBebePeso(e.target.value)}
-                      />
+            {(newborns.length === 0 || inModal) && (
+              <form onSubmit={handleAddNewborn} className={styles.form}>
+                <h4 className={styles.formTitle}>{newborns.length > 0 ? 'Actualizar datos del bebé' : 'Agregar Recién Nacido'}</h4>
+                <div className={styles.fieldGroupCheckbox}>
+                  <input
+                    type="checkbox"
+                    id="bebeVivo"
+                    checked={bebeVivo}
+                    onChange={(e) => setBebeVivo(e.target.checked)}
+                  />
+                  <label htmlFor="bebeVivo">Nacido Vivo</label>
+                </div>
+                {bebeVivo && (
+                  <>
+                    <div className={styles.row}>
+                      <div className={styles.fieldGroup}>
+                        <label>Peso (gramos)</label>
+                        <input
+                          type="number"
+                          placeholder="Ej. 3200"
+                          value={bebePeso}
+                          onChange={(e) => setBebePeso(e.target.value)}
+                        />
+                      </div>
+                      <div className={styles.fieldGroup}>
+                        <label>Talla (cm)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          placeholder="Ej. 49.5"
+                          value={bebeTalla}
+                          onChange={(e) => setBebeTalla(e.target.value)}
+                        />
+                      </div>
                     </div>
-                    <div className={styles.fieldGroup}>
-                      <label>Talla (cm)</label>
+                    <div className={styles.fieldGroupCheckbox}>
                       <input
-                        type="number"
-                        step="0.1"
-                        placeholder="Ej. 49.5"
-                        value={bebeTalla}
-                        onChange={(e) => setBebeTalla(e.target.value)}
+                        type="checkbox"
+                        id="bebeUci"
+                        checked={bebeUci}
+                        onChange={(e) => setBebeUci(e.target.checked)}
                       />
+                      <label htmlFor="bebeUci">¿Requirió ingreso a UCI Neonatal?</label>
                     </div>
-                  </div>
-                  <div className={styles.fieldGroupCheckbox}>
-                    <input
-                      type="checkbox"
-                      id="bebeUci"
-                      checked={bebeUci}
-                      onChange={(e) => setBebeUci(e.target.checked)}
-                    />
-                    <label htmlFor="bebeUci">¿Requirió ingreso a UCI Neonatal?</label>
-                  </div>
-                </>
-              )}
-              <div className={styles.fieldGroup}>
-                <label>Observaciones o notas adicionales</label>
-                <textarea
-                  value={bebeObs}
-                  onChange={(e) => setBebeObs(e.target.value)}
-                  placeholder="Detalles sobre el nacimiento de tu bebé..."
-                />
-              </div>
-              <button type="submit" className={styles.submitBtn} disabled={newbornLoading}>
-                {newbornLoading ? 'Agregando...' : 'Agregar Bebé'}
-              </button>
-            </form>
+                  </>
+                )}
+                <div className={styles.fieldGroup}>
+                  <label>Observaciones o notas adicionales</label>
+                  <textarea
+                    value={bebeObs}
+                    onChange={(e) => setBebeObs(e.target.value)}
+                    placeholder="Detalles sobre el nacimiento de tu bebé..."
+                  />
+                </div>
+                <button type="submit" className={styles.submitBtn} disabled={newbornLoading}>
+                  {newbornLoading ? 'Guardando...' : newborns.length > 0 ? 'Actualizar datos del bebé' : 'Agregar Bebé'}
+                </button>
+              </form>
+            )}
           </div>
         )}
 

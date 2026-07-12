@@ -27,7 +27,7 @@ export const ContentMain = () => {
   const userName = localStorage.getItem('user_name') || 'Gestante';
   const displayId = userName.replace('Gestante ', '');
   const { data } = useGestationalAge();
-  const { data: birthData, create: createBirth, refresh: refreshBirthData } = useBirthRecord();
+  const { data: birthData } = useBirthRecord();
 
   const calcularDiasPosparto = () => {
     if (!birthData?.fecha_parto) return null;
@@ -68,13 +68,8 @@ export const ContentMain = () => {
   const { data: checklistData, loading: checklistLoading, updateItem } = useChecklist();
   const [showAllChecklist, setShowAllChecklist] = useState(false);
 
-  // Estados para el registro de parto desde M3
+  // Estados para el registro de parto y recién nacido desde el modal
   const [registerBirthOpen, setRegisterBirthOpen] = useState(false);
-  const [tipoParto, setTipoParto] = useState('Vaginal');
-  const [fechaParto, setFechaParto] = useState(new Date().toISOString().split('T')[0]);
-  const [complicacionesParto, setComplicacionesParto] = useState('');
-  const [uciMaterna, setUciMaterna] = useState(false);
-  const [saveBirthLoading, setSaveBirthLoading] = useState(false);
 
   const handleSymptomsSubmit = async (
     descripcion: string,
@@ -87,25 +82,6 @@ export const ContentMain = () => {
 
     await reportSymptoms({ descripcion, severidad: capitalizedSeveridad });
     setSymptomsModalOpen(false);
-  };
-
-  const handleSaveBirthDirect = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaveBirthLoading(true);
-    try {
-      await createBirth({
-        tipo_parto: tipoParto,
-        fecha_parto: fechaParto,
-        complicaciones: complicacionesParto || null,
-        uci_materna: uciMaterna,
-      });
-      await refreshBirthData();
-      setRegisterBirthOpen(false);
-    } catch (err) {
-      console.error("Error al registrar parto:", err);
-    } finally {
-      setSaveBirthLoading(false);
-    }
   };
 
   useEffect(() => {
@@ -166,14 +142,15 @@ export const ContentMain = () => {
 
         </div>
         <section className={styles.right}>
-          {(activeModule?.codigo === 'M4' || birthData) && <PostpartumDashboard />}
           <Datos className={styles.datos} />
           <Consejos 
             className={styles.consejos} 
             activeModule={activeModule}
             birthData={birthData}
             weeks={data?.semanas}
-            onRegisterBirth={() => setRegisterBirthOpen(true)}
+            onRegisterBirth={() => {
+              setRegisterBirthOpen(true);
+            }}
           />
           <Registros className={styles.registros} />
         </section>
@@ -217,6 +194,34 @@ export const ContentMain = () => {
                     ? '0 0 8px #f59e0b' 
                     : '0 0 8px #10b981',
                 }} />
+              </button>
+              <button 
+                onClick={() => {
+                  setRegisterBirthOpen(true);
+                }}
+                title="Mi Bebé / Parto"
+                aria-label="Mi Bebé / Parto"
+                style={{
+                  background: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '36px',
+                  height: '36px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                  color: '#ca436e'
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 12h.01" />
+                  <path d="M15 12h.01" />
+                  <path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5" />
+                  <path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 5 6.3" />
+                  <path d="M12 2v2" />
+                </svg>
               </button>
               <div 
                 className={styles.mobileBell} 
@@ -295,30 +300,30 @@ export const ContentMain = () => {
             </>
           )}
 
-          {activeModule?.codigo !== 'M4' && !birthData && (activeModule?.codigo === 'M3' || (data?.semanas && data.semanas >= 28)) && (
-            <button 
-              onClick={() => setRegisterBirthOpen(true)}
-              style={{
-                background: 'transparent',
-                color: '#ca436e',
-                border: '1.5px solid rgba(202, 67, 110, 0.4)',
-                borderRadius: '20px',
-                padding: '11px 20px',
-                width: '100%',
-                fontSize: '14px',
-                fontWeight: '600',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginBottom: '15px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxSizing: 'border-box'
-              }}
-            >
-              ¿Ya nació tu bebé? Registrar Parto
-            </button>
-          )}
+          {/* Botón superior de acceso rápido para parto o bebé en el móvil */}
+          <div style={{ width: '100%', padding: '0 8px', marginBottom: '15px' }}>
+            {activeModule?.codigo === 'M4' || birthData ? (
+              <button 
+                onClick={() => {
+                  setRegisterBirthOpen(true);
+                }}
+                className={styles.topActionBtn}
+              >
+                🍼 Control de Posparto
+              </button>
+            ) : (
+              (activeModule?.codigo === 'M3' || (data?.semanas && data.semanas >= 28)) && (
+                <button 
+                  onClick={() => {
+                    setRegisterBirthOpen(true);
+                  }}
+                  className={styles.topActionBtn}
+                >
+                  👶 ¿Ya nació tu bebé? Registrar Parto
+                </button>
+              )
+            )}
+          </div>
 
           <button className={styles.sintomasBtn} onClick={() => setSymptomsModalOpen(true)}>
             Sintomas criticos
@@ -457,12 +462,6 @@ export const ContentMain = () => {
 
 
 
-          {(activeModule?.codigo === 'M4' || birthData) && (
-            <div style={{ width: '100%', margin: '20px 0 0 0' }}>
-              <PostpartumDashboard />
-            </div>
-          )}
-
           {/* Alertas Panel Mobile (movido al header) */}
 
 
@@ -498,77 +497,11 @@ export const ContentMain = () => {
         <Modal 
           isOpen={registerBirthOpen} 
           onClose={() => setRegisterBirthOpen(false)} 
-          title="Registrar Nacimiento"
+          title="Control de Posparto"
         >
-          <form onSubmit={handleSaveBirthDirect} style={{ display: 'flex', flexDirection: 'column', gap: '15px', padding: '10px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>Tipo de parto</label>
-              <select 
-                value={tipoParto} 
-                onChange={(e) => setTipoParto(e.target.value)}
-                style={{ padding: '10px', borderRadius: '10px', border: '1px solid #ccc', background: 'white' }}
-              >
-                <option value="Vaginal">Parto Vaginal Natural</option>
-                <option value="Cesárea">Cesárea</option>
-                <option value="Instrumentado">Vaginal Instrumentado (Fórceps/Espátulas)</option>
-              </select>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>Fecha de parto</label>
-              <input
-                type="date"
-                value={fechaParto}
-                max={new Date().toISOString().split('T')[0]}
-                onChange={(e) => setFechaParto(e.target.value)}
-                required
-                style={{ padding: '10px', borderRadius: '10px', border: '1px solid #ccc' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '5px 0' }}>
-              <input
-                type="checkbox"
-                id="uciMaternaDirect"
-                checked={uciMaterna}
-                onChange={(e) => setUciMaterna(e.target.checked)}
-                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-              />
-              <label htmlFor="uciMaternaDirect" style={{ fontSize: '14px', fontWeight: '500', color: '#333', cursor: 'pointer' }}>
-                ¿Requirió ingreso a UCI Materna?
-              </label>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <label style={{ fontSize: '14px', fontWeight: '600', color: '#333' }}>Complicaciones (Opcional)</label>
-              <textarea
-                value={complicacionesParto}
-                onChange={(e) => setComplicacionesParto(e.target.value)}
-                placeholder="Describe si hubo alguna eventualidad durante el parto..."
-                rows={3}
-                style={{ padding: '10px', borderRadius: '10px', border: '1px solid #ccc', resize: 'vertical' }}
-              />
-            </div>
-
-            <button 
-              type="submit" 
-              disabled={saveBirthLoading}
-              style={{
-                background: '#ca436e',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '12px',
-                fontSize: '15px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                marginTop: '10px',
-                transition: 'background 0.2s',
-              }}
-            >
-              {saveBirthLoading ? 'Guardando...' : 'Registrar Parto'}
-            </button>
-          </form>
+          <div style={{ padding: '10px' }}>
+            <PostpartumDashboard inModal={true} />
+          </div>
         </Modal>
       )}
     </section>
