@@ -19,6 +19,8 @@ export const AdminOBA = () => {
   const [categorias, setCategorias] = useState<EducationalCategoryResponse[]>([]);
   const [catActiva, setCatActiva] = useState<EducationalCategoryResponse | null>(null);
   const [contenido, setContenido] = useState<EducationalContentResponse[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 4;
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +86,10 @@ export const AdminOBA = () => {
   useEffect(() => {
     cargarDatos();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [catActiva]);
 
   // Abrir Modal de Categoría
   const openCreateCategory = () => {
@@ -211,6 +217,11 @@ export const AdminOBA = () => {
 
   const filtrado = contenido.filter(c => c.categoria_id === catActiva?.id);
 
+  const totalPages = Math.ceil(filtrado.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedFiltrado = filtrado.slice(startIndex, endIndex);
+
   const getImagenUrl = (c: EducationalContentResponse) => {
     if (c.url_imagen) return c.url_imagen;
     const t = (c.tipo_contenido ?? '').toUpperCase().trim();
@@ -309,102 +320,136 @@ export const AdminOBA = () => {
           ) : filtrado.length === 0 ? (
             <p className={styles.emptyMsg}>No hay contenido para esta categoría.</p>
           ) : (
-            <div className={styles.obaGrid}>
-              {filtrado.map(c => (
-                <div
-                  key={c.id}
-                  className={styles.obaCard}
-                  style={{ opacity: c.activo ? 1 : 0.6, cursor: 'pointer' }}
-                  onClick={() => {
-                    setPreviewContent(c);
-                    setModalPreviewOpen(true);
-                  }}
-                >
-                  <div className={styles.imgWrap}>
-                    <img src={getImagenUrl(c)} alt={c.titulo} className={styles.img} />
-                    <span className={styles.badge}>{(c.tipo_contenido ?? '').toUpperCase()}</span>
-                    {c.modulo_id && (
-                      <span className={styles.badge} style={{ background: '#7C3AED', left: 'auto', right: '10px' }}>
-                        {c.modulo_id === 1 ? 'M1 (Trimestre 1)' : c.modulo_id === 2 ? 'M2 (Trimestre 2)' : c.modulo_id === 3 ? 'M3 (Trimestre 3)' : 'M4 (Puerperio)'}
-                      </span>
-                    )}
-                    {(c.tipo_contenido ?? '').toUpperCase().trim() === 'VIDEO' && (
-                      <div className={styles.playBtn}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-                          <polygon points="5 3 19 12 5 21 5 3" />
-                        </svg>
+            <>
+              <div className={styles.obaGrid}>
+                {paginatedFiltrado.map(c => (
+                  <div
+                    key={c.id}
+                    className={styles.obaCard}
+                    style={{ opacity: c.activo ? 1 : 0.6, cursor: 'pointer' }}
+                    onClick={() => {
+                      setPreviewContent(c);
+                      setModalPreviewOpen(true);
+                    }}
+                  >
+                    <div className={styles.imgWrap}>
+                      <img src={getImagenUrl(c)} alt={c.titulo} className={styles.img} />
+                      <span className={styles.badge}>{(c.tipo_contenido ?? '').toUpperCase()}</span>
+                      {c.modulo_id && (
+                        <span className={styles.badge} style={{ background: '#7C3AED', left: 'auto', right: '10px' }}>
+                          {c.modulo_id === 1 ? 'M1 (Trimestre 1)' : c.modulo_id === 2 ? 'M2 (Trimestre 2)' : c.modulo_id === 3 ? 'M3 (Trimestre 3)' : 'M4 (Puerperio)'}
+                        </span>
+                      )}
+                      {(c.tipo_contenido ?? '').toUpperCase().trim() === 'VIDEO' && (
+                        <div className={styles.playBtn}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <div className={styles.cardBody}>
+                      <h3 className={styles.cardTitle}>{c.titulo}</h3>
+                      <p className={styles.cardDesc}>{c.descripcion}</p>
+                      <p style={{ fontSize: '11px', color: '#888', margin: '0 0 10px' }}>
+                        Duración: {c.duracion_minutos} min
+                      </p>
+                      <div className={styles.cardActions}>
+                        {/* Vista Previa */}
+                        <button
+                          className={styles.iconBtn}
+                          title="Vista Previa"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPreviewContent(c);
+                            setModalPreviewOpen(true);
+                          }}
+                          style={{ color: '#0284c7' }}
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                          </svg>
+                        </button>
+
+                        {/* Estado activo/inactivo */}
+                        <button
+                          className={styles.iconBtn}
+                          title={c.activo ? "Desactivar" : "Activar"}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleStatus(c);
+                          }}
+                          style={{ color: c.activo ? '#10b981' : '#ef4444' }}
+                        >
+                          {c.activo ? (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                              <polyline points="22 4 12 14.01 9 11.01" />
+                            </svg>
+                          ) : (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="15" y1="9" x2="9" y2="15" />
+                              <line x1="9" y1="9" x2="15" y2="15" />
+                            </svg>
+                          )}
+                        </button>
+
+                        {/* Editar */}
+                        <button
+                          className={styles.iconBtn}
+                          title="Editar"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditContent(c);
+                          }}
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" strokeWidth="2.2"
+                            strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                          </svg>
+                        </button>
                       </div>
-                    )}
-                  </div>
-                  <div className={styles.cardBody}>
-                    <h3 className={styles.cardTitle}>{c.titulo}</h3>
-                    <p className={styles.cardDesc}>{c.descripcion}</p>
-                    <p style={{ fontSize: '11px', color: '#888', margin: '0 0 10px' }}>
-                      Duración: {c.duracion_minutos} min
-                    </p>
-                    <div className={styles.cardActions}>
-                      {/* Vista Previa */}
-                      <button
-                        className={styles.iconBtn}
-                        title="Vista Previa"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPreviewContent(c);
-                          setModalPreviewOpen(true);
-                        }}
-                        style={{ color: '#0284c7' }}
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                          <circle cx="12" cy="12" r="3" />
-                        </svg>
-                      </button>
-
-                      {/* Estado activo/inactivo */}
-                      <button
-                        className={styles.iconBtn}
-                        title={c.activo ? "Desactivar" : "Activar"}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleStatus(c);
-                        }}
-                        style={{ color: c.activo ? '#10b981' : '#ef4444' }}
-                      >
-                        {c.activo ? (
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                            <polyline points="22 4 12 14.01 9 11.01" />
-                          </svg>
-                        ) : (
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="15" y1="9" x2="9" y2="15" />
-                            <line x1="9" y1="9" x2="15" y2="15" />
-                          </svg>
-                        )}
-                      </button>
-
-                      {/* Editar */}
-                      <button
-                        className={styles.iconBtn}
-                        title="Editar"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditContent(c);
-                        }}
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
-                          stroke="currentColor" strokeWidth="2.2"
-                          strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
-                      </button>
                     </div>
                   </div>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className={styles.pagination}>
+                  <button
+                    className={styles.pageBtn}
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    ← Anterior
+                  </button>
+                  
+                  <div className={styles.pageNumbers}>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        className={`${styles.pageNumberBtn} ${currentPage === page ? styles.pageNumberBtnActive : ''}`}
+                        onClick={() => setCurrentPage(page)}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    className={styles.pageBtn}
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Siguiente →
+                  </button>
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
 

@@ -25,11 +25,10 @@ interface Pregunta {
 }
 
 const MODULOS = [
-  { id: 1, nombre: 'M0 - Registro y Perfil' },
-  { id: 2, nombre: 'M1 - Primer Trimestre' },
-  { id: 3, nombre: 'M2 - Segundo Trimestre' },
-  { id: 4, nombre: 'M3 - Tercer Trimestre' },
-  { id: 5, nombre: 'M4 - Parto y Puerperio' },
+  { id: 1, nombre: 'M1 - Primer Trimestre' },
+  { id: 2, nombre: 'M2 - Segundo Trimestre' },
+  { id: 3, nombre: 'M3 - Tercer Trimestre' },
+  { id: 4, nombre: 'M4 - Parto y Puerperio' },
 ];
 
 const PRIORIDADES = [
@@ -70,7 +69,7 @@ export const AdminPreguntas = () => {
   // Estados para el nuevo formulario de creación
   const [form, setForm] = useState({
     descripcion: '',
-    moduloId: 2, // M1 por defecto
+    moduloId: 1, // M1 por defecto
     frecuencia: 'diaria',
     tipoRespuesta: 'si_no',
     esSignoAlarma: false,
@@ -139,7 +138,7 @@ export const AdminPreguntas = () => {
       // Reset form
       setForm({
         descripcion: '',
-        moduloId: 2,
+        moduloId: 1,
         frecuencia: 'diaria',
         tipoRespuesta: 'si_no',
         esSignoAlarma: false,

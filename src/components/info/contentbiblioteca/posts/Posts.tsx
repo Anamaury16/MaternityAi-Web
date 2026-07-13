@@ -8,6 +8,8 @@ interface Props {
   data: ContenidoEducativoResponse[];
   loading: boolean;
   error: string | null;
+  completedIds: Set<number>;
+  onMarkCompleted: (id: number) => Promise<void>;
 }
 
 const CardSkeleton = () => (
@@ -19,7 +21,7 @@ const CardSkeleton = () => (
   </div>
 );
 
-export const Posts = React.memo(({ data, loading, error }: Props) => {
+export const Posts = React.memo(({ data, loading, error, completedIds, onMarkCompleted }: Props) => {
   if (loading) {
     return (
       <div className={styles.grid}>
@@ -50,11 +52,12 @@ export const Posts = React.memo(({ data, loading, error }: Props) => {
 
   return (
     <div className={styles.grid}>
-      {data.map(item =>
-        (item.tipo_contenido ?? '').toLowerCase().trim() === 'video'
-          ? <Videos key={item.id} post={item} />
-          : <Articulo key={item.id} post={item} />
-      )}
+      {data.map(item => {
+        const isCompleted = completedIds.has(item.id);
+        return (item.tipo_contenido ?? '').toLowerCase().trim() === 'video'
+          ? <Videos key={item.id} post={item} isCompleted={isCompleted} onMarkCompleted={onMarkCompleted} />
+          : <Articulo key={item.id} post={item} isCompleted={isCompleted} onMarkCompleted={onMarkCompleted} />;
+      })}
     </div>
   );
 });

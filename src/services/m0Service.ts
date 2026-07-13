@@ -416,24 +416,10 @@ export const getActiveModule = async (): Promise<ActiveModule> => {
     return MOCK_ACTIVE_MODULE;
   }
 
-  // Verificar si ya tiene parto registrado para forzar módulo M4
-  try {
-    const birth = await getBirthRecord();
-    if (birth && birth.id) {
-      return {
-        modulo_id: 4,
-        codigo: 'M4',
-        nombre: 'Parto y Puerperio',
-        semana_gestacion_actual: undefined
-      };
-    }
-  } catch (err) {
-    // Si no hay parto (404) o hay error, continuamos con el flujo normal
-  }
-
+  let baseModule: ActiveModule;
   try {
     const response = await api.get('/api/v1/m0/active-module');
-    return response.data;
+    baseModule = response.data;
   } catch (error) {
     // Fallback dinámico si el backend no puede determinar el módulo (ej. error 404 por superar las 42 semanas o NULL)
     try {
@@ -457,7 +443,7 @@ export const getActiveModule = async (): Promise<ActiveModule> => {
         nombre = 'Parto y Puerperio';
       }
 
-      return {
+      baseModule = {
         modulo_id,
         codigo,
         nombre,
@@ -467,6 +453,45 @@ export const getActiveModule = async (): Promise<ActiveModule> => {
       throw error;
     }
   }
+
+  // Si es M1 o M2, no hay posibilidad de parto registrado
+  if (baseModule && (baseModule.codigo === 'M1' || baseModule.codigo === 'M2')) {
+    sessionStorage.setItem('has_birth_record', 'false');
+    return baseModule;
+  }
+
+  // Si es M3 o M4, verificamos de forma inteligente la existencia del parto
+  const cached = sessionStorage.getItem('has_birth_record');
+  if (cached === 'true') {
+    return {
+      modulo_id: 4,
+      codigo: 'M4',
+      nombre: 'Parto y Puerperio',
+      semana_gestacion_actual: undefined
+    };
+  } else if (cached === 'false') {
+    return baseModule;
+  }
+
+  // Si no está en caché, consultamos el endpoint
+  try {
+    const birth = await getBirthRecord();
+    if (birth && birth.id) {
+      sessionStorage.setItem('has_birth_record', 'true');
+      return {
+        modulo_id: 4,
+        codigo: 'M4',
+        nombre: 'Parto y Puerperio',
+        semana_gestacion_actual: undefined
+      };
+    } else {
+      sessionStorage.setItem('has_birth_record', 'false');
+    }
+  } catch (err) {
+    // Si hay error, continuamos sin almacenar caché 'false' permanentemente
+  }
+
+  return baseModule;
 };
 
 // GET /api/v1/m0/module-history

@@ -327,4 +327,55 @@
     gap: 16px;
     padding: 0 20px 80px;
   }
+
+  .mobileProgressContainer {
+    background: linear-gradient(160deg, #fff5f8 0%, #ffffff 70%);
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 3px 12px rgba(202, 67, 110, 0.05);
+    border: 1px solid rgba(202, 67, 110, 0.08);
+    margin-bottom: 16px;
+    animation: fadeIn 0.4s ease;
+  }
+}
+
+/* ── PROGRESS STYLES ────────────────────────────────────── */
+.progressSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.progressStats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.progressCount {
+  font-size: 13px;
+  font-weight: 500;
+  color: #7a5a66;
+}
+
+.progressPercent {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ca436e;
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background: #f0e0e6;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(135deg, #f08aaa, #ca436e);
+  border-radius: 10px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }

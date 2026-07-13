@@ -26,7 +26,7 @@
   overflow: hidden;
 }
 .panelScroll {
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 .panelTitle {
   color: #CA436E;
@@ -176,4 +176,74 @@
 }
 .iconBtn:hover {
   color: #CA436E;
+}
+
+/* ── PAGINATION ── */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.pageBtn {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.pageBtn:hover:not(:disabled) {
+  border-color: #CA436E;
+  color: #CA436E;
+  background: #fdf5f7;
+}
+
+.pageBtn:disabled {
+  color: #ccc;
+  border-color: #eee;
+  cursor: not-allowed;
+}
+
+.pageNumbers {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pageNumberBtn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.pageNumberBtn:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+.pageNumberBtnActive {
+  background: #CA436E;
+  color: white;
+  border-color: #CA436E;
 }

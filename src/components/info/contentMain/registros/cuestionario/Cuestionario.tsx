@@ -5,8 +5,12 @@ import type { RespuestaItem } from '../../../../../services/clinicalService';
 import { SvgClipboard } from '../../../../Icons/IconsSystem';
 import styles from './Cuestionario.module.css';
 
-export const Cuestionario = () => {
-  const { questions, history, loading, submit, refresh } = useDailyQuestions();
+interface Props {
+  activeModule?: { modulo_id: number; codigo: string; nombre: string } | null;
+}
+
+export const Cuestionario = ({ activeModule }: Props) => {
+  const { questions, history, loading, submit, refresh } = useDailyQuestions(activeModule?.modulo_id);
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleSubmit = async (respuestas: RespuestaItem[]) => {

@@ -73,6 +73,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       sessionStorage.clear();
       localStorage.removeItem('selected_gestante_gmi');
       localStorage.removeItem('selected_gestante_id');
+      localStorage.removeItem('user_name');
+      localStorage.removeItem('codigo_gmi');
+      localStorage.removeItem('consent_accepted');
     }
     setUser({ role: null, isAuthenticated: false });
   }, []);

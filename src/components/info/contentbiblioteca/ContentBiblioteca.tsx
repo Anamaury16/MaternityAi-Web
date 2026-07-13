@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useEducationalContent } from '../../../hooks/m5/usM5';
+import { useEducationalContent, useProgress } from '../../../hooks/m5/usM5';
 import { PreguntasFrecuentes } from './CARDS/CardPF/PreguntasFrecuentes';
 import { Recomendaciones } from './CARDS/CardR/Recomendaciones';
 import { Posts } from './posts/Posts';
@@ -23,8 +23,21 @@ const normalizeTipoContenido = (tipo: string | null | undefined): string => {
 
 export const ContentBiblioteca = () => {
   const { data, loading, error, activeModule } = useEducationalContent();
+  const { data: progressData, markCompleted } = useProgress();
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('todos');
+
+  const completedIds = useMemo(() => {
+    return new Set(progressData.map(p => p.contenido_id));
+  }, [progressData]);
+
+  const totalContents = data?.length ?? 0;
+  const completedContentsCount = useMemo(() => {
+    if (!data) return 0;
+    return data.filter(item => completedIds.has(item.id)).length;
+  }, [data, completedIds]);
+
+  const progressPercent = totalContents > 0 ? Math.round((completedContentsCount / totalContents) * 100) : 0;
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -76,6 +89,21 @@ export const ContentBiblioteca = () => {
         {/* LEFT SIDEBAR */}
         <aside className={styles.sidebar}>
 
+          {totalContents > 0 && (
+            <div className={styles.sideSection}>
+              <p className={styles.sideLabel}>MI PROGRESO</p>
+              <div className={styles.progressSummary}>
+                <div className={styles.progressStats}>
+                  <span className={styles.progressCount}>{completedContentsCount} de {totalContents} leídos</span>
+                  <span className={styles.progressPercent}>{progressPercent}%</span>
+                </div>
+                <div className={styles.progressBar}>
+                  <div className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className={styles.sideSection}>
             <PreguntasFrecuentes activeModule={activeModule} />
           </div>
@@ -121,7 +149,7 @@ export const ContentBiblioteca = () => {
             </div>
           </div>
 
-          <Posts data={filtered} loading={loading} error={error} />
+          <Posts data={filtered} loading={loading} error={error} completedIds={completedIds} onMarkCompleted={markCompleted} />
         </main>
 
       </div>
@@ -140,7 +168,18 @@ export const ContentBiblioteca = () => {
       </div>
 
       <div className={styles.mobileBody}>
-        <Posts data={filtered} loading={loading} error={error} />
+        {totalContents > 0 && (
+          <div className={styles.mobileProgressContainer}>
+            <div className={styles.progressStats}>
+              <span className={styles.progressCount}>{completedContentsCount} de {totalContents} leídos</span>
+              <span className={styles.progressPercent}>{progressPercent}%</span>
+            </div>
+            <div className={styles.progressBar}>
+              <div className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
+            </div>
+          </div>
+        )}
+        <Posts data={filtered} loading={loading} error={error} completedIds={completedIds} onMarkCompleted={markCompleted} />
       </div>
 
       <div className={styles.mobileSide}>

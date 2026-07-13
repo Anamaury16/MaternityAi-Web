@@ -11,7 +11,6 @@ import { useGestationalAge } from '../../../hooks/m0/useM0';
 
 import { ReporteModal } from './registros/reportarsignos/ReporteModal';
 import { useSymptoms } from '../../../hooks/clinical/useClinical';
-import { useChecklist } from '../../../hooks/m5/usM5';
 import { PostpartumDashboard } from './postpartum/PostpartumDashboard';
 import { useBirthRecord } from '../../../hooks/m4/useM4';
 import { AlertasPanel } from '../../alertas/AlertasPanel';
@@ -42,7 +41,7 @@ export const ContentMain = () => {
   const userName = localStorage.getItem('user_name') || 'Gestante';
   const displayId = userName.replace('Gestante ', '');
   const { data, refresh: refreshGestationalAge } = useGestationalAge();
-  const { data: birthData, refresh: refreshBirth } = useBirthRecord(activeModule?.codigo === 'M3' || activeModule?.codigo === 'M4');
+  const { data: birthData, refresh: refreshBirth } = useBirthRecord(activeModule?.codigo === 'M4');
 
   const calcularDiasPosparto = () => {
     if (!birthData?.fecha_parto) return null;
@@ -75,8 +74,6 @@ export const ContentMain = () => {
 
   const [symptomsModalOpen, setSymptomsModalOpen] = useState(false);
   const { report: reportSymptoms, loading: symptomsLoading, error: symptomsError } = useSymptoms();
-  const { data: checklistData, loading: checklistLoading, updateItem } = useChecklist();
-  const [showAllChecklist, setShowAllChecklist] = useState(false);
 
   // Estados para el registro de parto y recién nacido desde el modal
   const [registerBirthOpen, setRegisterBirthOpen] = useState(false);
@@ -199,7 +196,7 @@ export const ContentMain = () => {
               setRegisterBirthOpen(true);
             }}
           />
-          <Registros className={styles.registros} />
+          <Registros className={styles.registros} activeModule={activeModule} />
         </section>
       </div>
 
@@ -405,146 +402,34 @@ export const ContentMain = () => {
               <SvgSparkle width={18} height={18} fill="white" />
             </div>
           </button>
-
+          
           {activeModule?.codigo !== 'M4' && (
-          <div className={styles.preparacionSeccion}>
-            <h4 style={{ marginBottom: '8px' }}>Preparación para el parto</h4>
-            {(() => {
-              const completedChecklistItems = checklistData?.items?.filter(item => item.completado).length || 0;
-              const totalChecklistItems = checklistData?.items?.length || 0;
-              const checklistProgressPercent = totalChecklistItems > 0 
-                ? Math.round((completedChecklistItems / totalChecklistItems) * 100) 
-                : 0;
-
-              return totalChecklistItems > 0 ? (
-                <div style={{ width: '100%', marginBottom: '14px', padding: '0 4px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#888', marginBottom: '4px', fontWeight: '500' }}>
-                    <span>Tareas</span>
-                    <span style={{ color: '#df5d86', fontWeight: '600' }}>{checklistProgressPercent}% ({completedChecklistItems}/{totalChecklistItems})</span>
-                  </div>
-                  <div style={{ width: '100%', height: '4px', backgroundColor: 'rgba(223, 93, 134, 0.08)', borderRadius: '2px', overflow: 'hidden' }}>
-                    <div style={{ 
-                      width: `${checklistProgressPercent}%`, 
-                      height: '100%', 
-                      background: 'linear-gradient(90deg, #df5d86 0%, #ca436e 100%)',
-                      borderRadius: '2px',
-                      transition: 'width 0.4s ease-out'
-                    }} />
-                  </div>
-                </div>
-              ) : null;
-            })()}
-            {checklistLoading ? (
-              <p style={{fontSize: '14px', color: '#666'}}>Cargando checklist...</p>
-            ) : checklistData?.items?.length ? (
-              <>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                  {(showAllChecklist ? checklistData.items : checklistData.items.slice(0, 2)).map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => updateItem(item.id, { completado: !item.completado })}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        padding: '14px',
-                        background: item.completado ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : '#ffffff',
-                        border: item.completado ? '1px solid #bbf7d0' : '1px solid #e5e7eb',
-                        borderRadius: '16px',
-                        marginBottom: '10px',
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01)',
-                        transition: 'all 0.2s ease',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: '22px',
-                          height: '22px',
-                          borderRadius: '50%',
-                          border: item.completado ? '2px solid #22c55e' : '2px solid #9ca3af',
-                          background: item.completado ? '#22c55e' : 'transparent',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#ffffff',
-                          fontWeight: 'bold',
-                          fontSize: '12px',
-                          flexShrink: 0,
-                        }}
-                      >
-                        {item.completado && '✓'}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: '13.5px',
-                            fontWeight: 500,
-                            color: item.completado ? '#166534' : '#1f2937',
-                            textDecoration: item.completado ? 'line-through' : 'none',
-                            lineHeight: '1.4',
-                          }}
-                        >
-                          {item.texto}
-                        </p>
-                        {item.semana_eg && (
-                          <span
-                            style={{
-                              display: 'inline-block',
-                              marginTop: '6px',
-                              padding: '2px 8px',
-                              background: item.completado ? '#dcfce7' : '#f3f4f6',
-                              color: item.completado ? '#15803d' : '#4b5563',
-                              borderRadius: '12px',
-                              fontSize: '10.5px',
-                              fontWeight: 500,
-                            }}
-                          >
-                            Semana {item.semana_eg}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {checklistData.items.length > 2 && (
-                  <button
-                    onClick={() => setShowAllChecklist(!showAllChecklist)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#CA436E',
-                      fontWeight: 600,
-                      fontSize: '13px',
-                      marginTop: '8px',
-                      cursor: 'pointer',
-                      padding: '4px 0',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
-                  >
-                    {showAllChecklist ? 'Ver menos ↑' : `Ver todos (${checklistData.items.length}) ↓`}
-                  </button>
-                )}
-              </>
-            ) : (
-              <p style={{fontSize: '14px', color: '#666'}}>No hay ítems configurados</p>
-            )}
-          </div>
+            <div className={styles.preparacionSeccion} style={{ width: '100%', marginTop: '15px' }}>
+              <Consejos 
+                activeModule={activeModule}
+                birthData={birthData}
+                weeks={data?.semanas}
+                onRegisterBirth={() => {
+                  setRegisterBirthOpen(true);
+                }}
+              />
+            </div>
           )}
+        </div>
 
+        {/* --- DATOS Y REGISTROS EN MÓVIL --- */}
+        <div className={styles.mobileAdditionalContainer}>
+          <div className={styles.mobileSectionHeader}>
+            <h3>Mis Métricas Clínicas</h3>
+          </div>
+          <Datos activeModule={activeModule} className={styles.mobileSectionComponent} />
+        </div>
 
-
-          {/* Alertas Panel Mobile (movido al header) */}
-
-
-
-
-
-
+        <div className={styles.mobileAdditionalContainer}>
+          <div className={styles.mobileSectionHeader}>
+            <h3>Mis Registros y Cuestionarios</h3>
+          </div>
+          <Registros className={styles.mobileSectionComponent} activeModule={activeModule} />
         </div>
       </div>
 

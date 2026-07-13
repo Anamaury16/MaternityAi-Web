@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import styles from './UserInfo.module.css';
-import { getConsent } from '../../../../../services/m0Service';
 
 export const UserInfo = () => {
   const storedUser = localStorage.getItem('user_name') || '';
@@ -18,31 +17,31 @@ export const UserInfo = () => {
     initial = 'G';
   } else if (storedUser.includes('@')) {
     nombre = 'Personal Médico';
-    apellidos = '';
+    apellidos = 'MaternityAI';
     usuario = storedUser;
-    initial = storedUser.charAt(0).toUpperCase();
+    initial = 'P';
   } else if (storedUser) {
     nombre = storedUser;
     initial = storedUser.charAt(0).toUpperCase();
   }
 
-  // Intentar obtener el código GMI del consentimiento (que trae el ID asignado)
+  // Estructura obstétrica y datos demográficos se cargan en la vista principal
+  // Aquí sólo mostramos datos básicos de la sesión
+
   useEffect(() => {
-    // El código GMI se guarda en localStorage durante el registro
+    // El código GMI se guarda en localStorage durante el registro o login
     const stored = localStorage.getItem('codigo_gmi');
     if (stored) {
       setCodigoGmi(stored);
       return;
     }
-    // Si no, consultar consentimiento para obtener la fecha (el código viene del registro)
-    getConsent()
-      .then(() => {
-        // El código viene del registro m0, usar el user_name como fallback
-        const gmi = `GMI-${new Date().getFullYear()}-${usuario.slice(0, 6).toUpperCase()}`;
-        setCodigoGmi(gmi);
-      })
-      .catch(() => {});
-  }, [usuario]);
+    // Si no, intentar extraerlo del user_name (que tiene formato "Gestante GMI-XXXX")
+    if (storedUser.startsWith('Gestante')) {
+      const gmi = storedUser.replace('Gestante ', '');
+      setCodigoGmi(gmi);
+      localStorage.setItem('codigo_gmi', gmi);
+    }
+  }, [storedUser]);
 
   return (
     <section className={styles.containerInfo}>

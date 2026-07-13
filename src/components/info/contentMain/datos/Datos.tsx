@@ -1,5 +1,4 @@
 import { useVitals } from '../../../../hooks/clinical/useClinical';
-import { useGestationalAge } from '../../../../hooks/m0/useM0';
 import { useNewborns } from '../../../../hooks/m4/useM4';
 import styles from './datos.module.css';
 
@@ -10,7 +9,6 @@ interface Props {
 
 export const Datos = ({ className, activeModule }: Props) => {
   const { data: vitalsData } = useVitals();
-  const { data: gestationalData } = useGestationalAge();
   const { data: newborns } = useNewborns(activeModule?.codigo === 'M4');
 
   const ultimoRegistro = vitalsData.length > 0 ? vitalsData[vitalsData.length - 1] : null;

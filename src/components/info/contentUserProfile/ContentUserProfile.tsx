@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { HeaderActividad } from '../../Headers/HeaderActividad/HeaderActividad';
 import styles from './ContentUserProfile.module.css';
 import { Left } from './left/Left';
@@ -14,6 +14,9 @@ import { useAuth } from '../../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useVitals } from '../../../hooks/clinical/useClinical';
 import { PwaInstallPrompt } from '../../pwa/PwaInstallPrompt';
+import { useGestationalAge } from '../../../hooks/m0/useM0';
+import { useNewborns } from '../../../hooks/m4/useM4';
+import { getActiveModule, type ActiveModule } from '../../../services/m0Service';
 
 export const ContentUserProfile = () => {
   const [activeTab, setActiveTab] = useState<'perfil' | 'seguridad' | 'privacidad' | 'eliminar_cuenta'>('perfil');
@@ -32,6 +35,40 @@ export const ContentUserProfile = () => {
     await logout();
     navigate('/login');
   };
+
+  const [activeModule, setActiveModule] = useState<ActiveModule | null>(null);
+  const { data: gestationalAgeData } = useGestationalAge();
+  const { data: newborns } = useNewborns(activeModule?.codigo === 'M4');
+
+  useEffect(() => {
+    const loadModule = async () => {
+      try {
+        const modulo = await getActiveModule();
+        setActiveModule(modulo);
+      } catch (err) {
+        console.error("Failed to load active module in profile:", err);
+      }
+    };
+    loadModule();
+  }, []);
+
+  const getEtapaImage = (moduloCodigo: string | undefined, semanas: number | undefined): string => {
+    if (moduloCodigo === 'M4') return './image/etapas/puerperio.png';
+    const s = semanas ?? 0;
+    if (s <= 13) return './image/etapas/primertrimestre.png';
+    if (s <= 36) return './image/etapas/tercertrimestre.png';
+    return './image/etapas/parto.png';
+  };
+
+  const datosBebe = newborns.length > 0
+    ? {
+      tamaño: newborns[0].talla_cm !== null && newborns[0].talla_cm !== undefined ? `${newborns[0].talla_cm}` : '--',
+      gramos: newborns[0].peso_gramos !== null && newborns[0].peso_gramos !== undefined ? newborns[0].peso_gramos.toLocaleString('es-ES') : '--'
+    }
+    : {
+      tamaño: '--',
+      gramos: '--'
+    };
 
   const storedUser = localStorage.getItem('user_name') || '200412';
   let userId = storedUser;
@@ -82,7 +119,13 @@ export const ContentUserProfile = () => {
         </div>
 
         <div className={styles.fetusImageContainer}>
-          <img src="./image/etapas/primertrimestre.png" alt="Feto" className={styles.fetusImage} loading="lazy" decoding="async" />
+          <img 
+            src={getEtapaImage(activeModule?.codigo, gestationalAgeData?.semanas)} 
+            alt="Feto" 
+            className={styles.fetusImage} 
+            loading="lazy" 
+            decoding="async" 
+          />
         </div>
 
         <div className={styles.bottomSection}>
@@ -90,11 +133,11 @@ export const ContentUserProfile = () => {
           <div className={styles.pinkContainer}>
             <div className={styles.babyCard}>
               <span>TAMAÑO</span>
-              <strong>92 <small>CM</small></strong>
+              <strong>{datosBebe.tamaño} {datosBebe.tamaño !== '--' && <small>CM</small>}</strong>
             </div>
             <div className={styles.babyCard}>
               <span>GRAMOS</span>
-              <strong>1.200</strong>
+              <strong>{datosBebe.gramos} {datosBebe.gramos !== '--' && <small>g</small>}</strong>
             </div>
           </div>
 

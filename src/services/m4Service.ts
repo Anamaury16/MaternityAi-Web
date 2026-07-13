@@ -203,6 +203,7 @@ const MOCK_CONTRACEPTION: ContraceptionResponse[] = [
 export const createBirthRecord = async (data: BirthRecordCreate): Promise<BirthRecordResponse> => {
   if (USE_MOCKS) {
     await mockDelay();
+    sessionStorage.setItem('has_birth_record', 'true');
     return {
       id: `parto-${Date.now()}`,
       gestante_id: "gest-001",
@@ -217,6 +218,7 @@ export const createBirthRecord = async (data: BirthRecordCreate): Promise<BirthR
     };
   }
   const response = await api.post('/api/v1/m4/birth-record', data);
+  sessionStorage.setItem('has_birth_record', 'true');
   return response.data;
 };
 

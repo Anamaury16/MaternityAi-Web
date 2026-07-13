@@ -233,6 +233,7 @@ export const FormLogin = () => {
         const gestanteData = await loginUser(gestanteForm);
         login(gestanteData); // actualiza el AuthContext
         localStorage.setItem('user_name', `Gestante ${gestanteForm.codigo_gmi}`);
+        localStorage.setItem('codigo_gmi', gestanteForm.codigo_gmi);
         localStorage.setItem('has_logged_in_before', 'true');
         setSuccessMessage('Sesión iniciada correctamente.');
         navigate('/main', { replace: true });
