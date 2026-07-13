@@ -435,12 +435,25 @@ export const AdminChecklist = () => {
                 id="ci-semana"
                 className={modalStyles.input}
                 value={form.semana_eg ?? ''}
-                onChange={e =>
+                onChange={e => {
+                  const val = e.target.value === '' ? null : Number(e.target.value);
+                  let nextModuloId = form.modulo_id;
+                  if (val !== null) {
+                    const matchingModulo = modulos.find(m => {
+                      const start = m.semana_eg_inicio ?? 0;
+                      const end = m.semana_eg_fin ?? 0;
+                      return val >= start && val <= end;
+                    });
+                    if (matchingModulo) {
+                      nextModuloId = Number(matchingModulo.id);
+                    }
+                  }
                   setForm({
                     ...form,
-                    semana_eg: e.target.value === '' ? null : Number(e.target.value),
-                  })
-                }
+                    semana_eg: val,
+                    modulo_id: nextModuloId,
+                  });
+                }}
               >
                 <option value="">Sin semana</option>
                 {getWeekOptions().map(week => (

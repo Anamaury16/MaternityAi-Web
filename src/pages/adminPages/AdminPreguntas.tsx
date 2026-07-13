@@ -33,9 +33,9 @@ const MODULOS = [
 ];
 
 const PRIORIDADES = [
-  { id: 2, nombre: 'Baja (Informativa/Seguimiento)' },
-  { id: 3, nombre: 'Media (Alerta moderada)' },
-  { id: 4, nombre: 'Alta (Signo de alarma crítico)' },
+  { id: 1, nombre: 'Baja (Informativa/Seguimiento)' },
+  { id: 2, nombre: 'Media (Alerta moderada)' },
+  { id: 3, nombre: 'Alta (Signo de alarma crítico)' },
 ];
 
 const TIPOS_RESPUESTA = [
@@ -74,7 +74,7 @@ export const AdminPreguntas = () => {
     frecuencia: 'diaria',
     tipoRespuesta: 'si_no',
     esSignoAlarma: false,
-    prioridadAlerta: 2, // Baja
+    prioridadAlerta: 1, // Baja
   });
 
   // Modal de detalle / edición
@@ -91,8 +91,8 @@ export const AdminPreguntas = () => {
       const data = await getFollowUpQuestions({ page: 1, size: 100 });
       const mapped = data.filter(q => q.activo).map((q) => {
         let prioridad: 'Alta' | 'Medio' | 'Baja' = 'Baja';
-        if (q.prioridad_alerta_default_id === 4) prioridad = 'Alta';
-        else if (q.prioridad_alerta_default_id === 3) prioridad = 'Medio';
+        if (q.prioridad_alerta_default_id === 3) prioridad = 'Alta';
+        else if (q.prioridad_alerta_default_id === 2) prioridad = 'Medio';
 
         const categoria = getModuloLabel(q.modulo_id);
 

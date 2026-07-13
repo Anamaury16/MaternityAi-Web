@@ -21,6 +21,8 @@ import {
   exportGestantes,
   exportIndicators,
   getGestanteVitals,
+  getPendingActivations,
+  resolveActivationRequest,
   type GestanteResponse,
   type RoleOption,
   type ExamenResponse,
@@ -29,7 +31,9 @@ import {
   type LlamadaEmergenciaCreate,
   type GestanteChecklistItem,
   type SignosVitalesResponse,
+  type SolicitudActivacionResponse,
 } from '../../services/adminService';
+import { getSecurityQuestion } from '../../services/authService';
 import {
   getObstetricFormula,
   updateObstetricFormula,
@@ -53,6 +57,43 @@ const EyeOffIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
     <line x1="1" y1="1" x2="23" y2="23" />
+  </svg>
+);
+
+const BellIcon = ({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </svg>
+);
+
+const ClockIcon = ({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </svg>
+);
+
+const AlertTriangleIcon = ({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    <line x1="12" y1="9" x2="12" y2="13" />
+    <line x1="12" y1="17" x2="12.01" y2="17" />
+  </svg>
+);
+
+const CheckCircleIcon = ({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+    <polyline points="22 4 12 14.01 9 11.01" />
+  </svg>
+);
+
+const XCircleIcon = ({ size = 16, color = 'currentColor' }: { size?: number; color?: string }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <line x1="15" y1="9" x2="9" y2="15" />
+    <line x1="9" y1="9" x2="15" y2="15" />
   </svg>
 );
 
@@ -259,6 +300,28 @@ export const AdminUsuarias = () => {
   const [gestantes, setGestantes] = useState<GestanteResponse[]>([]);
   const [paginaMaternas, setPaginaMaternas] = useState(1);
   const MATERNAS_POR_PAGINA = 10;
+
+  // --- Estados de Activación de Login ---
+  const [loginStatusMap, setLoginStatusMap] = useState<Record<string, boolean>>({});
+  const [pendingActivations, setPendingActivations] = useState<SolicitudActivacionResponse[]>([]);
+  const [showActivationsModal, setShowActivationsModal] = useState(false);
+  const [isResolvingId, setIsResolvingId] = useState<string | null>(null);
+
+  // Cargar solicitudes pendientes al iniciar
+  const fetchPendingActivations = async () => {
+    try {
+      const data = await getPendingActivations();
+      setPendingActivations(data);
+    } catch (e) {
+      console.warn("No se pudieron cargar solicitudes de activación pendientes:", e);
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin) {
+      fetchPendingActivations();
+    }
+  }, [isAdmin]);
 
   useEffect(() => {
     if (selPaciente && selPaciente !== 'XYZ1002') {
@@ -473,6 +536,72 @@ export const AdminUsuarias = () => {
     paginaMaternasClamped * MATERNAS_POR_PAGINA
   );
 
+  // Efecto para consultar si tienen pregunta de seguridad configurada (login activo)
+  useEffect(() => {
+    if (maternasPagina.length === 0) return;
+
+    // Filtrar códigos que aún no han sido validados
+    const codesToFetch = maternasPagina
+      .map(p => p.codigo_gmi)
+      .filter(code => loginStatusMap[code] === undefined);
+
+    if (codesToFetch.length === 0) return;
+
+    // Marcar como true temporalmente para no duplicar peticiones en paralelo
+    setLoginStatusMap(prev => {
+      const next = { ...prev };
+      codesToFetch.forEach(code => {
+        next[code] = true; // Por defecto asumimos activa hasta que falle
+      });
+      return next;
+    });
+
+    const checkSecurityQuestions = async () => {
+      const results = await Promise.all(
+        codesToFetch.map(async (code) => {
+          try {
+            await getSecurityQuestion(code);
+            return { code, hasQuestion: true };
+          } catch (e: any) {
+            // Si retorna 404, no tiene pregunta
+            if (e?.status === 404) {
+              return { code, hasQuestion: false };
+            }
+            return { code, hasQuestion: true }; // En caso de otro error, no marcar alerta
+          }
+        })
+      );
+
+      setLoginStatusMap(prev => {
+        const next = { ...prev };
+        results.forEach(res => {
+          next[res.code] = res.hasQuestion;
+        });
+        return next;
+      });
+    };
+
+    checkSecurityQuestions();
+  }, [maternasPagina]);
+
+  const handleResolveActivation = async (id: string, code: string, aprobar: boolean) => {
+    setIsResolvingId(id);
+    try {
+      await resolveActivationRequest(id, aprobar);
+      alert(aprobar ? "Solicitud aprobada con éxito. Login activado." : "Solicitud rechazada.");
+      // Actualizar mapa
+      setLoginStatusMap(prev => ({ ...prev, [code]: aprobar }));
+      // Refrescar lista de solicitudes
+      fetchPendingActivations();
+      // Refrescar listado de gestantes
+      getGestantes().then(setGestantes).catch(console.error);
+    } catch (err: any) {
+      alert("Error al resolver la solicitud: " + (err.response?.data?.detail || err.message));
+    } finally {
+      setIsResolvingId(null);
+    }
+  };
+
   useEffect(() => {
     setPaginaMaternas(1);
   }, [busqueda, activeList]);
@@ -643,9 +772,34 @@ export const AdminUsuarias = () => {
 
         {/*parte izquierda ls lista*/}
         <div className={styles.panel}>
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <p className={styles.panelTitle} style={{ margin: 0 }}>Lista</p>
           </div>
+
+          {isAdmin && pendingActivations.length > 0 && (
+            <div 
+              onClick={() => setShowActivationsModal(true)}
+              style={{
+                backgroundColor: '#fef3c7',
+                border: '1px solid #fcd34d',
+                borderRadius: '8px',
+                padding: '10px 12px',
+                marginBottom: '12px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+              }}
+              title="Revisar solicitudes de activación de cuenta"
+            >
+              <span style={{ fontSize: '12px', fontWeight: 600, color: '#d97706', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <BellIcon size={14} color="#d97706" /> {pendingActivations.length} Solicitud{pendingActivations.length > 1 ? 'es' : ''} de Activación
+              </span>
+              <span style={{ fontSize: '11px', color: '#b45309', fontWeight: 600, textDecoration: 'underline' }}>Revisar</span>
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: '10px', marginBottom: '12px' }}>
             {isAdmin && (
@@ -760,6 +914,16 @@ export const AdminUsuarias = () => {
                         <line x1="12" y1="17" x2="12.01" y2="17" />
                       </svg>
                     )}
+                    {pendingActivations.some(act => act.codigo_gmi === p.codigo_gmi) && (
+                      <span style={{ marginLeft: '8px', display: 'inline-block', fontSize: '10px', backgroundColor: '#fef3c7', color: '#d97706', padding: '1px 6px', borderRadius: '4px', fontWeight: 'bold', verticalAlign: 'middle' }} title="Solicitud de activación de login pendiente">
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}><ClockIcon size={10} color="#d97706" /> Solicitado</span>
+                      </span>
+                    )}
+                    {!pendingActivations.some(act => act.codigo_gmi === p.codigo_gmi) && loginStatusMap[p.codigo_gmi] === false && (
+                      <span style={{ marginLeft: '8px', display: 'inline-block', fontSize: '10px', backgroundColor: '#fee2e2', color: '#dc2626', padding: '1px 6px', borderRadius: '4px', fontWeight: 'bold', verticalAlign: 'middle' }} title="Login no activado (sin pregunta de seguridad)">
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px' }}><AlertTriangleIcon size={10} color="#dc2626" /> Sin Login</span>
+                      </span>
+                    )}
                   </span>
                   <div>
                     <div className={styles.pDetail}>Nro Semana · {currentWeeks}</div>
@@ -837,6 +1001,91 @@ export const AdminUsuarias = () => {
             <p className={styles.diagnostico}>
               EMBARAZO DE ALTO RIESGO SIN OTRA ESPECIFICACION
             </p>
+
+            {/* Aviso de Login Inactivo / Solicitud Pendiente */}
+            {loginStatusMap[selPaciente] === false && (() => {
+              const solicitud = pendingActivations.find(s => s.codigo_gmi === selPaciente);
+              if (solicitud) {
+                return (
+                  <div style={{
+                    backgroundColor: '#fffbeb',
+                    border: '1px solid #fef3c7',
+                    borderLeft: '5px solid #d97706',
+                    borderRadius: '8px',
+                    padding: '16px',
+                    marginBottom: '20px',
+                  }}>
+                    <h4 style={{ margin: '0 0 8px 0', color: '#d97706', fontSize: '14px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <ClockIcon size={16} color="#d97706" /> Solicitud de Activación Pendiente
+                    </h4>
+                    <p style={{ margin: '0 0 12px 0', fontSize: '12px', color: '#6b7280', lineHeight: '1.5' }}>
+                      La gestante ha solicitado activar su cuenta con la siguiente pregunta de seguridad:
+                      <br />
+                      <strong style={{ color: '#374151' }}>"{solicitud.pregunta}"</strong>
+                    </p>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button
+                        onClick={() => handleResolveActivation(solicitud.id, solicitud.codigo_gmi, false)}
+                        disabled={isResolvingId === solicitud.id}
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: '12px',
+                          borderRadius: '6px',
+                          border: '1px solid #d1d5db',
+                          background: 'white',
+                          color: '#374151',
+                          cursor: 'pointer',
+                          fontWeight: 600
+                        }}
+                      >
+                        Rechazar
+                      </button>
+                      <button
+                        onClick={() => handleResolveActivation(solicitud.id, solicitud.codigo_gmi, true)}
+                        disabled={isResolvingId === solicitud.id}
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: '12px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          background: '#CA436E',
+                          color: 'white',
+                          cursor: 'pointer',
+                          fontWeight: 600
+                        }}
+                      >
+                        {isResolvingId === solicitud.id ? (
+                          'Aprobando...'
+                        ) : (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            Aprobar Activación <CheckCircleIcon size={12} color="white" />
+                          </span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                );
+              } else {
+                return (
+                  <div style={{
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #fee2e2',
+                    borderLeft: '5px solid #ef4444',
+                    borderRadius: '8px',
+                    padding: '12px 16px',
+                    marginBottom: '20px',
+                  }}>
+                    <h4 style={{ margin: '0 0 4px 0', color: '#991b1b', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <AlertTriangleIcon size={14} color="#ef4444" /> Cuenta Inactiva (Sin Login)
+                    </h4>
+                    <p style={{ margin: 0, fontSize: '12px', color: '#7f1d1d', lineHeight: '1.4' }}>
+                      Esta gestante no tiene una pregunta de seguridad registrada (posiblemente importada de Excel). 
+                      Debe ingresar al portal de gestantes en la pantalla de Login con su código para configurar su pregunta y enviar la solicitud de activación.
+                    </p>
+                  </div>
+                );
+              }
+            })()}
 
             <p className={styles.infoRow}><strong>Nro Semana</strong> · {gestanteSeleccionada ? calculateCurrentWeeks(gestanteSeleccionada.fecha_ultima_menstruacion) : 'N/A'}</p>
             <p className={styles.infoRow}><strong>Fecha posible parto</strong>  {gestanteSeleccionada?.fecha_probable_parto || 'N/A'}</p>
@@ -1702,6 +1951,104 @@ export const AdminUsuarias = () => {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Modal: Solicitudes de Activación de Login Pendientes */}
+      <Modal
+        isOpen={showActivationsModal}
+        onClose={() => setShowActivationsModal(false)}
+        title="Solicitudes de Activación de Login Pendientes"
+      >
+        <div style={{ maxHeight: '450px', overflowY: 'auto', paddingRight: '5px' }}>
+          {pendingActivations.length === 0 ? (
+            <p style={{ textAlign: 'center', color: '#666', margin: '20px 0' }}>
+              No hay solicitudes de activación pendientes en este momento.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {pendingActivations.map((sol) => (
+                <div 
+                  key={sol.id} 
+                  style={{
+                    padding: '14px',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '10px',
+                    background: '#f9fafb',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontWeight: 'bold', color: '#CA436E', fontSize: '14px' }}>
+                      {sol.codigo_gmi}
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#9ca3af' }}>
+                      {new Date(sol.created_at).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#4b5563' }}>
+                    <strong>Pregunta:</strong> "{sol.pregunta}"
+                  </div>
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '6px', alignSelf: 'flex-end' }}>
+                    <button
+                      type="button"
+                      disabled={isResolvingId === sol.id}
+                      onClick={() => handleResolveActivation(sol.id, sol.codigo_gmi, false)}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        border: '1px solid #d1d5db',
+                        background: 'white',
+                        color: '#374151',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
+                    >
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        Rechazar <XCircleIcon size={12} color="#374151" />
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isResolvingId === sol.id}
+                      onClick={() => handleResolveActivation(sol.id, sol.codigo_gmi, true)}
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        background: '#CA436E',
+                        color: 'white',
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
+                    >
+                      {isResolvingId === sol.id ? (
+                        'Procesando...'
+                      ) : (
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                          Aprobar <CheckCircleIcon size={12} color="white" />
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+            <button
+              type="button"
+              onClick={() => setShowActivationsModal(false)}
+              className={modalStyles.cancelBtn}
+              style={{ padding: '8px 16px', fontSize: '13px' }}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
       </Modal>
     </div>
   );

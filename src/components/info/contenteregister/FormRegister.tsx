@@ -193,6 +193,10 @@ export const FormRegister = () => {
           <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu primera mascota?</option>
           <option value="¿Cuál es el nombre de tu ciudad natal?">¿Cuál es el nombre de tu ciudad natal?</option>
           <option value="¿Cuál es tu color favorito?">¿Cuál es tu color favorito?</option>
+          <option value="¿Cuál es el nombre de tu mejor amigo de la infancia?">¿Cuál es el nombre de tu mejor amigo de la infancia?</option>
+          <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
+          <option value="¿Cuál es tu comida favorita?">¿Cuál es tu comida favorita?</option>
+          <option value="¿Cuál es el nombre de tu escuela de la infancia?">¿Cuál es el nombre de tu escuela de la infancia?</option>
         </select>
       </div>
 

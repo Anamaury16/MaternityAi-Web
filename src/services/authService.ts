@@ -112,6 +112,24 @@ export const getSecurityQuestion = async (
   }
 };
 
+// ─── Solicitud de Activación de Cuenta ────────────────────────────────────────
+
+export interface SolicitudActivacionPayload {
+  codigo_gmi: string;
+  pregunta: string;
+  respuesta: string;
+}
+
+export const createActivationRequest = async (
+  payload: SolicitudActivacionPayload
+): Promise<void> => {
+  try {
+    await api.post('/api/v1/auth/solicitud-activacion', payload);
+  } catch (err) {
+    return handleAuthError(err);
+  }
+};
+
 // ─── Reset de contraseña ─────────────────────────────────────────────────────
 
 // Paso 1: solicitar el reset — el backend envía el token por email

@@ -6,12 +6,22 @@ import { SvgClipboard } from '../../../../Icons/IconsSystem';
 import styles from './Cuestionario.module.css';
 
 export const Cuestionario = () => {
-  const { questions, loading, submit } = useDailyQuestions();
+  const { questions, history, loading, submit, refresh } = useDailyQuestions();
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleSubmit = async (respuestas: RespuestaItem[]) => {
     await submit({ respuestas });
+    refresh();
   };
+
+  const isCompletedToday = history.some(item => {
+    if (!item.created_at) return false;
+    const itemDate = new Date(item.created_at);
+    const today = new Date();
+    return itemDate.getDate() === today.getDate() &&
+           itemDate.getMonth() === today.getMonth() &&
+           itemDate.getFullYear() === today.getFullYear();
+  });
 
   return (
     <>
@@ -29,14 +39,34 @@ export const Cuestionario = () => {
             </svg>
           </span>
         </div>
-        <p>
-          Queremos estar contigo en cada etapa de tu embarazo y posparto.
-          Comparte cómo te sientes y así podremos acompañarte mejor y cuidar de
-          tu bienestar.
-        </p>
-        <button className={styles.boton} onClick={() => setModalOpen(true)}>
-          Realizar cuestionario
-        </button>
+        {isCompletedToday ? (
+          <>
+            <p style={{ color: '#2e7d32', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px', margin: '12px 0 8px 0' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2e7d32" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>
+              ¡Cuestionario completado hoy!
+            </p>
+            <p style={{ margin: '0 0 15px 0' }}>
+              Gracias por compartir cómo te sientes. Tu equipo de salud está al tanto de tu bienestar. ¡Vuelve mañana para tu siguiente reporte!
+            </p>
+            <button className={styles.boton} disabled style={{ backgroundColor: '#f0f0f0', color: '#999', cursor: 'not-allowed', boxShadow: 'none', border: '1px solid #ddd' }}>
+              Completado
+            </button>
+          </>
+        ) : (
+          <>
+            <p>
+              Queremos estar contigo en cada etapa de tu embarazo y posparto.
+              Comparte cómo te sientes y así podremos acompañarte mejor y cuidar de
+              tu bienestar.
+            </p>
+            <button className={styles.boton} onClick={() => setModalOpen(true)} disabled={loading}>
+              {loading ? 'Cargando...' : 'Realizar cuestionario'}
+            </button>
+          </>
+        )}
       </section>
 
       {modalOpen && (

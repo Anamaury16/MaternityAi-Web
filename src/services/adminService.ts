@@ -864,3 +864,35 @@ export const getGestanteAlertsStaff = async (
   return response.data;
 };
 
+// ─── Solicitudes de Activación de Login ──────────────────────────────────────
+
+export interface SolicitudActivacionResponse {
+  id: string;
+  codigo_gmi: string;
+  pregunta: string;
+  estado: string;
+  created_at: string;
+}
+
+export interface DetailResponse {
+  detail: string;
+}
+
+export const getPendingActivations = async (): Promise<SolicitudActivacionResponse[]> => {
+  const response = await api.get<SolicitudActivacionResponse[]>('/api/v1/admin/solicitudes-activacion');
+  return response.data;
+};
+
+export const resolveActivationRequest = async (
+  id: string,
+  aprobar: boolean
+): Promise<DetailResponse> => {
+  const response = await api.post<DetailResponse>(
+    `/api/v1/admin/solicitudes-activacion/${id}/resolver`,
+    null,
+    { params: { aprobar } }
+  );
+  return response.data;
+};
+
+
