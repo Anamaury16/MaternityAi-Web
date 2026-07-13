@@ -18,6 +18,9 @@
     flex: 1 1 250px;
 
     & h3 {
+      font-weight: 600;
+      font-size: 1rem;
+      color: #2e1020;
       margin: 0px;
     }
   }
@@ -46,6 +49,7 @@
 
     & p {
       margin: 0;
+      display: flex;
     }
 
     & h4 {

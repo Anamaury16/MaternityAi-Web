@@ -1,5 +1,4 @@
 import { useVitals } from '../../../../hooks/clinical/useClinical';
-import { useNewborns } from '../../../../hooks/m4/useM4';
 import styles from './datos.module.css';
 
 interface Props {
@@ -7,34 +6,39 @@ interface Props {
   activeModule?: { codigo: string; nombre: string } | null;
 }
 
-export const Datos = ({ className, activeModule }: Props) => {
+export const Datos = ({ className }: Props) => {
   const { data: vitalsData } = useVitals();
-  const { data: newborns } = useNewborns(activeModule?.codigo === 'M4');
 
-  const ultimoRegistro = vitalsData.length > 0 ? vitalsData[vitalsData.length - 1] : null;
-
-  // Si ya nació (se registró un recién nacido en el puerperio), se muestran los datos reales.
-  // De lo contrario, la información del bebé se muestra vacía/con guiones.
-  const datosBebe = newborns.length > 0
-    ? {
-      tamaño: newborns[0].talla_cm !== null && newborns[0].talla_cm !== undefined ? newborns[0].talla_cm.toString() : '--',
-      gramos: newborns[0].peso_gramos !== null && newborns[0].peso_gramos !== undefined ? newborns[0].peso_gramos.toLocaleString('es-ES') : '--'
-    }
-    : {
-      tamaño: '--',
-      gramos: '--'
-    };
+  const ultimoRegistro =
+    vitalsData.length > 0 ? vitalsData[vitalsData.length - 1] : null;
 
   return (
     <section className={`${styles.container} ${className ?? ''}`}>
       <div className={styles.tarjeta}>
-        <h3>Mis datos</h3>
+        <h3>Información general</h3>
         <div className={styles.mis_datos}>
           <div className={styles.datos}>
             <h4>PESO</h4>
             <p>
               {ultimoRegistro?.peso_kg || '--'} <span>kg</span>
             </p>
+          </div>
+
+          <div className={styles.datos}>
+            <h4>TALLA </h4>
+            <p>
+              {ultimoRegistro?.talla_cm || '--'} <span>cm</span>
+            </p>
+          </div>
+
+          <div className={styles.datos}>
+            <h4>IMC</h4>
+            <p>{ultimoRegistro?.imc || '--'}</p>
+          </div>
+
+          <div className={styles.datos}>
+            <h4>FCF</h4>
+            <p>{ultimoRegistro?.fcf || '--'}</p>
           </div>
 
           <div className={styles.datos}>
@@ -45,28 +49,16 @@ export const Datos = ({ className, activeModule }: Props) => {
           </div>
 
           <div className={styles.datos}>
-            <h4>TALLA </h4>
-            <p>
-              {ultimoRegistro?.talla_cm || '--'} <span>cm</span>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.tarjeta}>
-        <h3>Datos del bebé</h3>
-        <div className={styles.datos_bebe}>
-          <div className={styles.datos}>
-            <h4>TAMAÑO</h4>
-            <p>
-              {datosBebe.tamaño} <span>cm</span>
-            </p>
+            <h4>PRESIÓN DIASTOLICA</h4>
+            <p>{ultimoRegistro?.presion_diastolica || '--'}</p>
           </div>
           <div className={styles.datos}>
-            <h4>GRAMOS</h4>
-            <p>
-              {datosBebe.gramos} {datosBebe.gramos !== '--' && <span>g</span>}
-            </p>
+            <h4>PRESIÓN SISTOLICA</h4>
+            <p>{ultimoRegistro?.presion_sistolica || '--'}</p>
+          </div>
+          <div className={styles.datos}>
+            <h4>FECHA CONTROL</h4>
+            <p>{ultimoRegistro?.fecha_control || '--'}</p>
           </div>
         </div>
       </div>
