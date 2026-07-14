@@ -145,7 +145,7 @@ const NuevaCitaModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fechaHora || !tipoCita) return;
-    await onCreate({ tipo_cita: tipoCita, fecha_hora: new Date(fechaHora).toISOString() });
+    await onCreate({ tipo_cita: tipoCita, fecha_hora: `${fechaHora}:00` });
   };
 
   return (

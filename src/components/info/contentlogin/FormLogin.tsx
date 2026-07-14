@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './ContentLogin.module.css';
-import { loginUser, loginStaff, getSecurityQuestion, type AuthError, requestPasswordReset, confirmPasswordReset, createActivationRequest } from '../../../services/authService';
+import { loginUser, loginStaff, getSecurityQuestion, type AuthError, createActivationRequest } from '../../../services/authService';
 import { useAuth } from '../../../context/AuthContext';
 
 // Mapa rol → ruta de destino
@@ -36,18 +36,7 @@ const EyeOffIcon = () => (
   </svg>
 );
 
-const KeyIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', marginRight: '4px' }}>
-    <path d="M21 2L9 14M21 2v6M21 2h-6M9 14l-4 4v4h4l4-4M9 14L4 9l4-4 5 5" />
-  </svg>
-);
 
-const CheckCircleIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ verticalAlign: 'middle', marginRight: '4px' }}>
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-    <polyline points="22 4 12 14.01 9 11.01" />
-  </svg>
-);
 
 export const FormLogin = () => {
   const navigate = useNavigate();
@@ -55,53 +44,7 @@ export const FormLogin = () => {
   const { login } = useAuth();
 
   const [isStaff, setIsStaff] = useState(location.state?.isStaff || false);
-  // ─── Reset de contraseña ─────────────────────────────────────────────────────
-  const [showReset, setShowReset] = useState(false);
-  const [resetStep, setResetStep] = useState<1 | 2>(1);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetToken, setResetToken] = useState('');
-  const [resetNewPassword, setResetNewPassword] = useState('');
-  const [isLoadingReset, setIsLoadingReset] = useState(false);
 
-  const handleResetRequest = async () => {
-    if (!resetEmail.trim()) {
-      setErrorMessage('Ingresa tu correo electrónico.');
-      return;
-    }
-    setIsLoadingReset(true);
-    setErrorMessage(null);
-    try {
-      await requestPasswordReset({ email: resetEmail });
-      setSuccessMessage('Si el email existe, recibirás instrucciones en tu correo.');
-      setResetStep(2);
-    } catch {
-      setErrorMessage('No se pudo procesar la solicitud. Intenta de nuevo.');
-    } finally {
-      setIsLoadingReset(false);
-    }
-  };
-
-  const handleResetConfirm = async () => {
-    if (!resetToken.trim() || !resetNewPassword.trim()) {
-      setErrorMessage('Completa el token y la nueva contraseña.');
-      return;
-    }
-    setIsLoadingReset(true);
-    setErrorMessage(null);
-    try {
-      await confirmPasswordReset({ token: resetToken, new_password: resetNewPassword });
-      setSuccessMessage('¡Contraseña actualizada! Ya puedes iniciar sesión.');
-      setShowReset(false);
-      setResetStep(1);
-      setResetEmail('');
-      setResetToken('');
-      setResetNewPassword('');
-    } catch {
-      setErrorMessage('Token inválido o expirado. Solicita uno nuevo.');
-    } finally {
-      setIsLoadingReset(false);
-    }
-  };
   // Estados para Gestante
   const [gestanteStep, setGestanteStep] = useState<1 | 2>(1);
   const [securityQuestion, setSecurityQuestion] = useState<string>('');
@@ -122,7 +65,7 @@ export const FormLogin = () => {
 
   const [showAnswer, setShowAnswer] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showResetNewPassword, setShowResetNewPassword] = useState(false);
+
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -142,7 +85,9 @@ export const FormLogin = () => {
 
   const handleSendActivation = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!activationAnswer.trim()) {
+    const trimmedAnswer = activationAnswer.trim();
+    const trimmedGmi = gestanteForm.codigo_gmi.trim();
+    if (!trimmedAnswer) {
       setErrorMessage('Por favor, ingresa una respuesta.');
       return;
     }
@@ -151,9 +96,9 @@ export const FormLogin = () => {
     setSuccessMessage(null);
     try {
       await createActivationRequest({
-        codigo_gmi: gestanteForm.codigo_gmi,
+        codigo_gmi: trimmedGmi,
         pregunta: activationQuestion,
-        respuesta: activationAnswer,
+        respuesta: trimmedAnswer,
       });
       setSuccessMessage('Solicitud de activación enviada correctamente. El administrador la revisará pronto.');
       setShowActivationForm(false);
@@ -169,7 +114,8 @@ export const FormLogin = () => {
 
   const handleNextStep = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!gestanteForm.codigo_gmi.trim()) {
+    const trimmedGmi = gestanteForm.codigo_gmi.trim();
+    if (!trimmedGmi) {
       setErrorMessage('Por favor, ingresa tu Código GMI.');
       return;
     }
@@ -179,7 +125,7 @@ export const FormLogin = () => {
     setSuccessMessage(null);
 
     try {
-      const res = await getSecurityQuestion(gestanteForm.codigo_gmi);
+      const res = await getSecurityQuestion(trimmedGmi);
       setSecurityQuestion(res.pregunta);
       setSuccessMessage('Código validado correctamente. Responde la pregunta para continuar.');
       setGestanteStep(2);
@@ -205,14 +151,19 @@ export const FormLogin = () => {
 
     try {
       if (isStaff) {
-        if (!staffForm.email.trim() || !staffForm.password.trim()) {
+        const trimmedEmail = staffForm.email.trim();
+        const trimmedPassword = staffForm.password.trim();
+        if (!trimmedEmail || !trimmedPassword) {
           setErrorMessage('Por favor, completa todos los campos.');
           setIsLoading(false);
           return;
         }
-        const staffData = await loginStaff(staffForm);
+        const staffData = await loginStaff({
+          email: trimmedEmail,
+          password: trimmedPassword,
+        });
         login(staffData); // actualiza el AuthContext
-        localStorage.setItem('user_name', staffForm.email);
+        localStorage.setItem('user_name', trimmedEmail);
         localStorage.setItem('has_logged_in_before', 'true');
         setSuccessMessage('Sesión iniciada correctamente.');
         // Redirige al dashboard correspondiente al rol
@@ -225,15 +176,20 @@ export const FormLogin = () => {
           return;
         }
 
-        if (!gestanteForm.codigo_gmi.trim() || !gestanteForm.respuesta_seguridad.trim()) {
+        const trimmedGmi = gestanteForm.codigo_gmi.trim();
+        const trimmedRespuesta = gestanteForm.respuesta_seguridad.trim();
+        if (!trimmedGmi || !trimmedRespuesta) {
           setErrorMessage('Por favor, completa tu respuesta.');
           setIsLoading(false);
           return;
         }
-        const gestanteData = await loginUser(gestanteForm);
+        const gestanteData = await loginUser({
+          codigo_gmi: trimmedGmi,
+          respuesta_seguridad: trimmedRespuesta,
+        });
         login(gestanteData); // actualiza el AuthContext
-        localStorage.setItem('user_name', `Gestante ${gestanteForm.codigo_gmi}`);
-        localStorage.setItem('codigo_gmi', gestanteForm.codigo_gmi);
+        localStorage.setItem('user_name', `Gestante ${trimmedGmi}`);
+        localStorage.setItem('codigo_gmi', trimmedGmi);
         localStorage.setItem('has_logged_in_before', 'true');
         setSuccessMessage('Sesión iniciada correctamente.');
         navigate('/main', { replace: true });
@@ -517,149 +473,6 @@ export const FormLogin = () => {
               {isLoading ? 'Iniciando...' : 'Iniciar Sesión'}
             </button>
           )}
-        </div>
-      )}
-      {/* ── Reset de contraseña (solo visible en modo staff) ── */}
-      {isStaff && !showReset && (
-        <button
-          type="button"
-          onClick={() => { setShowReset(true); setErrorMessage(null); setSuccessMessage(null); }}
-          style={{
-            background: 'none', border: 'none', color: '#CA436E',
-            cursor: 'pointer', marginTop: '12px', textDecoration: 'underline',
-            fontSize: '0.85rem', display: 'block', width: '100%', textAlign: 'center',
-          }}
-        >
-          ¿Olvidaste tu contraseña?
-        </button>
-      )}
-
-      {isStaff && showReset && (
-        <div style={{
-          marginTop: '16px', padding: '16px', borderRadius: '10px',
-          border: '1px solid #f0c0cc', background: '#fff8f9',
-        }}>
-          <p style={{ fontWeight: '600', color: '#CA436E', marginBottom: '12px', fontSize: '0.95rem' }}>
-            {resetStep === 1 ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <KeyIcon /> Restablecer contraseña
-              </span>
-            ) : (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                <CheckCircleIcon /> Confirmar nueva contraseña
-              </span>
-            )}
-          </p>
-
-          {resetStep === 1 && (
-            <>
-              <p style={{ fontSize: '0.85rem', color: '#555', marginBottom: '8px' }}>
-                Ingresa tu correo y te enviaremos un token de recuperación.
-              </p>
-              <input
-                type="email"
-                placeholder="correo@hospital.com"
-                value={resetEmail}
-                onChange={(e) => { setResetEmail(e.target.value); setErrorMessage(null); }}
-                disabled={isLoadingReset}
-                style={{
-                  width: '100%', padding: '10px', borderRadius: '8px',
-                  border: '1px solid #ddd', marginBottom: '10px',
-                  fontSize: '0.9rem', boxSizing: 'border-box',
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleResetRequest}
-                disabled={isLoadingReset}
-                style={{
-                  width: '100%', padding: '10px', borderRadius: '8px',
-                  background: '#CA436E', color: 'white', border: 'none',
-                  cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem',
-                }}
-              >
-                {isLoadingReset ? 'Enviando...' : 'Enviar token'}
-              </button>
-            </>
-          )}
-
-          {resetStep === 2 && (
-            <>
-              <p style={{ fontSize: '0.85rem', color: '#555', marginBottom: '8px' }}>
-                Revisa tu correo e ingresa el token recibido junto a tu nueva contraseña.
-              </p>
-              <input
-                type="text"
-                placeholder="Token recibido por email"
-                value={resetToken}
-                onChange={(e) => { setResetToken(e.target.value); setErrorMessage(null); }}
-                disabled={isLoadingReset}
-                style={{
-                  width: '100%', padding: '10px', borderRadius: '8px',
-                  border: '1px solid #ddd', marginBottom: '10px',
-                  fontSize: '0.9rem', boxSizing: 'border-box',
-                }}
-              />
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%', marginBottom: '10px' }}>
-                <input
-                  type={showResetNewPassword ? "text" : "password"}
-                  placeholder="Nueva contraseña"
-                  value={resetNewPassword}
-                  onChange={(e) => { setResetNewPassword(e.target.value); setErrorMessage(null); }}
-                  disabled={isLoadingReset}
-                  style={{
-                    width: '100%', padding: '10px 45px 10px 10px', borderRadius: '8px',
-                    border: '1px solid #ddd', margin: 0,
-                    fontSize: '0.9rem', boxSizing: 'border-box',
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowResetNewPassword(prev => !prev)}
-                  style={{
-                    position: 'absolute',
-                    right: '12px',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#888',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                  }}
-                >
-                  {showResetNewPassword ? <EyeIcon /> : <EyeOffIcon />}
-                </button>
-              </div>
-              <button
-                type="button"
-                onClick={handleResetConfirm}
-                disabled={isLoadingReset}
-                style={{
-                  width: '100%', padding: '10px', borderRadius: '8px',
-                  background: '#CA436E', color: 'white', border: 'none',
-                  cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem',
-                }}
-              >
-                {isLoadingReset ? 'Confirmando...' : 'Confirmar nueva contraseña'}
-              </button>
-            </>
-          )}
-
-          <button
-            type="button"
-            onClick={() => { setShowReset(false); setResetStep(1); setResetEmail(''); setResetToken(''); setResetNewPassword(''); setErrorMessage(null); setSuccessMessage(null); }}
-            style={{
-              background: 'none', border: 'none', color: '#999',
-              cursor: 'pointer', marginTop: '10px', fontSize: '0.8rem',
-              textDecoration: 'underline', display: 'block', width: '100%', textAlign: 'center',
-            }}
-          >
-            Cancelar
-          </button>
         </div>
       )}
     </form>

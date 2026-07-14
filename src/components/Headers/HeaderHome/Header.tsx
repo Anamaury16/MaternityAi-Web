@@ -13,22 +13,19 @@ export const Header = () => {
         <Link to={'/'} className={styles.logo}>
           <DegradedText text={'MaternityAi'} fontSize="20px" />
         </Link>
-        
+
         <div className={styles.desktopLinks}>
-          <Link to={'/'} className={styles.home}>
-            Home
-          </Link>
           <Link to={'/nosotros'} className={styles.nosotros}>
             Nosotros
           </Link>
         </div>
 
         <Link to={'/login'} state={{ isStaff: true }} style={{ textDecoration: 'none' }} className={styles.hideOnMobile}>
-          <GradedButton textbutton={'Acceso Staff'} height="35px" width="130px" />
+          <GradedButton textbutton={'Login'} height="35px" width="100px" />
         </Link>
 
-        <button 
-          className={styles.hamburgerBtn} 
+        <button
+          className={styles.hamburgerBtn}
           onClick={() => setIsMenuOpen(!isMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -51,9 +48,6 @@ export const Header = () => {
 
       {isMenuOpen && (
         <div className={styles.mobileMenu}>
-          <Link to={'/'} className={styles.mobileLink} onClick={() => setIsMenuOpen(false)}>
-            Home
-          </Link>
           <Link to={'/nosotros'} className={styles.mobileLink} onClick={() => setIsMenuOpen(false)}>
             Nosotros
           </Link>

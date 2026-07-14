@@ -9,8 +9,9 @@ interface Props {
 export const Datos = ({ className }: Props) => {
   const { data: vitalsData } = useVitals();
 
+  // La API retorna los registros ordenados por fecha de control DESC (el primero es el más reciente)
   const ultimoRegistro =
-    vitalsData.length > 0 ? vitalsData[vitalsData.length - 1] : null;
+    vitalsData.length > 0 ? vitalsData[0] : null;
 
   return (
     <section className={`${styles.container} ${className ?? ''}`}>
@@ -25,7 +26,7 @@ export const Datos = ({ className }: Props) => {
           </div>
 
           <div className={styles.datos}>
-            <h4>TALLA </h4>
+            <h4>TALLA</h4>
             <p>
               {ultimoRegistro?.talla_cm || '--'} <span>cm</span>
             </p>
@@ -36,10 +37,14 @@ export const Datos = ({ className }: Props) => {
             <p>{ultimoRegistro?.imc || '--'}</p>
           </div>
 
-          <div className={styles.datos}>
-            <h4>FCF</h4>
-            <p>{ultimoRegistro?.fcf || '--'}</p>
-          </div>
+          {ultimoRegistro?.fcf != null && (
+            <div className={styles.datos}>
+              <h4>FCF</h4>
+              <p>
+                {ultimoRegistro.fcf} <span>lpm</span>
+              </p>
+            </div>
+          )}
 
           <div className={styles.datos}>
             <h4>ALTURA UTERINA</h4>
@@ -48,17 +53,29 @@ export const Datos = ({ className }: Props) => {
             </p>
           </div>
 
-          <div className={styles.datos}>
-            <h4>PRESIÓN DIASTOLICA</h4>
-            <p>{ultimoRegistro?.presion_diastolica || '--'}</p>
-          </div>
-          <div className={styles.datos}>
-            <h4>PRESIÓN SISTOLICA</h4>
-            <p>{ultimoRegistro?.presion_sistolica || '--'}</p>
-          </div>
+          {ultimoRegistro?.presion_diastolica != null && (
+            <div className={styles.datos}>
+              <h4>PRESIÓN DIASTÓLICA</h4>
+              <p>
+                {ultimoRegistro.presion_diastolica} <span>mmHg</span>
+              </p>
+            </div>
+          )}
+
+          {ultimoRegistro?.presion_sistolica != null && (
+            <div className={styles.datos}>
+              <h4>PRESIÓN SISTÓLICA</h4>
+              <p>
+                {ultimoRegistro.presion_sistolica} <span>mmHg</span>
+              </p>
+            </div>
+          )}
+
           <div className={styles.datos}>
             <h4>FECHA CONTROL</h4>
-            <p>{ultimoRegistro?.fecha_control || '--'}</p>
+            <p className={styles.fechaValue}>
+              {ultimoRegistro?.fecha_control || '--'}
+            </p>
           </div>
         </div>
       </div>
