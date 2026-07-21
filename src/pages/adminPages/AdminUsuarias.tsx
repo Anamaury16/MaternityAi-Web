@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { HeaderActividad } from '../../components/Headers/HeaderActividad/HeaderActividad';
 import styles from '../../components/admin/AdminUsuarias.module.css';
 import modalStyles from './StaffModal.module.css';
@@ -45,6 +45,22 @@ import {
   type PathologicalHistory as IPathologicalHistory,
 } from '../../services/m0Service';
 import { calculateCurrentWeeks, getFaseOrTrimestre } from '../../utils/gestationalAgeUtils';
+import { downloadBlob, buildExportFilename } from '../../utils/exportUtils';
+
+// ─── Toast interno ────────────────────────────────────────────────────────────
+interface InternalToast {
+  id: number;
+  message: string;
+  type: 'success' | 'error' | 'info';
+}
+let _toastId = 0;
+
+// ─── Modal de confirmación custom ────────────────────────────────────────────
+interface ConfirmState {
+  open: boolean;
+  message: string;
+  onConfirm: () => void;
+}
 
 const EyeIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -389,8 +405,9 @@ export const AdminUsuarias = () => {
       const updated = await updateObstetricFormula(formulaForm);
       setFormula(updated);
       setEditingFormula(false);
+      addToast("Fórmula obstétrica actualizada correctamente.", "success");
     } catch (error: any) {
-      alert(error.response?.data?.detail || "Error al actualizar la fórmula obstétrica");
+      addToast(error.response?.data?.detail || "Error al actualizar la fórmula obstétrica", "error");
     }
   };
 
@@ -406,6 +423,7 @@ export const AdminUsuarias = () => {
           tratamiento_actual: antecedenteForm.tratamiento_actual || null
         });
         setAntecedentes(prev => [...prev, nuevo]);
+        addToast("Antecedente patológico creado correctamente.", "success");
       } else if (editingAntecedenteId) {
         const modificado = await updatePathologicalHistory(editingAntecedenteId, {
           tipo_condicion: antecedenteForm.tipo_condicion,
@@ -415,21 +433,24 @@ export const AdminUsuarias = () => {
           tratamiento_actual: antecedenteForm.tratamiento_actual || null
         });
         setAntecedentes(prev => prev.map(a => a.id === editingAntecedenteId ? modificado : a));
+        addToast("Antecedente patológico actualizado correctamente.", "success");
       }
       setEditingAntecedenteId(null);
     } catch (error: any) {
-      alert(error.response?.data?.detail || "Error al guardar el antecedente patológico");
+      addToast(error.response?.data?.detail || "Error al guardar el antecedente patológico", "error");
     }
   };
 
-  const handleDeleteAntecedente = async (id: string) => {
-    if (!window.confirm("¿Está seguro de que desea eliminar este antecedente patológico?")) return;
-    try {
-      await deletePathologicalHistory(id);
-      setAntecedentes(prev => prev.filter(a => a.id !== id));
-    } catch (error: any) {
-      alert(error.response?.data?.detail || "Error al eliminar el antecedente");
-    }
+  const handleDeleteAntecedente = (id: string) => {
+    showConfirm("¿Está seguro de que desea eliminar este antecedente patológico?", async () => {
+      try {
+        await deletePathologicalHistory(id);
+        setAntecedentes(prev => prev.filter(a => a.id !== id));
+        addToast("Antecedente eliminado correctamente.", "success");
+      } catch (error: any) {
+        addToast(error.response?.data?.detail || "Error al eliminar el antecedente", "error");
+      }
+    });
   };
 
   // Controla qué modal está abierto: 'gestante' | 'staff' | null
@@ -452,6 +473,21 @@ export const AdminUsuarias = () => {
   const [emergenciaLoading, setEmergenciaLoading] = useState(false);
   const [emergenciaError, setEmergenciaError] = useState<string | null>(null);
   const [emergenciaSuccess, setEmergenciaSuccess] = useState(false);
+  // ─── Toast & Confirm internos ───────────────────────────────────────────────
+  const [toasts, setToasts] = useState<InternalToast[]>([]);
+  const [confirmState, setConfirmState] = useState<ConfirmState>({ open: false, message: '', onConfirm: () => {} });
+
+  const addToast = useCallback((message: string, type: InternalToast['type'] = 'info') => {
+    const id = ++_toastId;
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
+  }, []);
+
+  const showConfirm = useCallback((message: string, onConfirm: () => void) => {
+    setConfirmState({ open: true, message, onConfirm });
+  }, []);
+
+  const [loadingStaff, setLoadingStaff] = useState(false);
   const [staffUsers, setStaffUsers] = useState<any[]>([]);
   const [selStaff, setSelStaff] = useState<any>(null);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -515,9 +551,10 @@ export const AdminUsuarias = () => {
         }
       }).catch(console.error);
     } else if (activeList === 'staff' && isAdmin) {
+      setLoadingStaff(true);
       getStaffUsers().then(data => {
         setStaffUsers(data);
-      }).catch(console.error);
+      }).catch(console.error).finally(() => setLoadingStaff(false));
     }
   }, [activeList, isAdmin]);
 
@@ -588,7 +625,10 @@ export const AdminUsuarias = () => {
     setIsResolvingId(id);
     try {
       await resolveActivationRequest(id, aprobar);
-      alert(aprobar ? "Solicitud aprobada con éxito. Login activado." : "Solicitud rechazada.");
+      addToast(
+        aprobar ? '✅ Solicitud aprobada. Login activado.' : '✅ Solicitud rechazada.',
+        aprobar ? 'success' : 'info'
+      );
       // Actualizar mapa
       setLoginStatusMap(prev => ({ ...prev, [code]: aprobar }));
       // Refrescar lista de solicitudes
@@ -596,7 +636,7 @@ export const AdminUsuarias = () => {
       // Refrescar listado de gestantes
       getGestantes().then(setGestantes).catch(console.error);
     } catch (err: any) {
-      alert("Error al resolver la solicitud: " + (err.response?.data?.detail || err.message));
+      addToast('Error al resolver la solicitud: ' + (err.response?.data?.detail || err.message), 'error');
     } finally {
       setIsResolvingId(null);
     }
@@ -657,17 +697,10 @@ export const AdminUsuarias = () => {
     setExporting(true);
     try {
       const blob = await exportGestantes(format);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `gestantes_${new Date().toISOString().split('T')[0]}.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      downloadBlob(blob, buildExportFilename('gestantes', format));
     } catch (err: any) {
       console.error(err);
-      alert('Error al exportar datos de gestantes.');
+      addToast('Error al exportar datos de gestantes.', 'error');
     } finally {
       setExporting(false);
     }
@@ -677,17 +710,10 @@ export const AdminUsuarias = () => {
     setExporting(true);
     try {
       const blob = await exportIndicators('xlsx');
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `indicadores_${new Date().toISOString().split('T')[0]}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      downloadBlob(blob, buildExportFilename('indicadores', 'xlsx'));
     } catch (err: any) {
       console.error(err);
-      alert('Error al exportar indicadores.');
+      addToast('Error al exportar indicadores.', 'error');
     } finally {
       setExporting(false);
     }
@@ -763,6 +789,59 @@ export const AdminUsuarias = () => {
 
   return (
     <div className={styles.root}>
+
+      {/* ── Toast Layer ── */}
+      <div style={{
+        position: 'fixed', top: '20px', right: '20px', zIndex: 99999,
+        display: 'flex', flexDirection: 'column', gap: '8px', pointerEvents: 'none'
+      }}>
+        {toasts.map(t => (
+          <div key={t.id} style={{
+            padding: '12px 16px',
+            borderRadius: '10px',
+            fontSize: '13px',
+            fontWeight: 600,
+            color: 'white',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            background: t.type === 'success' ? '#16a34a' : t.type === 'error' ? '#dc2626' : '#CA436E',
+            animation: 'fadeInRight 0.3s ease-out',
+            pointerEvents: 'auto',
+            minWidth: '240px',
+          }}>
+            {t.message}
+          </div>
+        ))}
+      </div>
+
+      {/* ── Modal de confirmación custom ── */}
+      <Modal
+        isOpen={confirmState.open}
+        onClose={() => setConfirmState(s => ({ ...s, open: false }))}
+        title="Confirmar acción"
+      >
+        <div style={{ padding: '10px 0' }}>
+          <p style={{ fontSize: '14px', color: '#333', marginBottom: '20px', lineHeight: '1.5' }}>
+            {confirmState.message}
+          </p>
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+            <button
+              onClick={() => setConfirmState(s => ({ ...s, open: false }))}
+              style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #d1d5db', background: 'white', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={() => {
+                confirmState.onConfirm();
+                setConfirmState(s => ({ ...s, open: false }));
+              }}
+              style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#CA436E', color: 'white', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+            >
+              Confirmar
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/*tabs*/}
       <HeaderActividad rol="medico" tabActivo="Usuarias" />
@@ -931,6 +1010,28 @@ export const AdminUsuarias = () => {
                   </div>
                 </div>
               )})
+            ) : loadingStaff ? (
+              /* Skeleton de carga para lista staff */
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} style={{ padding: '10px 12px', borderRadius: '12px', border: '1px solid #f0f0f0', marginBottom: '2px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <div style={{ height: '12px', width: '60%', background: '#f0f0f0', borderRadius: '6px', animation: 'pulse 1.5s infinite' }} />
+                    <div style={{ height: '12px', width: '16%', background: '#f0f0f0', borderRadius: '6px' }} />
+                  </div>
+                  <div style={{ height: '10px', width: '80%', background: '#f5f5f5', borderRadius: '6px', marginBottom: '4px' }} />
+                  <div style={{ height: '10px', width: '30%', background: '#f5f5f5', borderRadius: '6px' }} />
+                </div>
+              ))
+            ) : staffFiltrados.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '30px 16px', color: '#bbb' }}>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ddd" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '8px' }}>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+                <p style={{ fontSize: '12px', margin: 0 }}>No hay usuarios de staff</p>
+              </div>
             ) : (
               staffFiltrados.map((u, i) => (
                 <div
@@ -999,7 +1100,7 @@ export const AdminUsuarias = () => {
           <div className={`${styles.panel} ${styles.panelScroll}`}>
             <h1 className={styles.nombrePaciente}>{selPaciente}</h1>
             <p className={styles.diagnostico}>
-              EMBARAZO DE ALTO RIESGO SIN OTRA ESPECIFICACION
+              {gestanteSeleccionada?.diagnostico_ingreso?.toUpperCase() || 'EMBARAZO DE ALTO RIESGO'}
             </p>
 
             {/* Aviso de Login Inactivo / Solicitud Pendiente */}
@@ -1095,9 +1196,11 @@ export const AdminUsuarias = () => {
               &nbsp;<span className={styles.sobrepeso} style={{ color: getRiesgoColor(gestanteSeleccionada?.nivel_riesgo) }}>{gestanteSeleccionada?.nivel_riesgo?.toUpperCase() || 'N/A'}</span>
             </p>
 
-            <p className={styles.ipsText}>
-              IPS DE ATENCION <strong>Ese hospital de Puerto Colombia</strong>
-            </p>
+            {gestanteSeleccionada?.ips_atencion && (
+              <p className={styles.ipsText}>
+                IPS DE ATENCIÓN <strong>{gestanteSeleccionada.ips_atencion}</strong>
+              </p>
+            )}
             <button className={styles.emergenciaBtn} onClick={abrirEmergencia}>
               Generar llamada de emergencia
             </button>
@@ -1562,7 +1665,39 @@ export const AdminUsuarias = () => {
             </div>
           </div>
         ) : (
-          <div className={styles.panel} style={{ background: 'transparent', boxShadow: 'none' }}></div>
+          <div className={styles.panel}>
+            <h2 className={styles.panelTitle} style={{ marginBottom: '16px' }}>Resumen del Equipo</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+              <div style={{ background: '#f9f9f9', borderRadius: '12px', padding: '14px', textAlign: 'center', border: '1px solid #f0f0f0' }}>
+                <div style={{ fontSize: '26px', fontWeight: 700, color: '#CA436E' }}>{staffUsers.length}</div>
+                <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>Total Staff</div>
+              </div>
+              <div style={{ background: '#f0fdf4', borderRadius: '12px', padding: '14px', textAlign: 'center', border: '1px solid #bbf7d0' }}>
+                <div style={{ fontSize: '26px', fontWeight: 700, color: '#16a34a' }}>{staffUsers.filter(u => u.activo).length}</div>
+                <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>Activos</div>
+              </div>
+            </div>
+            <h3 style={{ fontSize: '13px', fontWeight: 600, color: '#555', marginBottom: '10px' }}>Por Rol</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {['admin', 'clinico', 'hospital'].map(rol => {
+                const count = staffUsers.filter(u => getRolNombre(u.rol_id).toLowerCase() === rol).length;
+                if (count === 0) return null;
+                return (
+                  <div key={rol} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#f9f9f9', borderRadius: '8px', border: '1px solid #f0f0f0' }}>
+                    <span style={{ fontSize: '12px', color: '#444', fontWeight: 500, textTransform: 'capitalize' }}>
+                      {rol === 'admin' ? '🛡️ Administrador' : rol === 'clinico' ? '🩺 Clínico' : '🏥 Hospital'}
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#CA436E' }}>{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+            {!selStaff && staffUsers.length > 0 && (
+              <p style={{ fontSize: '12px', color: '#bbb', textAlign: 'center', marginTop: '20px' }}>
+                Selecciona un usuario de la lista para ver sus detalles
+              </p>
+            )}
+          </div>
         )}
 
       </div>

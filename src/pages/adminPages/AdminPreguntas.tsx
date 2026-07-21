@@ -378,6 +378,20 @@ export const AdminPreguntas = () => {
           <h2 className={styles.panelTitle}>Catálogo de Preguntas</h2>
           <p className={styles.secDesc}>Administra las preguntas clínicas asignadas a cada etapa.</p>
 
+          {/* Aviso: solo se muestran preguntas activas */}
+          <div style={{
+            display: 'flex', alignItems: 'flex-start', gap: '8px',
+            padding: '10px 12px', background: '#f0f9ff', border: '1px solid #bae6fd',
+            borderRadius: '8px', marginBottom: '12px'
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '1px', flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <p style={{ margin: 0, fontSize: '11px', color: '#0369a1', lineHeight: '1.5' }}>
+              Mostrando <strong>{preguntas.length} preguntas activas</strong>. Las preguntas desactivadas no se listan aquí, pero siguen en el sistema. Puedes desactivar una pregunta desde el modal de edición.
+            </p>
+          </div>
+
           <table className={styles.tabla}>
             <thead>
               <tr>

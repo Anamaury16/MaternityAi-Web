@@ -10,6 +10,7 @@ import {
   type CargaExcelResponse,
   type CargaExcelDetalleResponse,
 } from '../../services/adminService';
+import { downloadBlob, buildExportFilename } from '../../utils/exportUtils';
 
 // ─── SVG Icons ───
 const SvgDownload = ({ size = 16, className = '' }: { size?: number; className?: string }) => (
@@ -57,22 +58,16 @@ export const AdminCargas = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [loadingCargas, setLoadingCargas] = useState(true);
 
   const handleExportData = async (format: 'xlsx' | 'csv') => {
     setExporting(true);
     try {
       const blob = await exportGestantes(format);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `gestantes_${new Date().toISOString().split('T')[0]}.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      downloadBlob(blob, buildExportFilename('gestantes', format));
     } catch (err: any) {
       console.error(err);
-      alert('Error al exportar datos de gestantes.');
+      setErrorMsg('Error al exportar datos de gestantes.');
     } finally {
       setExporting(false);
     }
@@ -82,28 +77,24 @@ export const AdminCargas = () => {
     setExporting(true);
     try {
       const blob = await exportIndicators('xlsx');
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `indicadores_${new Date().toISOString().split('T')[0]}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      downloadBlob(blob, buildExportFilename('indicadores', 'xlsx'));
     } catch (err: any) {
       console.error(err);
-      alert('Error al exportar indicadores.');
+      setErrorMsg('Error al exportar indicadores.');
     } finally {
       setExporting(false);
     }
   };
 
   const fetchCargas = async () => {
+    setLoadingCargas(true);
     try {
       const data = await getHistorialCargas();
       setCargas(data);
     } catch (err) {
       console.error('Error fetching historial cargas:', err);
+    } finally {
+      setLoadingCargas(false);
     }
   };
 
@@ -269,21 +260,44 @@ export const AdminCargas = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {cargas.map((carga) => (
-                    <tr
-                      key={carga.id}
-                      className={`${styles.row} ${selectedCarga?.id === carga.id ? styles.rowSelected : ''}`}
-                      onClick={() => handleSelectCarga(carga.id)}
-                    >
-                      <td>{carga.archivo_nombre}</td>
-                      <td>{carga.created_at ? new Date(carga.created_at).toLocaleDateString() : '-'}</td>
-                      <td>
-                        <span className={`${styles.badge} ${carga.estado === 'completado' ? styles.completado : styles.error}`}>
-                          {carga.estado}
-                        </span>
+                  {loadingCargas ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <tr key={i}>
+                        <td><div style={{ height: '12px', background: '#f0f0f0', borderRadius: '6px', width: '80%' }} /></td>
+                        <td><div style={{ height: '12px', background: '#f0f0f0', borderRadius: '6px', width: '60%' }} /></td>
+                        <td><div style={{ height: '12px', background: '#f0f0f0', borderRadius: '6px', width: '50%' }} /></td>
+                      </tr>
+                    ))
+                  ) : cargas.length === 0 ? (
+                    <tr>
+                      <td colSpan={3}>
+                        <div style={{ textAlign: 'center', padding: '30px 16px', color: '#bbb' }}>
+                          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ddd" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '8px', display: 'block', margin: '0 auto 8px' }}>
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                          </svg>
+                          <p style={{ fontSize: '12px', margin: 0 }}>No hay cargas registradas.</p>
+                          <p style={{ fontSize: '11px', color: '#ccc', margin: '4px 0 0' }}>Sube un archivo Excel para comenzar.</p>
+                        </div>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    cargas.map((carga) => (
+                      <tr
+                        key={carga.id}
+                        className={`${styles.row} ${selectedCarga?.id === carga.id ? styles.rowSelected : ''}`}
+                        onClick={() => handleSelectCarga(carga.id)}
+                      >
+                        <td>{carga.archivo_nombre}</td>
+                        <td>{carga.created_at ? new Date(carga.created_at).toLocaleDateString() : '-'}</td>
+                        <td>
+                          <span className={`${styles.badge} ${carga.estado === 'completado' ? styles.completado : styles.error}`}>
+                            {carga.estado}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

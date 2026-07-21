@@ -154,6 +154,9 @@ export interface GestanteResponse {
   ultima_prioridad_alerta_id?: number | null;
   nivel_riesgo?: string | null;
   clasificacion_ia?: string | null;
+  // Campos adicionales retornados por el backend
+  ips_atencion?: string | null;
+  diagnostico_ingreso?: string | null;
 }
 
 export const getGestantes = async (

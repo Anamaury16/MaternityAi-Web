@@ -24,6 +24,10 @@ const parseDateAsUtc = (dateStr: string | undefined | null): Date => {
 };
 
 export const ContentAi = () => {
+  const userKey = localStorage.getItem('codigo_gmi') || localStorage.getItem('user_name') || 'default';
+  const SESSIONS_KEY = `maternity_chat_sessions_${userKey}`;
+  const DELETED_KEY = `maternity_deleted_session_ids_${userKey}`;
+
   const [activeTopic, setActiveTopic] = useState(0);
   const {
     messages,
@@ -45,21 +49,25 @@ export const ContentAi = () => {
 
   // 1. Cargar datos iniciales de localStorage al montar
   useEffect(() => {
-    const savedSessions = localStorage.getItem('maternity_chat_sessions');
-    const savedDeleted = localStorage.getItem('maternity_deleted_session_ids');
+    const savedSessions = localStorage.getItem(SESSIONS_KEY);
+    const savedDeleted = localStorage.getItem(DELETED_KEY);
     if (savedSessions) {
       setSessions(JSON.parse(savedSessions));
+    } else {
+      setSessions([]);
     }
     if (savedDeleted) {
       setDeletedSessionIds(JSON.parse(savedDeleted));
+    } else {
+      setDeletedSessionIds([]);
     }
-  }, []);
+  }, [SESSIONS_KEY, DELETED_KEY]);
 
   // 2. Auto-inicializar sesiones pasadas si existen mensajes en la BD pero no sesiones locales
   useEffect(() => {
     if (isLoading || messages.length === 0) return;
 
-    const savedSessionsStr = localStorage.getItem('maternity_chat_sessions');
+    const savedSessionsStr = localStorage.getItem(SESSIONS_KEY);
     let currentSessions: ChatSession[] = savedSessionsStr ? JSON.parse(savedSessionsStr) : [];
     let updated = false;
 
@@ -82,9 +90,9 @@ export const ContentAi = () => {
 
     if (updated) {
       setSessions(currentSessions);
-      localStorage.setItem('maternity_chat_sessions', JSON.stringify(currentSessions));
+      localStorage.setItem(SESSIONS_KEY, JSON.stringify(currentSessions));
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, SESSIONS_KEY]);
 
   // 3. Crear sesión inicial para temas sin sesiones activas, y auto-seleccionar la última sesión activa
   useEffect(() => {
@@ -103,7 +111,7 @@ export const ContentAi = () => {
       };
       const updated = [...sessions, newSession];
       setSessions(updated);
-      localStorage.setItem('maternity_chat_sessions', JSON.stringify(updated));
+      localStorage.setItem(SESSIONS_KEY, JSON.stringify(updated));
       setActiveSessionId(newSessionId);
     } else if (
       topicSessions.length > 0 &&
@@ -112,7 +120,7 @@ export const ContentAi = () => {
     ) {
       setActiveSessionId(topicSessions[topicSessions.length - 1].id);
     }
-  }, [activeTopic, sessions, activeSessionId, isLoading, deletedSessionIds, activeTopicTag]);
+  }, [activeTopic, sessions, activeSessionId, isLoading, deletedSessionIds, activeTopicTag, SESSIONS_KEY]);
 
   // Obtener la sesión activa para el tema actual
   const activeSession =
@@ -187,7 +195,7 @@ export const ContentAi = () => {
         return s;
       });
       setSessions(updatedSessions);
-      localStorage.setItem('maternity_chat_sessions', JSON.stringify(updatedSessions));
+      localStorage.setItem(SESSIONS_KEY, JSON.stringify(updatedSessions));
     }
   };
 
@@ -202,14 +210,14 @@ export const ContentAi = () => {
     };
     const updated = [...sessions, newSession];
     setSessions(updated);
-    localStorage.setItem('maternity_chat_sessions', JSON.stringify(updated));
+    localStorage.setItem(SESSIONS_KEY, JSON.stringify(updated));
     setActiveSessionId(newSessionId);
   };
 
   const handleDeleteSession = (sessionId: string) => {
     const updatedDeleted = [...deletedSessionIds, sessionId];
     setDeletedSessionIds(updatedDeleted);
-    localStorage.setItem('maternity_deleted_session_ids', JSON.stringify(updatedDeleted));
+    localStorage.setItem(DELETED_KEY, JSON.stringify(updatedDeleted));
 
     if (activeSessionId === sessionId) {
       setActiveSessionId(null);
@@ -221,7 +229,7 @@ export const ContentAi = () => {
     if (success) {
       const updated = sessions.filter((s) => s.topic !== activeTopicTag);
       setSessions(updated);
-      localStorage.setItem('maternity_chat_sessions', JSON.stringify(updated));
+      localStorage.setItem(SESSIONS_KEY, JSON.stringify(updated));
       setActiveSessionId(null);
     }
     return success;

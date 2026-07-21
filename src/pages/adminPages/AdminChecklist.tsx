@@ -69,6 +69,19 @@ export const AdminChecklist = () => {
   // Form state
   const [form, setForm] = useState<ChecklistItemCreate>(emptyForm());
 
+  // Filters
+  const [searchText, setSearchText] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+
+  const filteredItems = items.filter(item => {
+    const matchText = item.texto.toLowerCase().includes(searchText.toLowerCase());
+    const matchStatus =
+      filterStatus === 'all' ? true :
+      filterStatus === 'active' ? item.activo :
+      !item.activo;
+    return matchText && matchStatus;
+  });
+
   const getWeekOptions = () => {
     if (form.modulo_id === null) {
       return Array.from({ length: 42 }, (_, i) => i + 1);
@@ -235,7 +248,43 @@ export const AdminChecklist = () => {
           </button>
         </div>
 
-        {/* Data table */}
+        {/* Search & Filter Bar */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '14px', alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input
+              type="text"
+              placeholder="Buscar por texto..."
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              style={{
+                width: '100%', padding: '7px 32px 7px 12px',
+                borderRadius: '20px', border: '1px solid #e0e0e0',
+                background: '#f9f9f9', fontSize: '12px', boxSizing: 'border-box',
+                outline: 'none', fontFamily: 'inherit'
+              }}
+            />
+            <svg style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)' }}
+              width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#CA436E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+            </svg>
+          </div>
+          <select
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value as any)}
+            style={{
+              padding: '7px 12px', borderRadius: '20px', border: '1px solid #e0e0e0',
+              background: '#f9f9f9', fontSize: '12px', outline: 'none',
+              fontFamily: 'inherit', cursor: 'pointer', color: '#555'
+            }}
+          >
+            <option value="all">Todos</option>
+            <option value="active">Solo activos</option>
+            <option value="inactive">Solo inactivos</option>
+          </select>
+          <span style={{ fontSize: '12px', color: '#999', whiteSpace: 'nowrap' }}>
+            {filteredItems.length} resultado{filteredItems.length !== 1 ? 's' : ''}
+          </span>
+        </div>
         <div className={styles.panel}>
           <div className={styles.tableWrap}>
             <table className={styles.table}>
@@ -264,7 +313,7 @@ export const AdminChecklist = () => {
                       <td><div className={styles.skeletonBar} style={{ width: 54 }} /></td>
                     </tr>
                   ))
-                ) : items.length === 0 ? (
+                ) : filteredItems.length === 0 ? (
                   <tr>
                     <td colSpan={7}>
                       <div className={styles.emptyState}>
@@ -273,15 +322,15 @@ export const AdminChecklist = () => {
                           <path d="M9 11l3 3L22 4" />
                           <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
                         </svg>
-                        <p>No hay ítems de checklist configurados.</p>
+                        <p>{searchText || filterStatus !== 'all' ? 'Sin resultados para los filtros aplicados.' : 'No hay ítems de checklist configurados.'}</p>
                         <p style={{ fontSize: 12, color: '#ccc' }}>
-                          Haz clic en "Nuevo Ítem" para agregar el primero.
+                          {searchText || filterStatus !== 'all' ? 'Prueba cambiando los filtros.' : 'Haz clic en "Nuevo Ítem" para agregar el primero.'}
                         </p>
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  items.map(item => (
+                  filteredItems.map(item => (
                     <tr key={item.id}>
                       {/* ID */}
                       <td>

@@ -25,6 +25,15 @@ export const AdminOBA = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // ─── Toast notifications ───────────────────────────────────────────────
+  const [obaToasts, setObaToasts] = useState<Array<{ id: number; msg: string; type: 'success' | 'error' }>>([]);
+  let _obaToastId = 0;
+  const addObaToast = (msg: string, type: 'success' | 'error' = 'success') => {
+    const id = ++_obaToastId;
+    setObaToasts(prev => [...prev, { id, msg, type }]);
+    setTimeout(() => setObaToasts(prev => prev.filter(t => t.id !== id)), 3500);
+  };
+
   // Modales
   const [modalCatOpen, setModalCatOpen] = useState(false);
   const [modalContOpen, setModalContOpen] = useState(false);
@@ -124,14 +133,17 @@ export const AdminOBA = () => {
 
       if (editingCategory) {
         await updateEducationalCategory(editingCategory.id, data);
+        addObaToast('✅ Categoría actualizada correctamente.');
       } else {
         await createEducationalCategory(data);
+        addObaToast('✅ Categoría creada correctamente.');
       }
       setModalCatOpen(false);
       cargarDatos();
     } catch (err) {
       console.error(err);
       setError('Error al guardar la categoría.');
+      addObaToast('Error al guardar la categoría.', 'error');
     }
   };
 
@@ -193,14 +205,17 @@ export const AdminOBA = () => {
 
       if (editingContent) {
         await updateEducationalContent(editingContent.id, data);
+        addObaToast('✅ Contenido actualizado correctamente.');
       } else {
         await createEducationalContent(data);
+        addObaToast('✅ Contenido creado correctamente.');
       }
       setModalContOpen(false);
       cargarDatos();
     } catch (err) {
       console.error(err);
       setError('Error al guardar el contenido.');
+      addObaToast('Error al guardar el contenido.', 'error');
     }
   };
 
@@ -208,10 +223,12 @@ export const AdminOBA = () => {
   const handleToggleStatus = async (c: EducationalContentResponse) => {
     try {
       await updateEducationalContentStatus(c.id, !c.activo);
+      addObaToast(c.activo ? 'Contenido desactivado.' : '✅ Contenido activado.');
       cargarDatos();
     } catch (err) {
       console.error(err);
       setError('Error al cambiar el estado del contenido.');
+      addObaToast('Error al cambiar el estado.', 'error');
     }
   };
 
@@ -244,6 +261,21 @@ export const AdminOBA = () => {
 
   return (
     <div className={styles.root}>
+      {/* Toast Layer */}
+      <div style={{ position: 'fixed', top: '20px', right: '20px', zIndex: 99999, display: 'flex', flexDirection: 'column', gap: '8px', pointerEvents: 'none' }}>
+        {obaToasts.map(t => (
+          <div key={t.id} style={{
+            padding: '11px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, color: 'white',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            background: t.type === 'success' ? '#16a34a' : '#dc2626',
+            minWidth: '220px', pointerEvents: 'auto',
+            animation: 'slideDownIn 0.3s ease-out'
+          }}>
+            {t.msg}
+          </div>
+        ))}
+      </div>
+
       {/*header con tabs*/}
       <HeaderActividad rol="medico" tabActivo="OVA" />
 

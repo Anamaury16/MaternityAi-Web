@@ -92,21 +92,21 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
         {/* Links específicos de Admin */}
         {activeRole === 'admin' && (
           <>
-            <Link to={'/admin/usuarias'} className={styles.link}>Usuarias</Link>
-            <Link to={'/admin/preguntas'} className={styles.link}>Preguntas</Link>
-            <Link to={'/admin/cargas'} className={styles.link}>Cargas</Link>
-            <Link to={'/admin/checklist'} className={styles.link}>Checklist</Link>
-            <Link to={'/admin/ia'} className={styles.link}>IA</Link>
+            <Link to={'/admin/usuarias'} className={getTabClass('/admin/usuarias')}>Usuarias</Link>
+            <Link to={'/admin/preguntas'} className={getTabClass('/admin/preguntas')}>Preguntas</Link>
+            <Link to={'/admin/cargas'} className={getTabClass('/admin/cargas')}>Cargas</Link>
+            <Link to={'/admin/checklist'} className={getTabClass('/admin/checklist')}>Checklist</Link>
+            <Link to={'/admin/ia'} className={getTabClass('/admin/ia')}>IA</Link>
           </>
         )}
 
         {/* Links específicos de Médico / Clínico */}
         {activeRole === 'medico' && (
           <>
-            <Link to={'/clinico/usuarias'} className={styles.link}>Usuarias</Link>
-            <Link to={'/clinico/oba'} className={styles.link}>OVA</Link>
-            <Link to={'/clinico/citas'} className={styles.link}>Citas</Link>
-            <Link to={'/clinico/ia'} className={styles.link}>IA</Link>
+            <Link to={'/clinico/usuarias'} className={getTabClass('/clinico/usuarias')}>Usuarias</Link>
+            <Link to={'/clinico/oba'} className={getTabClass('/clinico/oba')}>OVA</Link>
+            <Link to={'/clinico/citas'} className={getTabClass('/clinico/citas')}>Citas</Link>
+            <Link to={'/clinico/ia'} className={getTabClass('/clinico/ia')}>IA</Link>
           </>
         )}
 
@@ -121,7 +121,10 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
         {activeRole === 'paciente' && (
           <>
             <button 
-              onClick={() => setIsProgressModalOpen(true)}
+              onClick={() => {
+                setAlertsOpen(false);
+                setIsProgressModalOpen(true);
+              }}
               className={styles.bellBtn}
               style={{ marginRight: '5px' }}
               aria-label="Mi Progreso"
@@ -137,7 +140,10 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
               </svg>
             </button>
             <button 
-              onClick={() => setIsRiskModalOpen(true)}
+              onClick={() => {
+                setAlertsOpen(false);
+                setIsRiskModalOpen(true);
+              }}
               className={styles.bellBtn}
               style={{ marginRight: '5px' }}
               aria-label="Semáforo de Riesgo IA"
@@ -151,7 +157,10 @@ export const HeaderActividad = ({ rol }: HeaderActividadProps) => {
               </svg>
             </button>
             <button 
-              onClick={() => setIsBabyModalOpen(true)}
+              onClick={() => {
+                setAlertsOpen(false);
+                setIsBabyModalOpen(true);
+              }}
               className={styles.bellBtn}
               style={{ marginRight: '5px' }}
               aria-label="Mi Bebé / Parto"
