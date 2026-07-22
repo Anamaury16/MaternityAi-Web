@@ -254,13 +254,14 @@ const MOCK_AUTOEVALUACIONES: AutoevaluacionDetalleResponse[] = [
 
 // ---- Contenidos y Categorías ----
 
-// GET /content
-export const getContentByModule = async (): Promise<ContenidoEducativoResponse[]> => {
+// GET /content?modulo_id={modulo_id}
+export const getContentByModule = async (modulo_id?: number): Promise<ContenidoEducativoResponse[]> => {
   if (USE_MOCKS) {
     await mockDelay();
     return MOCK_CONTENIDOS;
   }
-  const response = await api.get('/api/v1/m5/content');
+  const params = modulo_id !== undefined ? { modulo_id } : {};
+  const response = await api.get('/api/v1/m5/content', { params });
   return response.data ?? [];
 };
 

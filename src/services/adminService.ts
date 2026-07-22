@@ -34,6 +34,14 @@ export const getCatalogos = async (): Promise<Catalogos> => {
   };
 };
 
+// Obtener módulos clínicos con sus IDs REALES de la BD (para el formulario del OVA)
+export const getModulosClinicos = async (): Promise<CatalogoItem[]> => {
+  const response = await api.get<CatalogoItem[]>('/api/v1/admin/catalogs/modulo-clinico', {
+    params: { size: 20 },
+  });
+  return response.data;
+};
+
 
 export interface CargaDetalleResponse {
   fila_numero: number;

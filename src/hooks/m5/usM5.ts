@@ -78,14 +78,16 @@ export const useEducationalContent = () => {
 
   const fetch = useCallback(async () => {
     // 1. Sincronizar módulo activo desde FUM (actualiza modulo_activo_id en BD)
+    let moduloId: number | undefined;
     try {
       const modulo = await getActiveModule();
       setActiveModule(modulo);
+      moduloId = modulo.modulo_id;
     } catch {
-      // Si falla, igual intentamos traer el contenido
+      // Si falla, igual intentamos traer el contenido sin filtro de módulo
     }
-    // 2. Traer contenido ya filtrado por módulo activo
-    await run(getContentByModule);
+    // 2. Traer contenido filtrado por el módulo activo real (pasado explícitamente)
+    await run(() => getContentByModule(moduloId));
   }, [run]);
 
   useEffect(() => {

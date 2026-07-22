@@ -11,8 +11,10 @@ import {
   createEducationalContent,
   updateEducationalContent,
   updateEducationalContentStatus,
+  getModulosClinicos,
   type EducationalCategoryResponse,
-  type EducationalContentResponse
+  type EducationalContentResponse,
+  type CatalogoItem,
 } from '../../services/adminService';
 
 export const AdminOBA = () => {
@@ -24,6 +26,7 @@ export const AdminOBA = () => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [modulosClinicos, setModulosClinicos] = useState<CatalogoItem[]>([]);
 
   // ─── Toast notifications ───────────────────────────────────────────────
   const [obaToasts, setObaToasts] = useState<Array<{ id: number; msg: string; type: 'success' | 'error' }>>([]);
@@ -94,6 +97,9 @@ export const AdminOBA = () => {
 
   useEffect(() => {
     cargarDatos();
+    getModulosClinicos()
+      .then(mods => setModulosClinicos(mods.filter(m => m.activo)))
+      .catch(() => {/* Si falla usamos fallback */});
   }, []);
 
   useEffect(() => {
@@ -369,7 +375,9 @@ export const AdminOBA = () => {
                       <span className={styles.badge}>{(c.tipo_contenido ?? '').toUpperCase()}</span>
                       {c.modulo_id && (
                         <span className={styles.badge} style={{ background: '#7C3AED', left: 'auto', right: '10px' }}>
-                          {c.modulo_id === 1 ? 'M1 (Trimestre 1)' : c.modulo_id === 2 ? 'M2 (Trimestre 2)' : c.modulo_id === 3 ? 'M3 (Trimestre 3)' : 'M4 (Puerperio)'}
+                          {modulosClinicos.find(m => String(m.id) === String(c.modulo_id))?.codigo
+                            ? `${modulosClinicos.find(m => String(m.id) === String(c.modulo_id))?.codigo} (${modulosClinicos.find(m => String(m.id) === String(c.modulo_id))?.nombre})`
+                            : `Módulo ${c.modulo_id}`}
                         </span>
                       )}
                       {(c.tipo_contenido ?? '').toUpperCase().trim() === 'VIDEO' && (
@@ -615,10 +623,26 @@ export const AdminOBA = () => {
               onChange={e => setContModuloId(e.target.value)}
             >
               <option value="">Ninguno / General</option>
-              <option value="1">M1 - Primer Trimestre (Semanas 0-13)</option>
-              <option value="2">M2 - Segundo Trimestre (Semanas 14-27)</option>
-              <option value="3">M3 - Tercer Trimestre (Semanas 28-42)</option>
-              <option value="4">M4 - Parto y Puerperio (Semanas 0-6)</option>
+              {modulosClinicos.length > 0
+                ? modulosClinicos.map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.codigo} - {m.nombre}
+                      {m.semana_eg_inicio != null && m.semana_eg_fin != null
+                        ? ` (Sem. ${m.semana_eg_inicio}-${m.semana_eg_fin})`
+                        : m.semana_eg_inicio != null
+                        ? ` (Sem. ${m.semana_eg_inicio}+)`
+                        : ''}
+                    </option>
+                  ))
+                : (
+                  <>
+                    <option value="1">M1 - Primer Trimestre (Semanas 0-13)</option>
+                    <option value="2">M2 - Segundo Trimestre (Semanas 14-27)</option>
+                    <option value="3">M3 - Tercer Trimestre (Semanas 28-42)</option>
+                    <option value="4">M4 - Parto y Puerperio</option>
+                  </>
+                )
+              }
             </select>
           </div>
 
@@ -705,7 +729,9 @@ export const AdminOBA = () => {
               </span>
               {previewContent.modulo_id && (
                 <span style={{ background: '#e0e7ff', color: '#4338ca', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
-                  {previewContent.modulo_id === 1 ? 'M1 - 1er Trimestre' : previewContent.modulo_id === 2 ? 'M2 - 2do Trimestre' : previewContent.modulo_id === 3 ? 'M3 - 3er Trimestre' : 'M4 - Puerperio'}
+                  {modulosClinicos.find(m => String(m.id) === String(previewContent.modulo_id))
+                    ? `${modulosClinicos.find(m => String(m.id) === String(previewContent.modulo_id))?.codigo} - ${modulosClinicos.find(m => String(m.id) === String(previewContent.modulo_id))?.nombre}`
+                    : `Módulo ${previewContent.modulo_id}`}
                 </span>
               )}
               <span>Duración: {previewContent.duracion_minutos} min</span>
