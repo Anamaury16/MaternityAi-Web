@@ -89,6 +89,7 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
   const [anticonceptivoFecha, setAnticonceptivoFecha] = useState(new Date().toISOString().split('T')[0]);
 
   const [isAddingNewborn, setIsAddingNewborn] = useState(false);
+  const [newbornError, setNewbornError] = useState<string | null>(null);
 
   const resetNewbornForm = () => {
     setBebeVivo(true);
@@ -96,6 +97,7 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
     setBebeTalla('');
     setBebeUci(false);
     setBebeObs('');
+    setNewbornError(null);
   };
 
   const hasSwitchedTab = useRef(false);
@@ -183,34 +185,63 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
   const handleAddNewborn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!birthData) return;
-    await createNewborn({
-      vivo: bebeVivo,
-      peso_gramos: bebePeso ? parseInt(bebePeso) : null,
-      talla_cm: bebeTalla ? parseFloat(bebeTalla) : null,
-      uci_neonatal: bebeUci,
-      observaciones: bebeObs || null,
-    });
+    setNewbornError(null);
 
-    // Sincronizar vivos / mortinatos en fórmula obstétrica
-    if (obstetricFormula) {
-      try {
-        await updateObstetricFormula({
-          gestaciones: obstetricFormula.gestaciones || 0,
-          partos: obstetricFormula.partos || 0,
-          cesareas: obstetricFormula.cesareas || 0,
-          abortos: obstetricFormula.abortos || 0,
-          vivos: (obstetricFormula.vivos || 0) + (bebeVivo ? 1 : 0),
-          mortinatos: (obstetricFormula.mortinatos || 0) + (bebeVivo ? 0 : 1),
-        });
-        await fetchObstetricFormula();
-      } catch (err) {
-        console.error("Error al actualizar fórmula obstétrica en recién nacido:", err);
+    if (bebeVivo) {
+      if (!bebePeso || !bebeTalla) {
+        setNewbornError('El peso y la talla son obligatorios para un bebé nacido vivo.');
+        return;
+      }
+      const pesoNum = parseInt(bebePeso);
+      const tallaNum = parseFloat(bebeTalla);
+      if (isNaN(pesoNum) || pesoNum < 500 || pesoNum > 6000) {
+        setNewbornError('El peso del recién nacido debe estar entre 500 y 6000 gramos.');
+        return;
+      }
+      if (isNaN(tallaNum) || tallaNum < 20 || tallaNum > 70) {
+        setNewbornError('La talla del recién nacido debe estar entre 20 y 70 centímetros.');
+        return;
+      }
+    } else {
+      if (!bebeObs || bebeObs.trim().length < 10) {
+        setNewbornError('Para registrar un óbito fetal, por favor proporcione observaciones explicativas (mínimo 10 caracteres).');
+        return;
       }
     }
-    resetNewbornForm();
-    setIsAddingNewborn(false);
-    refreshNewborns();
-    window.dispatchEvent(new CustomEvent('refresh-risk-summary'));
+
+    try {
+      await createNewborn({
+        vivo: bebeVivo,
+        peso_gramos: bebeVivo && bebePeso ? parseInt(bebePeso) : null,
+        talla_cm: bebeVivo && bebeTalla ? parseFloat(bebeTalla) : null,
+        uci_neonatal: bebeVivo ? bebeUci : false,
+        observaciones: bebeObs || null,
+      });
+
+      // Sincronizar vivos / mortinatos en fórmula obstétrica
+      if (obstetricFormula) {
+        try {
+          await updateObstetricFormula({
+            gestaciones: obstetricFormula.gestaciones || 0,
+            partos: obstetricFormula.partos || 0,
+            cesareas: obstetricFormula.cesareas || 0,
+            abortos: obstetricFormula.abortos || 0,
+            vivos: (obstetricFormula.vivos || 0) + (bebeVivo ? 1 : 0),
+            mortinatos: (obstetricFormula.mortinatos || 0) + (bebeVivo ? 0 : 1),
+          });
+          await fetchObstetricFormula();
+        } catch (err) {
+          console.error("Error al actualizar fórmula obstétrica en recién nacido:", err);
+        }
+      }
+      resetNewbornForm();
+      setIsAddingNewborn(false);
+      refreshNewborns();
+      window.dispatchEvent(new CustomEvent('refresh-risk-summary'));
+    } catch (err) {
+      setNewbornError('Ocurrió un error al guardar el registro del recién nacido.');
+      console.error(err);
+    }
   };
 
 
@@ -422,12 +453,25 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
             {(newborns.length === 0 || isAddingNewborn) && (
               <form onSubmit={handleAddNewborn} className={styles.form}>
                 <h4 className={styles.formTitle}>Agregar Recién Nacido</h4>
+                {newbornError && (
+                  <div className={styles.errorAlert} style={{ color: '#dc2626', backgroundColor: '#fee2e2', padding: '10px', borderRadius: '6px', marginBottom: '15px', fontSize: '14px', border: '1px solid #fecaca' }}>
+                    ⚠️ {newbornError}
+                  </div>
+                )}
                 <div className={styles.fieldGroupCheckbox}>
                   <input
                     type="checkbox"
                     id="bebeVivo"
                     checked={bebeVivo}
-                    onChange={(e) => setBebeVivo(e.target.checked)}
+                    onChange={(e) => {
+                      const val = e.target.checked;
+                      setBebeVivo(val);
+                      if (!val) {
+                        setBebePeso('');
+                        setBebeTalla('');
+                        setBebeUci(false);
+                      }
+                    }}
                   />
                   <label htmlFor="bebeVivo">Nacido Vivo</label>
                 </div>
@@ -440,6 +484,9 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
                           type="number"
                           placeholder="Ej. 3200"
                           value={bebePeso}
+                          min="500"
+                          max="6000"
+                          required
                           onChange={(e) => setBebePeso(e.target.value)}
                         />
                       </div>
@@ -450,6 +497,9 @@ export const PostpartumDashboard: React.FC<PostpartumDashboardProps> = ({ inModa
                           step="0.1"
                           placeholder="Ej. 49.5"
                           value={bebeTalla}
+                          min="20"
+                          max="70"
+                          required
                           onChange={(e) => setBebeTalla(e.target.value)}
                         />
                       </div>

@@ -86,10 +86,10 @@
 }
 
 
-/* Semáforo de Riesgo (Variantes) */
+/* Semáforo de Riesgo (Variantes con soporte de accesibilidad) */
 .riskGreen {
   background-color: #f0fdf4;
-  border-color: #bbf7d0;
+  border: 1.5px solid #22c55e;
   
   & .riskLabel {
     color: #16a34a;
@@ -98,7 +98,7 @@
 
 .riskYellow {
   background-color: #fefce8;
-  border-color: #fef08a;
+  border: 3px dashed #ca8a04;
 
   & .riskLabel {
     color: #ca8a04;
@@ -107,7 +107,7 @@
 
 .riskRed {
   background-color: #fef2f2;
-  border-color: #fecaca;
+  border: 4px solid #ef4444;
 
   & .riskLabel {
     color: #dc2626;

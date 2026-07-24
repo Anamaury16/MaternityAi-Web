@@ -7,6 +7,8 @@ import { getExplainability, type ExplainabilityResponse } from '../../../../serv
 interface RiskDetails {
   class: string;
   label: string;
+  icon: string;
+  prefix: string;
 }
 
 export const RiskSummaryCard = () => {
@@ -69,25 +71,33 @@ export const RiskSummaryCard = () => {
     semana_gestacion,
   } = summary;
 
-  // Mapear el nivel de riesgo a clases de estilo y etiquetas
+  // Mapear el nivel de riesgo a clases de estilo y etiquetas con mejoras de accesibilidad
   const riskConfig: Record<'verde' | 'amarillo' | 'rojo', RiskDetails> = {
     verde: {
       class: styles.riskGreen,
       label: 'Riesgo Bajo',
+      icon: '✅',
+      prefix: 'Estado:',
     },
     amarillo: {
       class: styles.riskYellow,
       label: 'Riesgo Medio',
+      icon: '⚠️',
+      prefix: 'Precaución:',
     },
     rojo: {
       class: styles.riskRed,
       label: 'Riesgo Alto',
+      icon: '🚨',
+      prefix: 'Alerta:',
     },
   };
 
   const currentRisk = riskConfig[nivel_riesgo] || {
     class: styles.riskYellow,
     label: 'Desconocido',
+    icon: '❓',
+    prefix: 'Estado:',
   };
 
   return (
@@ -95,22 +105,34 @@ export const RiskSummaryCard = () => {
       {/* Encabezado */}
       <div className={styles.header}>
         <div className={styles.riskBadge}>
-          <span className={`${styles.statusDot} ${styles[nivel_riesgo] || styles.verde}`} />
-          <span className={styles.riskLabel}>{currentRisk.label}</span>
+          <span className={styles.riskIcon} style={{ marginRight: '6px', fontSize: '18px' }}>{currentRisk.icon}</span>
+          <span className={styles.riskLabel}>
+            <span className={styles.accessibilityPrefix} style={{ fontSize: '13px', fontWeight: 500, opacity: 0.8, marginRight: '4px' }}>{currentRisk.prefix}</span>
+            {currentRisk.label}
+          </span>
         </div>
         <span className={styles.weekBadge}>Semana {semana_gestacion}</span>
       </div>
 
       {/* Semáforo visual prominente */}
       <div className={styles.semaforoRow}>
-        <div className={styles.semaforoDots}>
-          <div className={`${styles.semaforoDot} ${nivel_riesgo === 'rojo' ? styles.dotRojo : styles.dotOff}`} />
-          <div className={`${styles.semaforoDot} ${nivel_riesgo === 'amarillo' ? styles.dotAmarillo : styles.dotOff}`} />
-          <div className={`${styles.semaforoDot} ${nivel_riesgo === 'verde' ? styles.dotVerde : styles.dotOff}`} />
+        <div className={styles.semaforoDots} aria-label={`Semáforo de riesgo: ${currentRisk.label}`}>
+          <div 
+            className={`${styles.semaforoDot} ${nivel_riesgo === 'rojo' ? styles.dotRojo : styles.dotOff}`} 
+            title="Posición superior: Alerta de Riesgo Alto"
+          />
+          <div 
+            className={`${styles.semaforoDot} ${nivel_riesgo === 'amarillo' ? styles.dotAmarillo : styles.dotOff}`} 
+            title="Posición media: Precaución de Riesgo Medio"
+          />
+          <div 
+            className={`${styles.semaforoDot} ${nivel_riesgo === 'verde' ? styles.dotVerde : styles.dotOff}`} 
+            title="Posición inferior: Estado de Riesgo Bajo"
+          />
         </div>
         <div className={styles.semaforoInfo}>
           <span className={`${styles.semaforoLevel} ${styles[`level${nivel_riesgo.charAt(0).toUpperCase() + nivel_riesgo.slice(1)}`]}`}>
-            {currentRisk.label}
+            {currentRisk.icon} {currentRisk.label}
           </span>
           <span className={styles.semaforoDesc}>
             {nivel_riesgo === 'verde' && 'Embarazo sin factores de riesgo críticos detectados. Continúa con tus controles.'}

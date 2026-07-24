@@ -167,6 +167,127 @@ const MOCK_CONTENIDOS: ContenidoEducativoResponse[] = [
   },
 ];
 
+export const MOCK_CONTENIDOS_POR_MODULO: Record<number, ContenidoEducativoResponse[]> = {
+  1: [
+    {
+      id: 101,
+      titulo: "1er Trimestre: Alimentación e Hidratación",
+      descripcion: "Aprende qué comer y cómo manejar las náuseas matutinas en tus primeras semanas.",
+      tipo_contenido: "articulo",
+      url_recurso: null,
+      url_imagen: null,
+      duracion_minutos: 8,
+      orden: 1
+    },
+    {
+      id: 102,
+      titulo: "Importancia del Ácido Fólico",
+      descripcion: "Por qué debes tomar suplementos de ácido fólico durante el primer trimestre.",
+      tipo_contenido: "articulo",
+      url_recurso: null,
+      url_imagen: null,
+      duracion_minutos: 5,
+      orden: 2
+    },
+    {
+      id: 103,
+      titulo: "Ejercicios de respiración iniciales",
+      descripcion: "Video sobre técnicas de respiración relajante para el inicio del embarazo.",
+      tipo_contenido: "video",
+      url_recurso: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      url_imagen: null,
+      duracion_minutos: 10,
+      orden: 3
+    }
+  ],
+  2: [
+    {
+      id: 201,
+      titulo: "2do Trimestre: Cambios en tu cuerpo",
+      descripcion: "Qué esperar durante los meses 4, 5 y 6 de gestación.",
+      tipo_contenido: "articulo",
+      url_recurso: null,
+      url_imagen: null,
+      duracion_minutos: 12,
+      orden: 1
+    },
+    {
+      id: 202,
+      titulo: "Ejercicios de estiramiento y yoga prenatal",
+      descripcion: "Rutina guiada en video para mantener la flexibilidad y evitar dolores de espalda.",
+      tipo_contenido: "video",
+      url_recurso: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      url_imagen: null,
+      duracion_minutos: 15,
+      orden: 2
+    }
+  ],
+  3: [
+    {
+      id: 301,
+      titulo: "3er Trimestre: Preparándote para el parto",
+      descripcion: "Signos de alarma, contracciones y cuándo acudir al centro de salud.",
+      tipo_contenido: "articulo",
+      url_recurso: null,
+      url_imagen: null,
+      duracion_minutos: 15,
+      orden: 1
+    },
+    {
+      id: 302,
+      titulo: "Plan de Parto: Qué es y cómo redactarlo",
+      descripcion: "Una guía completa para definir tus preferencias de parto y comunicarlas al hospital.",
+      tipo_contenido: "articulo",
+      url_recurso: null,
+      url_imagen: null,
+      duracion_minutos: 10,
+      orden: 2
+    },
+    {
+      id: 303,
+      titulo: "Signos de alarma en el tercer trimestre",
+      descripcion: "Video explicativo sobre sangrados, dolores de cabeza intensos y pérdida de líquido.",
+      tipo_contenido: "video",
+      url_recurso: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      url_imagen: null,
+      duracion_minutos: 8,
+      orden: 3
+    }
+  ],
+  4: [
+    {
+      id: 401,
+      titulo: "Postparto: Cuidados de la madre en casa",
+      descripcion: "Recuperación física, higiene y manejo de las emociones en el puerperio.",
+      tipo_contenido: "articulo",
+      url_recurso: null,
+      url_imagen: null,
+      duracion_minutos: 10,
+      orden: 1
+    },
+    {
+      id: 402,
+      titulo: "Lactancia Materna Eficaz",
+      descripcion: "Técnicas de agarre correcto, posiciones para amamantar y prevención de grietas.",
+      tipo_contenido: "articulo",
+      url_recurso: null,
+      url_imagen: null,
+      duracion_minutos: 15,
+      orden: 2
+    },
+    {
+      id: 403,
+      titulo: "Primeros cuidados del recién nacido",
+      descripcion: "Video instructivo sobre el baño, el cordón umbilical y patrones de sueño del bebé.",
+      tipo_contenido: "video",
+      url_recurso: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      url_imagen: null,
+      duracion_minutos: 12,
+      orden: 3
+    }
+  ]
+};
+
 const MOCK_CONTENIDO_DETALLE: ContenidoEducativoDetalleResponse = {
   id: 1,
   titulo: "Nutrición durante el embarazo",
