@@ -12,6 +12,8 @@ import {
   type IARecommendationResponse,
 } from '../../services/adminService';
 
+import { calculateCurrentWeeks, getFaseOrTrimestre } from '../../utils/gestationalAgeUtils';
+
 const MENSAJE_ERROR_IA = 'No se pudo generar la respuesta de IA. Intenta nuevamente más tarde.';
 
 export const AdminIA = () => {
@@ -63,18 +65,15 @@ export const AdminIA = () => {
       .finally(() => setRiesgoLoading(false));
   }, [selPaciente]);
 
-  const filtrados = gestantes.filter(p =>
-    (p.codigo_gmi || p.id).toLowerCase().includes(busqueda.toLowerCase())
-  );
+  const filtrados = gestantes
+    .filter(p => (p.codigo_gmi || p.id).toLowerCase().includes(busqueda.toLowerCase()))
+    .sort((a, b) => {
+      const aAlerta = a.ultimo_estado_alerta === 'activa' ? 1 : 0;
+      const bAlerta = b.ultimo_estado_alerta === 'activa' ? 1 : 0;
+      return bAlerta - aAlerta;
+    });
 
   const gestanteSeleccionada = gestantes.find(g => g.codigo_gmi === selPaciente);
-
-  const getTrimestre = (semanas?: number | null) => {
-    if (!semanas) return 'N/A';
-    if (semanas <= 13) return 'Trimestre 1';
-    if (semanas <= 27) return 'Trimestre 2';
-    return 'Trimestre 3';
-  };
 
   return (
     <div className={styles.root}>
@@ -106,20 +105,42 @@ export const AdminIA = () => {
             </svg>
           </div>
 
-          <div className={styles.pList}>
-            {filtrados.map((p, i) => (
+           <div className={styles.pList}>
+            {filtrados.map((p, i) => {
+              const currentWeeks = calculateCurrentWeeks(p.fecha_ultima_menstruacion);
+              return (
               <div
                 key={p.id || i}
                 className={`${styles.pItem} ${p.codigo_gmi === selPaciente ? styles.pItemSel : ''}`}
                 onClick={() => setSelPaciente(p.codigo_gmi)}
               >
-                <span className={styles.pId}>{p.codigo_gmi}</span>
+                <span className={styles.pId}>
+                  {p.codigo_gmi}
+                  {p.ultimo_estado_alerta === 'activa' && (
+                    <svg 
+                      width="14" 
+                      height="14" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="#ff4b72" 
+                      strokeWidth="2.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                      style={{ marginLeft: '8px', display: 'inline-block', verticalAlign: 'middle' }}
+                    >
+                      <title>Alerta Activa</title>
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                  )}
+                </span>
                 <div>
-                  <div className={styles.pDetail}>Nro Semana · {p.semanas_eg_ingreso || 0}</div>
-                  <div className={styles.pDetail}>Fase · {getTrimestre(p.semanas_eg_ingreso)}</div>
+                  <div className={styles.pDetail}>Nro Semana · {currentWeeks}</div>
+                  <div className={styles.pDetail}>Fase · {getFaseOrTrimestre(currentWeeks)}</div>
                 </div>
               </div>
-            ))}
+            )})}
           </div>
         </div>
 
@@ -130,7 +151,7 @@ export const AdminIA = () => {
             Asistente de IA · GMI
           </p>
 
-          <p className={styles.infoRow}><strong>Nro Semana</strong> · {gestanteSeleccionada?.semanas_eg_ingreso || 'N/A'}</p>
+          <p className={styles.infoRow}><strong>Nro Semana</strong> · {gestanteSeleccionada ? calculateCurrentWeeks(gestanteSeleccionada.fecha_ultima_menstruacion) : 'N/A'}</p>
           <p className={styles.infoRow}><strong>Módulo activo</strong> · {resumen?.modulo_activo || 'N/A'}</p>
 
           <h2 className={styles.secTitle}>Resumen Clínico</h2>

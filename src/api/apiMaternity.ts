@@ -3,8 +3,7 @@ import axios from 'axios';
  * Instancia de Axios para maternity
  */
 const apiMaternity = axios.create({
-  //   baseURL: import.meta.env.VITE_API_URL,
-  baseURL: 'http://127.0.0.1:8000/api/v1',
+  baseURL: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/v1` : 'http://127.0.0.1:8000/api/v1',
   timeout: 10000,
 
   headers: {

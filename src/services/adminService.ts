@@ -8,6 +8,8 @@ export interface CatalogoItem {
   nombre: string;
   descripcion?: string | null;
   activo: boolean;
+  semana_eg_inicio?: number | null;
+  semana_eg_fin?: number | null;
 }
 
 export interface Catalogos {
@@ -30,6 +32,14 @@ export const getCatalogos = async (): Promise<Catalogos> => {
     pertenencias_etnicas: etnica.data,
     grupos_poblacionales: grupo.data,
   };
+};
+
+// Obtener módulos clínicos con sus IDs REALES de la BD (para el formulario del OVA)
+export const getModulosClinicos = async (): Promise<CatalogoItem[]> => {
+  const response = await api.get<CatalogoItem[]>('/api/v1/admin/catalogs/modulo-clinico', {
+    params: { size: 20 },
+  });
+  return response.data;
 };
 
 
@@ -152,6 +162,9 @@ export interface GestanteResponse {
   ultima_prioridad_alerta_id?: number | null;
   nivel_riesgo?: string | null;
   clasificacion_ia?: string | null;
+  // Campos adicionales retornados por el backend
+  ips_atencion?: string | null;
+  diagnostico_ingreso?: string | null;
 }
 
 export const getGestantes = async (
@@ -510,6 +523,21 @@ export const cancelarAppointment = async (id: string): Promise<CitaAdminResponse
 
 // ─── Panel Médico (detalle de gestante) ───────────────────────────────────────
 
+export interface SignosVitalesResponse {
+  id: string;
+  control_prenatal_id: string;
+  fecha_control: string;
+  peso_kg: number;
+  talla_cm?: number | null;
+  imc?: number | null;
+  estado_nutricional_id?: number | null;
+  altura_uterina?: number | null;
+  presion_sistolica?: number | null;
+  presion_diastolica?: number | null;
+  fcf?: number | null;
+  created_at?: string | null;
+}
+
 export interface ExamenResponse {
   id: string;
   tipo_examen_id: number;
@@ -568,6 +596,32 @@ export const getGestanteExams = async (gestanteId: string): Promise<ExamenRespon
   return response.data;
 };
 
+export const getGestanteVitals = async (gestanteId: string): Promise<SignosVitalesResponse[]> => {
+  const response = await api.get<SignosVitalesResponse[]>(`/api/v1/admin/gestantes/${gestanteId}/vitals`);
+  return response.data;
+};
+
+export const getGestanteExamById = async (
+  gestanteId: string,
+  examId: string
+): Promise<ExamenResponse> => {
+  const response = await api.get<ExamenResponse>(
+    `/api/v1/admin/gestantes/${gestanteId}/exams/${examId}`
+  );
+  return response.data;
+};
+
+export const createGestanteExam = async (
+  gestanteId: string,
+  data: any
+): Promise<ExamenResponse> => {
+  const response = await api.post<ExamenResponse>(
+    `/api/v1/admin/gestantes/${gestanteId}/exams`,
+    data
+  );
+  return response.data;
+};
+
 export const getGestanteAlarmSigns = async (gestanteId: string): Promise<AlertaAdminResponse[]> => {
   const response = await api.get<AlertaAdminResponse[]>(`/api/v1/admin/gestantes/${gestanteId}/alarm-signs`);
   return response.data;
@@ -601,6 +655,34 @@ export const createGestanteEmergencyCall = async (
   );
   return response.data;
 };
+
+export const getGestanteAppointments = async (
+  gestanteId: string
+): Promise<CitaAdminResponse[]> => {
+  const response = await api.get<CitaAdminResponse[]>(
+    `/api/v1/admin/gestantes/${gestanteId}/appointments`
+  );
+  return response.data;
+};
+
+// ─── Exportación ─────────────────────────────────────────────────────────────
+
+export const exportGestantes = async (format: 'xlsx' | 'csv' = 'xlsx'): Promise<Blob> => {
+  const response = await api.get('/api/v1/admin/export/gestantes', {
+    params: { format },
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
+export const exportIndicators = async (format: 'xlsx' | 'csv' = 'xlsx'): Promise<Blob> => {
+  const response = await api.get('/api/v1/admin/export/indicators', {
+    params: { format },
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
 
 // ─── IA (asistente clínico) ────────────────────────────────────────────────
 
@@ -649,3 +731,179 @@ export const getIARecommendations = async (codigoGmi: string): Promise<IARecomme
   });
   return response.data;
 };
+
+// ─── Checklist Items (Gestión administrativa) ───────────────────────────────
+
+export interface ChecklistItemResponse {
+  id: number;
+  texto: string;
+  modulo_id: number | null;
+  semana_eg: number | null;
+  orden: number | null;
+  activo: boolean;
+}
+
+export interface ChecklistItemCreate {
+  texto: string;
+  modulo_id?: number | null;
+  semana_eg?: number | null;
+  orden?: number | null;
+}
+
+export interface ChecklistItemUpdate {
+  texto?: string;
+  modulo_id?: number | null;
+  semana_eg?: number | null;
+  orden?: number | null;
+}
+
+export const getChecklistItems = async (): Promise<ChecklistItemResponse[]> => {
+  const response = await api.get<ChecklistItemResponse[]>('/api/v1/admin/checklist-items', {
+    params: { size: 100 },
+  });
+  return response.data;
+};
+
+export const createChecklistItem = async (
+  data: ChecklistItemCreate
+): Promise<ChecklistItemResponse> => {
+  const response = await api.post<ChecklistItemResponse>('/api/v1/admin/checklist-items', data);
+  return response.data;
+};
+
+export const updateChecklistItem = async (
+  id: number,
+  data: ChecklistItemUpdate
+): Promise<ChecklistItemResponse> => {
+  const response = await api.put<ChecklistItemResponse>(`/api/v1/admin/checklist-items/${id}`, data);
+  return response.data;
+};
+
+export const updateChecklistItemStatus = async (
+  id: number,
+  activo: boolean
+): Promise<ChecklistItemResponse> => {
+  const response = await api.patch<ChecklistItemResponse>(`/api/v1/admin/checklist-items/${id}/status`, {
+    activo,
+  });
+  return response.data;
+};
+
+export interface GestanteChecklistItem {
+  id: number;
+  texto: string;
+  modulo_id: number | null;
+  semana_eg: number | null;
+  orden: number | null;
+  completado: boolean;
+  fecha_completado?: string | null;
+}
+
+export const getGestanteChecklist = async (
+  gestanteId: string
+): Promise<GestanteChecklistItem[]> => {
+  const response = await api.get<GestanteChecklistItem[]>(
+    `/api/v1/clinical/checklist-items/${gestanteId}`
+  );
+  return response.data;
+};
+
+// ─── Inteligencia Artificial (Staff) ─────────────────────────────────────────
+
+export interface ChatMensajeStaffResponse {
+  id: string;
+  rol: string;
+  contenido: string;
+  created_at: string;
+}
+
+export interface ChatHistorialStaffResponse {
+  codigo_gmi: string;
+  mensajes: ChatMensajeStaffResponse[];
+  total: number;
+}
+
+export interface AlertaStaffResponse {
+  id: string;
+  gestante_id: string;
+  tipo_alerta_id: number;
+  tipo_alerta_nombre: string | null;
+  prioridad_id: number;
+  prioridad_codigo: string | null;
+  estado: string;
+  modulo_origen: string | null;
+  descripcion: string | null;
+  clasificacion_riesgo_id: string | null;
+  resuelta_por: string | null;
+  fecha_resolucion: string | null;
+  created_at: string | null;
+}
+
+export interface ExplainabilityResponse {
+  assessment_id: string;
+  nivel_riesgo: 'verde' | 'amarillo' | 'rojo';
+  explicacion: string;
+  factores_determinantes: string[];
+  datos_utilizados: string[];
+}
+
+export const getGestanteExplainabilityStaff = async (
+  gestanteId: string,
+  assessmentId: string
+): Promise<ExplainabilityResponse> => {
+  const response = await api.get<ExplainabilityResponse>(
+    `/api/v1/ia/gestantes/${gestanteId}/explainability/${assessmentId}`
+  );
+  return response.data;
+};
+
+export const getGestanteChatHistoryStaff = async (
+  gestanteId: string
+): Promise<ChatHistorialStaffResponse> => {
+  const response = await api.get<ChatHistorialStaffResponse>(
+    `/api/v1/ia/gestantes/${gestanteId}/chat/history`
+  );
+  return response.data;
+};
+
+export const getGestanteAlertsStaff = async (
+  gestanteId: string
+): Promise<AlertaStaffResponse[]> => {
+  const response = await api.get<AlertaStaffResponse[]>(
+    `/api/v1/ia/gestantes/${gestanteId}/alerts`
+  );
+  return response.data;
+};
+
+// ─── Solicitudes de Activación de Login ──────────────────────────────────────
+
+export interface SolicitudActivacionResponse {
+  id: string;
+  codigo_gmi: string;
+  pregunta: string;
+  estado: string;
+  created_at: string;
+}
+
+export interface DetailResponse {
+  detail: string;
+}
+
+export const getPendingActivations = async (): Promise<SolicitudActivacionResponse[]> => {
+  const response = await api.get<SolicitudActivacionResponse[]>('/api/v1/admin/solicitudes-activacion');
+  return response.data;
+};
+
+export const resolveActivationRequest = async (
+  id: string,
+  aprobar: boolean
+): Promise<DetailResponse> => {
+  const response = await api.post<DetailResponse>(
+    `/api/v1/admin/solicitudes-activacion/${id}/resolver`,
+    null,
+    { params: { aprobar } }
+  );
+  return response.data;
+};
+
+

@@ -8,9 +8,11 @@ import {
   createChecklistItem,
   updateChecklistItem,
   updateChecklistItemStatus,
+  getCatalogItems,
   type ChecklistItemResponse,
   type ChecklistItemCreate,
   type ChecklistItemUpdate,
+  type CatalogoItem,
 } from '../../services/adminService';
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
@@ -53,6 +55,7 @@ const emptyForm = (): ChecklistItemCreate => ({
 export const AdminChecklist = () => {
   // Data
   const [items, setItems] = useState<ChecklistItemResponse[]>([]);
+  const [modulos, setModulos] = useState<CatalogoItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Toast
@@ -65,6 +68,36 @@ export const AdminChecklist = () => {
 
   // Form state
   const [form, setForm] = useState<ChecklistItemCreate>(emptyForm());
+
+  // Filters
+  const [searchText, setSearchText] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+
+  const filteredItems = items.filter(item => {
+    const matchText = item.texto.toLowerCase().includes(searchText.toLowerCase());
+    const matchStatus =
+      filterStatus === 'all' ? true :
+      filterStatus === 'active' ? item.activo :
+      !item.activo;
+    return matchText && matchStatus;
+  });
+
+  const getWeekOptions = () => {
+    if (form.modulo_id === null) {
+      return Array.from({ length: 42 }, (_, i) => i + 1);
+    }
+    const selectedModulo = modulos.find(m => Number(m.id) === form.modulo_id);
+    if (!selectedModulo) return [];
+    
+    const start = selectedModulo.semana_eg_inicio ?? 0;
+    const end = selectedModulo.semana_eg_fin ?? 0;
+    
+    const weeks = [];
+    for (let w = start; w <= end; w++) {
+      weeks.push(w);
+    }
+    return weeks;
+  };
 
   // Per-row toggle loading
   const [togglingId, setTogglingId] = useState<number | null>(null);
@@ -85,6 +118,9 @@ export const AdminChecklist = () => {
 
   useEffect(() => {
     fetchItems();
+    getCatalogItems('modulo-clinico')
+      .then(data => setModulos(data.filter(m => m.activo)))
+      .catch(err => console.error("Error loading clinical modules catalog:", err));
   }, [fetchItems]);
 
   // ── Open modal ───────────────────────────────────────────────────────────
@@ -212,7 +248,43 @@ export const AdminChecklist = () => {
           </button>
         </div>
 
-        {/* Data table */}
+        {/* Search & Filter Bar */}
+        <div style={{ display: 'flex', gap: '10px', marginBottom: '14px', alignItems: 'center' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <input
+              type="text"
+              placeholder="Buscar por texto..."
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              style={{
+                width: '100%', padding: '7px 32px 7px 12px',
+                borderRadius: '20px', border: '1px solid #e0e0e0',
+                background: '#f9f9f9', fontSize: '12px', boxSizing: 'border-box',
+                outline: 'none', fontFamily: 'inherit'
+              }}
+            />
+            <svg style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)' }}
+              width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#CA436E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
+            </svg>
+          </div>
+          <select
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value as any)}
+            style={{
+              padding: '7px 12px', borderRadius: '20px', border: '1px solid #e0e0e0',
+              background: '#f9f9f9', fontSize: '12px', outline: 'none',
+              fontFamily: 'inherit', cursor: 'pointer', color: '#555'
+            }}
+          >
+            <option value="all">Todos</option>
+            <option value="active">Solo activos</option>
+            <option value="inactive">Solo inactivos</option>
+          </select>
+          <span style={{ fontSize: '12px', color: '#999', whiteSpace: 'nowrap' }}>
+            {filteredItems.length} resultado{filteredItems.length !== 1 ? 's' : ''}
+          </span>
+        </div>
         <div className={styles.panel}>
           <div className={styles.tableWrap}>
             <table className={styles.table}>
@@ -241,7 +313,7 @@ export const AdminChecklist = () => {
                       <td><div className={styles.skeletonBar} style={{ width: 54 }} /></td>
                     </tr>
                   ))
-                ) : items.length === 0 ? (
+                ) : filteredItems.length === 0 ? (
                   <tr>
                     <td colSpan={7}>
                       <div className={styles.emptyState}>
@@ -250,15 +322,15 @@ export const AdminChecklist = () => {
                           <path d="M9 11l3 3L22 4" />
                           <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
                         </svg>
-                        <p>No hay ítems de checklist configurados.</p>
+                        <p>{searchText || filterStatus !== 'all' ? 'Sin resultados para los filtros aplicados.' : 'No hay ítems de checklist configurados.'}</p>
                         <p style={{ fontSize: 12, color: '#ccc' }}>
-                          Haz clic en "Nuevo Ítem" para agregar el primero.
+                          {searchText || filterStatus !== 'all' ? 'Prueba cambiando los filtros.' : 'Haz clic en "Nuevo Ítem" para agregar el primero.'}
                         </p>
                       </div>
                     </td>
                   </tr>
                 ) : (
-                  items.map(item => (
+                  filteredItems.map(item => (
                     <tr key={item.id}>
                       {/* ID */}
                       <td>
@@ -271,7 +343,7 @@ export const AdminChecklist = () => {
                       {/* Módulo */}
                       <td>
                         {item.modulo_id != null ? (
-                          item.modulo_id
+                          modulos.find((m) => Number(m.id) === item.modulo_id)?.codigo ?? `M${item.modulo_id}`
                         ) : (
                           <span className={styles.nullBadge}>—</span>
                         )}
@@ -371,43 +443,74 @@ export const AdminChecklist = () => {
           <div className={styles.formGrid2}>
             <div className={modalStyles.field}>
               <label className={modalStyles.label} htmlFor="ci-modulo">
-                ID de Módulo
+                Módulo Clínico
               </label>
-              <input
+              <select
                 id="ci-modulo"
-                type="number"
-                min={1}
                 className={modalStyles.input}
-                placeholder="Ej. 1"
                 value={form.modulo_id ?? ''}
-                onChange={e =>
+                onChange={e => {
+                  const val = e.target.value === '' ? null : Number(e.target.value);
+                  const selectedModulo = modulos.find(m => Number(m.id) === val);
+                  let nextSemana = form.semana_eg;
+                  if (selectedModulo && typeof nextSemana === 'number') {
+                    const start = selectedModulo.semana_eg_inicio ?? 0;
+                    const end = selectedModulo.semana_eg_fin ?? 0;
+                    if (nextSemana < start || nextSemana > end) {
+                      nextSemana = null;
+                    }
+                  }
                   setForm({
                     ...form,
-                    modulo_id: e.target.value === '' ? null : Number(e.target.value),
-                  })
-                }
-              />
+                    modulo_id: val,
+                    semana_eg: nextSemana,
+                  });
+                }}
+              >
+                <option value="">Seleccione un módulo</option>
+                {modulos.map((m) => (
+                  <option key={m.id} value={Number(m.id)}>
+                    {m.codigo} - {m.nombre}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className={modalStyles.field}>
               <label className={modalStyles.label} htmlFor="ci-semana">
                 Semana EG
               </label>
-              <input
+              <select
                 id="ci-semana"
-                type="number"
-                min={1}
-                max={42}
                 className={modalStyles.input}
-                placeholder="1 – 42"
                 value={form.semana_eg ?? ''}
-                onChange={e =>
+                onChange={e => {
+                  const val = e.target.value === '' ? null : Number(e.target.value);
+                  let nextModuloId = form.modulo_id;
+                  if (val !== null) {
+                    const matchingModulo = modulos.find(m => {
+                      const start = m.semana_eg_inicio ?? 0;
+                      const end = m.semana_eg_fin ?? 0;
+                      return val >= start && val <= end;
+                    });
+                    if (matchingModulo) {
+                      nextModuloId = Number(matchingModulo.id);
+                    }
+                  }
                   setForm({
                     ...form,
-                    semana_eg: e.target.value === '' ? null : Number(e.target.value),
-                  })
-                }
-              />
+                    semana_eg: val,
+                    modulo_id: nextModuloId,
+                  });
+                }}
+              >
+                <option value="">Sin semana</option>
+                {getWeekOptions().map(week => (
+                  <option key={week} value={week}>
+                    Semana {week}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

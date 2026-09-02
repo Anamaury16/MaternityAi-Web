@@ -3,7 +3,7 @@
   flex-direction: column;
   border: 1px solid rgb(218, 218, 218);
   border-radius: 15px;
-  padding: 30px;
+  padding: 20px;
   box-shadow: -4px 5px 10px rgb(218, 218, 218);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
@@ -14,7 +14,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 12px;
   gap: 12px;
 }
 
@@ -48,7 +48,7 @@
   height: 6px;
   background: #f0d6de;
   border-radius: 6px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   overflow: hidden;
 }
 
@@ -63,10 +63,10 @@
 .item {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   border-radius: 14px;
-  margin-bottom: 10px;
-  padding: 13px 16px;
+  margin-bottom: 8px;
+  padding: 10px 14px;
   background: #fff;
   border: 1.5px solid #f0d6de;
   cursor: pointer;

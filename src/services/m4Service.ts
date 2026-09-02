@@ -1,4 +1,5 @@
 import api, { USE_MOCKS } from './api';
+import axios from 'axios';
 
 // ---------------------------------------------------------------------------
 // Interfaces — alineadas 1:1 con schemas.py del módulo M4
@@ -202,6 +203,7 @@ const MOCK_CONTRACEPTION: ContraceptionResponse[] = [
 export const createBirthRecord = async (data: BirthRecordCreate): Promise<BirthRecordResponse> => {
   if (USE_MOCKS) {
     await mockDelay();
+    sessionStorage.setItem('has_birth_record', 'true');
     return {
       id: `parto-${Date.now()}`,
       gestante_id: "gest-001",
@@ -216,17 +218,25 @@ export const createBirthRecord = async (data: BirthRecordCreate): Promise<BirthR
     };
   }
   const response = await api.post('/api/v1/m4/birth-record', data);
+  sessionStorage.setItem('has_birth_record', 'true');
   return response.data;
 };
 
 // GET /birth-record
-export const getBirthRecord = async (): Promise<BirthRecordResponse> => {
+export const getBirthRecord = async (): Promise<BirthRecordResponse | null> => {
   if (USE_MOCKS) {
     await mockDelay();
     return MOCK_BIRTH_RECORD;
   }
-  const response = await api.get('/api/v1/m4/birth-record');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m4/birth-record');
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return null;
+    }
+    throw error;
+  }
 };
 
 // PUT /birth-record
@@ -274,8 +284,15 @@ export const getNewborns = async (): Promise<NewbornResponse[]> => {
     await mockDelay();
     return MOCK_NEWBORNS;
   }
-  const response = await api.get('/api/v1/m4/newborn');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m4/newborn');
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return [];
+    }
+    throw error;
+  }
 };
 
 // ---- Puerperio ----
@@ -304,8 +321,15 @@ export const getPostpartum = async (): Promise<PostpartumResponse[]> => {
     await mockDelay();
     return MOCK_POSTPARTUM;
   }
-  const response = await api.get('/api/v1/m4/postpartum');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m4/postpartum');
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return [];
+    }
+    throw error;
+  }
 };
 
 // GET /postpartum-evolution
@@ -342,6 +366,13 @@ export const getContraception = async (): Promise<ContraceptionResponse[]> => {
     await mockDelay();
     return MOCK_CONTRACEPTION;
   }
-  const response = await api.get('/api/v1/m4/contraception');
-  return response.data;
+  try {
+    const response = await api.get('/api/v1/m4/contraception');
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      return [];
+    }
+    throw error;
+  }
 };

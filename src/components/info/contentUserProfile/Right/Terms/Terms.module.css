@@ -1,6 +1,5 @@
 .container {
   padding-top: 60px;
-
   display: flex;
   flex-direction: column;
   align-items: start;
@@ -11,9 +10,32 @@
   background-color: rgba(223, 223, 223, 0.1);
   padding-left: 70px;
   padding-right: 30vh;
-  & h2 {
-    margin-bottom: 60px;
-    color: #ca436e;
-    font-size: 40px;
+}
+
+.container h2 {
+  margin-bottom: 60px;
+  color: #ca436e;
+  font-size: 40px;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding-top: 20px;
+    padding-left: 15px;
+    padding-right: 15px;
+    border-radius: 12px;
+    box-shadow: none;
+    border: none;
+    background-color: transparent;
+  }
+  
+  .container h2 {
+    font-size: 28px;
+    margin-bottom: 20px;
+  }
+
+  .container p {
+    font-size: 15px;
+    line-height: 1.5;
   }
 }

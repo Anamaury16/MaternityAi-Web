@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './ContentLogin.module.css';
-import { loginUser, loginStaff, getSecurityQuestion, type AuthError, requestPasswordReset, confirmPasswordReset } from '../../../services/authService';
+import { loginUser, loginStaff, getSecurityQuestion, type AuthError, createActivationRequest } from '../../../services/authService';
 import { useAuth } from '../../../context/AuthContext';
 
 // Mapa rol → ruta de destino
@@ -9,7 +9,7 @@ const ROLE_HOME: Record<string, string> = {
   gestante: '/main',
   admin: '/admin',
   clinico: '/clinico',
-  investigador: '/investigador',
+  hospital: '/hospital/dashboard',
 };
 
 interface GestanteLoginState {
@@ -22,62 +22,36 @@ interface StaffLoginState {
   password: string;
 }
 
+const EyeIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+const EyeOffIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+    <line x1="1" y1="1" x2="23" y2="23" />
+  </svg>
+);
+
+
+
 export const FormLogin = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
 
   const [isStaff, setIsStaff] = useState(location.state?.isStaff || false);
-  // ─── Reset de contraseña ─────────────────────────────────────────────────────
-  const [showReset, setShowReset] = useState(false);
-  const [resetStep, setResetStep] = useState<1 | 2>(1);
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetToken, setResetToken] = useState('');
-  const [resetNewPassword, setResetNewPassword] = useState('');
-  const [isLoadingReset, setIsLoadingReset] = useState(false);
 
-  const handleResetRequest = async () => {
-    if (!resetEmail.trim()) {
-      setErrorMessage('Ingresa tu correo electrónico.');
-      return;
-    }
-    setIsLoadingReset(true);
-    setErrorMessage(null);
-    try {
-      await requestPasswordReset({ email: resetEmail });
-      setSuccessMessage('Si el email existe, recibirás instrucciones en tu correo.');
-      setResetStep(2);
-    } catch {
-      setErrorMessage('No se pudo procesar la solicitud. Intenta de nuevo.');
-    } finally {
-      setIsLoadingReset(false);
-    }
-  };
-
-  const handleResetConfirm = async () => {
-    if (!resetToken.trim() || !resetNewPassword.trim()) {
-      setErrorMessage('Completa el token y la nueva contraseña.');
-      return;
-    }
-    setIsLoadingReset(true);
-    setErrorMessage(null);
-    try {
-      await confirmPasswordReset({ token: resetToken, new_password: resetNewPassword });
-      setSuccessMessage('¡Contraseña actualizada! Ya puedes iniciar sesión.');
-      setShowReset(false);
-      setResetStep(1);
-      setResetEmail('');
-      setResetToken('');
-      setResetNewPassword('');
-    } catch {
-      setErrorMessage('Token inválido o expirado. Solicita uno nuevo.');
-    } finally {
-      setIsLoadingReset(false);
-    }
-  };
   // Estados para Gestante
   const [gestanteStep, setGestanteStep] = useState<1 | 2>(1);
   const [securityQuestion, setSecurityQuestion] = useState<string>('');
+  const [showActivationForm, setShowActivationForm] = useState(false);
+  const [activationQuestion, setActivationQuestion] = useState('¿Cuál es el nombre de tu primera mascota?');
+  const [activationAnswer, setActivationAnswer] = useState('');
+  const [isSubmittingActivation, setIsSubmittingActivation] = useState(false);
 
   const [gestanteForm, setGestanteForm] = useState<GestanteLoginState>({
     codigo_gmi: '',
@@ -88,6 +62,10 @@ export const FormLogin = () => {
     email: '',
     password: '',
   });
+
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -105,9 +83,39 @@ export const FormLogin = () => {
     if (successMessage) setSuccessMessage(null);
   };
 
+  const handleSendActivation = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    const trimmedAnswer = activationAnswer.trim();
+    const trimmedGmi = gestanteForm.codigo_gmi.trim();
+    if (!trimmedAnswer) {
+      setErrorMessage('Por favor, ingresa una respuesta.');
+      return;
+    }
+    setIsSubmittingActivation(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    try {
+      await createActivationRequest({
+        codigo_gmi: trimmedGmi,
+        pregunta: activationQuestion,
+        respuesta: trimmedAnswer,
+      });
+      setSuccessMessage('Solicitud de activación enviada correctamente. El administrador la revisará pronto.');
+      setShowActivationForm(false);
+      setActivationAnswer('');
+      setGestanteStep(1);
+    } catch (error) {
+      const authError = error as AuthError;
+      setErrorMessage(authError?.message || 'Error al enviar la solicitud. Intenta de nuevo.');
+    } finally {
+      setIsSubmittingActivation(false);
+    }
+  };
+
   const handleNextStep = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!gestanteForm.codigo_gmi.trim()) {
+    const trimmedGmi = gestanteForm.codigo_gmi.trim();
+    if (!trimmedGmi) {
       setErrorMessage('Por favor, ingresa tu Código GMI.');
       return;
     }
@@ -117,13 +125,19 @@ export const FormLogin = () => {
     setSuccessMessage(null);
 
     try {
-      const res = await getSecurityQuestion(gestanteForm.codigo_gmi);
+      const res = await getSecurityQuestion(trimmedGmi);
       setSecurityQuestion(res.pregunta);
       setSuccessMessage('Código validado correctamente. Responde la pregunta para continuar.');
       setGestanteStep(2);
     } catch (error) {
       const authError = error as AuthError;
-      setErrorMessage(authError?.message || 'Código GMI no encontrado o error de servidor.');
+      if (authError?.status === 404) {
+        setShowActivationForm(true);
+        setErrorMessage(null);
+        setSuccessMessage('Tu cuenta aún no está activada. Configura tu pregunta de seguridad para solicitar la activación al administrador.');
+      } else {
+        setErrorMessage(authError?.message || 'Código GMI no encontrado o error de servidor.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -137,14 +151,20 @@ export const FormLogin = () => {
 
     try {
       if (isStaff) {
-        if (!staffForm.email.trim() || !staffForm.password.trim()) {
+        const trimmedEmail = staffForm.email.trim();
+        const trimmedPassword = staffForm.password.trim();
+        if (!trimmedEmail || !trimmedPassword) {
           setErrorMessage('Por favor, completa todos los campos.');
           setIsLoading(false);
           return;
         }
-        const staffData = await loginStaff(staffForm);
+        const staffData = await loginStaff({
+          email: trimmedEmail,
+          password: trimmedPassword,
+        });
         login(staffData); // actualiza el AuthContext
-        localStorage.setItem('user_name', staffForm.email);
+        localStorage.setItem('user_name', trimmedEmail);
+        localStorage.setItem('has_logged_in_before', 'true');
         setSuccessMessage('Sesión iniciada correctamente.');
         // Redirige al dashboard correspondiente al rol
         const from = location.state?.from?.pathname;
@@ -156,14 +176,21 @@ export const FormLogin = () => {
           return;
         }
 
-        if (!gestanteForm.codigo_gmi.trim() || !gestanteForm.respuesta_seguridad.trim()) {
+        const trimmedGmi = gestanteForm.codigo_gmi.trim();
+        const trimmedRespuesta = gestanteForm.respuesta_seguridad.trim();
+        if (!trimmedGmi || !trimmedRespuesta) {
           setErrorMessage('Por favor, completa tu respuesta.');
           setIsLoading(false);
           return;
         }
-        const gestanteData = await loginUser(gestanteForm);
+        const gestanteData = await loginUser({
+          codigo_gmi: trimmedGmi,
+          respuesta_seguridad: trimmedRespuesta,
+        });
         login(gestanteData); // actualiza el AuthContext
-        localStorage.setItem('user_name', `Gestante ${gestanteForm.codigo_gmi}`);
+        localStorage.setItem('user_name', `Gestante ${trimmedGmi}`);
+        localStorage.setItem('codigo_gmi', trimmedGmi);
+        localStorage.setItem('has_logged_in_before', 'true');
         setSuccessMessage('Sesión iniciada correctamente.');
         navigate('/main', { replace: true });
       }
@@ -213,46 +240,157 @@ export const FormLogin = () => {
 
       {!isStaff ? (
         <>
-          {gestanteStep === 1 && (
+          {showActivationForm ? (
             <>
-              <p>Código GMI</p>
-              <input
-                value={gestanteForm.codigo_gmi}
-                type="text"
-                placeholder="Ej. ID-GMI-2024-001"
-                disabled={isLoading}
-                onChange={(e) => handleGestanteForm('codigo_gmi', e.target.value)}
-              />
-            </>
-          )}
+              <p style={{ fontWeight: '600', color: '#CA436E', marginBottom: '8px' }}>Configurar Pregunta de Seguridad</p>
+              <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '15px', lineHeight: '1.4' }}>
+                Tu cuenta requiere ser activada. Elige una pregunta de seguridad y tu respuesta (funcionará como tu contraseña secreta) para enviar la solicitud de activación al administrador.
+              </p>
 
-          {gestanteStep === 2 && (
-            <>
               <p>Pregunta de Seguridad</p>
-              <div style={{ padding: '12px', background: '#fef5f8', borderRadius: '8px', borderLeft: '4px solid #CA436E', marginBottom: '15px', color: '#CA436E', fontWeight: '500' }}>
-                {securityQuestion}
-              </div>
+              <select
+                value={activationQuestion}
+                onChange={(e) => setActivationQuestion(e.target.value)}
+                disabled={isSubmittingActivation}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  borderRadius: '8px',
+                  border: '1px solid #ddd',
+                  marginBottom: '15px',
+                  fontSize: '0.9rem',
+                  backgroundColor: 'white',
+                  boxSizing: 'border-box'
+                }}
+              >
+                <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu primera mascota?</option>
+                <option value="¿Cuál es el nombre de tu ciudad natal?">¿Cuál es el nombre de tu ciudad natal?</option>
+                <option value="¿Cuál es tu color favorito?">¿Cuál es tu color favorito?</option>
+                <option value="¿Cuál es el nombre de tu mejor amigo de la infancia?">¿Cuál es el nombre de tu mejor amigo de la infancia?</option>
+                <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
+                <option value="¿Cuál es tu comida favorita?">¿Cuál es tu comida favorita?</option>
+                <option value="¿Cuál es el nombre de tu escuela de la infancia?">¿Cuál es el nombre de tu escuela de la infancia?</option>
+              </select>
 
+              <p>Tu Respuesta (Contraseña Secreta)</p>
               <input
-                value={gestanteForm.respuesta_seguridad}
-                type="password"
-                placeholder="Tu respuesta secreta"
-                disabled={isLoading}
-                onChange={(e) => handleGestanteForm('respuesta_seguridad', e.target.value)}
+                value={activationAnswer}
+                type="text"
+                placeholder="Escribe tu respuesta secreta"
+                disabled={isSubmittingActivation}
+                onChange={(e) => setActivationAnswer(e.target.value)}
+                style={{ width: '100%', boxSizing: 'border-box', marginBottom: '15px' }}
               />
 
-              <button
-                type="button"
-                onClick={() => {
-                  setGestanteStep(1);
-                  setGestanteForm(prev => ({ ...prev, respuesta_seguridad: '' }));
-                  setSuccessMessage(null);
-                  setErrorMessage(null);
-                }}
-                style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', marginTop: '10px', textDecoration: 'underline', fontSize: '0.9rem' }}
-              >
-                Volver y corregir código
-              </button>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowActivationForm(false);
+                    setErrorMessage(null);
+                    setSuccessMessage(null);
+                    setActivationAnswer('');
+                  }}
+                  disabled={isSubmittingActivation}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '8px',
+                    border: '1px solid #ccc',
+                    background: 'white',
+                    color: '#666',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                  }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendActivation}
+                  disabled={isSubmittingActivation}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#CA436E',
+                    color: 'white',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                  }}
+                >
+                  {isSubmittingActivation ? 'Enviando...' : 'Solicitar'}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              {gestanteStep === 1 && (
+                <>
+                  <p>Código GMI</p>
+                  <input
+                    value={gestanteForm.codigo_gmi}
+                    type="text"
+                    placeholder="Ej. ID-GMI-2024-001"
+                    disabled={isLoading}
+                    onChange={(e) => handleGestanteForm('codigo_gmi', e.target.value)}
+                  />
+                </>
+              )}
+
+              {gestanteStep === 2 && (
+                <>
+                  <p>Pregunta de Seguridad</p>
+                  <div style={{ padding: '12px', background: '#fef5f8', borderRadius: '8px', borderLeft: '4px solid #CA436E', marginBottom: '15px', color: '#CA436E', fontWeight: '500' }}>
+                    {securityQuestion}
+                  </div>
+
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%', marginTop: '8px' }}>
+                    <input
+                      value={gestanteForm.respuesta_seguridad}
+                      type={showAnswer ? "text" : "password"}
+                      placeholder="Tu respuesta secreta"
+                      disabled={isLoading}
+                      onChange={(e) => handleGestanteForm('respuesta_seguridad', e.target.value)}
+                      style={{ width: '100%', paddingRight: '45px', marginTop: 0 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAnswer(prev => !prev)}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#888',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                      }}
+                    >
+                      {showAnswer ? <EyeIcon /> : <EyeOffIcon />}
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setGestanteStep(1);
+                      setGestanteForm(prev => ({ ...prev, respuesta_seguridad: '' }));
+                      setSuccessMessage(null);
+                      setErrorMessage(null);
+                    }}
+                    style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', marginTop: '10px', textDecoration: 'underline', fontSize: '0.9rem' }}
+                  >
+                    Volver y corregir código
+                  </button>
+                </>
+              )}
             </>
           )}
         </>
@@ -268,13 +406,36 @@ export const FormLogin = () => {
           />
 
           <p>Contraseña</p>
-          <input
-            value={staffForm.password}
-            type="password"
-            placeholder="Tu contraseña"
-            disabled={isLoading}
-            onChange={(e) => handleStaffForm('password', e.target.value)}
-          />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: '100%', marginTop: '8px' }}>
+            <input
+              value={staffForm.password}
+              type={showPassword ? "text" : "password"}
+              placeholder="Tu contraseña"
+              disabled={isLoading}
+              onChange={(e) => handleStaffForm('password', e.target.value)}
+              style={{ width: '100%', paddingRight: '45px', marginTop: 0 }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(prev => !prev)}
+              style={{
+                position: 'absolute',
+                right: '12px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#888',
+                top: '50%',
+                transform: 'translateY(-50%)',
+              }}
+            >
+              {showPassword ? <EyeIcon /> : <EyeOffIcon />}
+            </button>
+          </div>
         </>
       )}
 
@@ -292,137 +453,26 @@ export const FormLogin = () => {
 
       {/* Registro oculto del login público según requerimiento */}
 
-      <div className={styles.boton}>
-        {(!isStaff && gestanteStep === 1) ? (
-          <button
-            type="button"
-            className={styles.lastbutton}
-            disabled={isLoading}
-            onClick={handleNextStep}
-          >
-            {isLoading ? 'Verificando...' : 'Continuar'}
-          </button>
-        ) : (
-          <button
-            type="submit"
-            className={styles.lastbutton}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Iniciando...' : 'Iniciar Sesión'}
-          </button>
-        )}
-      </div>
-      {/* ── Reset de contraseña (solo visible en modo staff) ── */}
-      {isStaff && !showReset && (
-        <button
-          type="button"
-          onClick={() => { setShowReset(true); setErrorMessage(null); setSuccessMessage(null); }}
-          style={{
-            background: 'none', border: 'none', color: '#CA436E',
-            cursor: 'pointer', marginTop: '12px', textDecoration: 'underline',
-            fontSize: '0.85rem', display: 'block', width: '100%', textAlign: 'center',
-          }}
-        >
-          ¿Olvidaste tu contraseña?
-        </button>
-      )}
-
-      {isStaff && showReset && (
-        <div style={{
-          marginTop: '16px', padding: '16px', borderRadius: '10px',
-          border: '1px solid #f0c0cc', background: '#fff8f9',
-        }}>
-          <p style={{ fontWeight: '600', color: '#CA436E', marginBottom: '12px', fontSize: '0.95rem' }}>
-            {resetStep === 1 ? '🔑 Restablecer contraseña' : '✅ Confirmar nueva contraseña'}
-          </p>
-
-          {resetStep === 1 && (
-            <>
-              <p style={{ fontSize: '0.85rem', color: '#555', marginBottom: '8px' }}>
-                Ingresa tu correo y te enviaremos un token de recuperación.
-              </p>
-              <input
-                type="email"
-                placeholder="correo@hospital.com"
-                value={resetEmail}
-                onChange={(e) => { setResetEmail(e.target.value); setErrorMessage(null); }}
-                disabled={isLoadingReset}
-                style={{
-                  width: '100%', padding: '10px', borderRadius: '8px',
-                  border: '1px solid #ddd', marginBottom: '10px',
-                  fontSize: '0.9rem', boxSizing: 'border-box',
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleResetRequest}
-                disabled={isLoadingReset}
-                style={{
-                  width: '100%', padding: '10px', borderRadius: '8px',
-                  background: '#CA436E', color: 'white', border: 'none',
-                  cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem',
-                }}
-              >
-                {isLoadingReset ? 'Enviando...' : 'Enviar token'}
-              </button>
-            </>
+      {!showActivationForm && (
+        <div className={styles.boton}>
+          {(!isStaff && gestanteStep === 1) ? (
+            <button
+              type="button"
+              className={styles.lastbutton}
+              disabled={isLoading}
+              onClick={handleNextStep}
+            >
+              {isLoading ? 'Verificando...' : 'Continuar'}
+            </button>
+          ) : (
+            <button
+              type="submit"
+              className={styles.lastbutton}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Iniciando...' : 'Iniciar Sesión'}
+            </button>
           )}
-
-          {resetStep === 2 && (
-            <>
-              <p style={{ fontSize: '0.85rem', color: '#555', marginBottom: '8px' }}>
-                Revisa tu correo e ingresa el token recibido junto a tu nueva contraseña.
-              </p>
-              <input
-                type="text"
-                placeholder="Token recibido por email"
-                value={resetToken}
-                onChange={(e) => { setResetToken(e.target.value); setErrorMessage(null); }}
-                disabled={isLoadingReset}
-                style={{
-                  width: '100%', padding: '10px', borderRadius: '8px',
-                  border: '1px solid #ddd', marginBottom: '10px',
-                  fontSize: '0.9rem', boxSizing: 'border-box',
-                }}
-              />
-              <input
-                type="password"
-                placeholder="Nueva contraseña"
-                value={resetNewPassword}
-                onChange={(e) => { setResetNewPassword(e.target.value); setErrorMessage(null); }}
-                disabled={isLoadingReset}
-                style={{
-                  width: '100%', padding: '10px', borderRadius: '8px',
-                  border: '1px solid #ddd', marginBottom: '10px',
-                  fontSize: '0.9rem', boxSizing: 'border-box',
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleResetConfirm}
-                disabled={isLoadingReset}
-                style={{
-                  width: '100%', padding: '10px', borderRadius: '8px',
-                  background: '#CA436E', color: 'white', border: 'none',
-                  cursor: 'pointer', fontWeight: '600', fontSize: '0.9rem',
-                }}
-              >
-                {isLoadingReset ? 'Confirmando...' : 'Confirmar nueva contraseña'}
-              </button>
-            </>
-          )}
-
-          <button
-            type="button"
-            onClick={() => { setShowReset(false); setResetStep(1); setResetEmail(''); setResetToken(''); setResetNewPassword(''); setErrorMessage(null); setSuccessMessage(null); }}
-            style={{
-              background: 'none', border: 'none', color: '#999',
-              cursor: 'pointer', marginTop: '10px', fontSize: '0.8rem',
-              textDecoration: 'underline', display: 'block', width: '100%', textAlign: 'center',
-            }}
-          >
-            Cancelar
-          </button>
         </div>
       )}
     </form>

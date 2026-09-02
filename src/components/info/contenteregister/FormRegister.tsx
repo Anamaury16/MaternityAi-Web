@@ -3,9 +3,10 @@ import modalStyles from '../../../pages/adminPages/StaffModal.module.css';
 import { useState, useEffect } from 'react';
 import { registerGestante } from '../../../services/m0Service';
 import type { GestanteRegisterRequest } from '../../../services/m0Service';
-import { getCatalogos } from '../../../services/adminService';
+import { getCatalogos, getGestantes } from '../../../services/adminService';
 import type { Catalogos } from '../../../services/adminService';
 import { CatalogField } from './CatalogField';
+import { registerPrenatalControl, registerVitals } from '../../../services/clinicalService';
 
 export const FormRegister = () => {
   const navigate = useNavigate();
@@ -26,6 +27,12 @@ export const FormRegister = () => {
     pregunta_seguridad: '¿Cuál es el nombre de tu primera mascota?',
     respuesta_seguridad: '',
   });
+
+  // Campos para parámetros físicos iniciales (solo visibles en modo staff/admin)
+  const [pesoInicial, setPesoInicial] = useState('');
+  const [tallaInicial, setTallaInicial] = useState('');
+  const [alturaUterinaInicial, setAlturaUterinaInicial] = useState('');
+  const isStaffMode = !!localStorage.getItem('token');
 
   useEffect(() => {
     getCatalogos()
@@ -50,12 +57,53 @@ export const FormRegister = () => {
 
     try {
       const response = await registerGestante(formData);
+
+      // Si es modo staff y tiene algún dato inicial físico, creamos el control prenatal inicial
+      if (isStaffMode && (pesoInicial || tallaInicial || alturaUterinaInicial)) {
+        try {
+          // 1. Consultamos la lista de gestantes para ubicar el id de la recién creada
+          const gestantes = await getGestantes();
+          const nuevaGestante = gestantes.find(g => g.codigo_gmi === response.codigo_gmi);
+
+          if (nuevaGestante?.id) {
+            // 2. Calcular semanas de gestación iniciales basadas en FUM
+            const fumDate = new Date(formData.fecha_ultima_menstruacion);
+            const today = new Date();
+            const diffDays = Math.ceil(Math.abs(today.getTime() - fumDate.getTime()) / (1000 * 60 * 60 * 24));
+            const semanas = Math.floor(diffDays / 7);
+
+            // 3. Registrar el primer control clínico prenatal
+            const control = await registerPrenatalControl({
+              gestante_id: nuevaGestante.id,
+              numero_control: 1,
+              fecha_control: today.toISOString().split('T')[0],
+              semana_gestacion: semanas,
+              observaciones: "Control prenatal inicial creado automáticamente al registrar usuaria.",
+            });
+
+            // 4. Registrar los signos vitales iniciales
+            await registerVitals({
+              control_prenatal_id: control.id,
+              peso_kg: pesoInicial ? parseFloat(pesoInicial) : 60,
+              talla_cm: tallaInicial ? parseFloat(tallaInicial) : null,
+              altura_uterina: alturaUterinaInicial ? parseFloat(alturaUterinaInicial) : null,
+            });
+          }
+        } catch (clinicalError) {
+          console.warn("No se pudieron inicializar los signos vitales:", clinicalError);
+        }
+      }
+
       setSuccess(true);
       // Guardamos el código GMI para el login posterior
       localStorage.setItem('temp_gmi', response.codigo_gmi);
       setTimeout(() => {
         alert(`${response.mensaje}. Tu código GMI es: ${response.codigo_gmi}`);
-        navigate('/login');
+        if (!isStaffMode) {
+          navigate('/login');
+        } else {
+          window.location.reload();
+        }
       }, 1500);
     } catch (err: any) {
       setError(err.message || 'Error al registrar. Inténtalo de nuevo.');
@@ -145,6 +193,10 @@ export const FormRegister = () => {
           <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu primera mascota?</option>
           <option value="¿Cuál es el nombre de tu ciudad natal?">¿Cuál es el nombre de tu ciudad natal?</option>
           <option value="¿Cuál es tu color favorito?">¿Cuál es tu color favorito?</option>
+          <option value="¿Cuál es el nombre de tu mejor amigo de la infancia?">¿Cuál es el nombre de tu mejor amigo de la infancia?</option>
+          <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
+          <option value="¿Cuál es tu comida favorita?">¿Cuál es tu comida favorita?</option>
+          <option value="¿Cuál es el nombre de tu escuela de la infancia?">¿Cuál es el nombre de tu escuela de la infancia?</option>
         </select>
       </div>
 
@@ -161,7 +213,52 @@ export const FormRegister = () => {
         />
       </div>
 
-      <div className={modalStyles.actions}>
+      {/* ── Datos Físicos Iniciales (Solo Staff/Admin) ── */}
+      {isStaffMode && (
+        <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(202, 67, 110, 0.03)', borderRadius: '12px', border: '1px dashed rgba(202, 67, 110, 0.3)' }}>
+          <h4 style={{ margin: '0 0 12px 0', fontSize: '13px', color: '#CA436E', fontWeight: 'bold' }}>Parámetros Físicos Iniciales (Opcional)</h4>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <div className={modalStyles.field} style={{ flex: 1, marginBottom: 0 }}>
+              <label className={modalStyles.label} style={{ fontSize: '11px' }}>Peso Inicial (kg)</label>
+              <input
+                className={modalStyles.input}
+                value={pesoInicial}
+                type="number"
+                step="any"
+                placeholder="Ej. 65"
+                onChange={(e) => setPesoInicial(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <div className={modalStyles.field} style={{ flex: 1, marginBottom: 0 }}>
+              <label className={modalStyles.label} style={{ fontSize: '11px' }}>Talla Inicial (cm)</label>
+              <input
+                className={modalStyles.input}
+                value={tallaInicial}
+                type="number"
+                step="any"
+                placeholder="Ej. 160"
+                onChange={(e) => setTallaInicial(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+            <div className={modalStyles.field} style={{ flex: 1, marginBottom: 0 }}>
+              <label className={modalStyles.label} style={{ fontSize: '11px' }}>Alt. Uterina (cm)</label>
+              <input
+                className={modalStyles.input}
+                value={alturaUterinaInicial}
+                type="number"
+                step="any"
+                placeholder="Ej. 12"
+                onChange={(e) => setAlturaUterinaInicial(e.target.value)}
+                disabled={loading}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={modalStyles.actions} style={{ marginTop: '20px' }}>
         <button
           type="submit"
           className={modalStyles.submitBtn}

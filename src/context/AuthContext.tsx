@@ -4,7 +4,7 @@ import type { LoginResponse } from '../services/authService';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
-export type UserRole = 'gestante' | 'admin' | 'clinico' | 'investigador' | null;
+export type UserRole = 'gestante' | 'admin' | 'clinico' | 'hospital' | null;
 
 export interface AuthUser {
   role: UserRole;
@@ -60,10 +60,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('role');
+  const logout = useCallback(async () => {
+    try {
+      const authService = await import('../services/authService');
+      await authService.logoutUser();
+    } catch (e) {
+      console.error('Failed to log out from server, clearing local storage:', e);
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('role');
+    } finally {
+      sessionStorage.clear();
+      localStorage.removeItem('selected_gestante_gmi');
+      localStorage.removeItem('selected_gestante_id');
+      localStorage.removeItem('user_name');
+      localStorage.removeItem('codigo_gmi');
+      localStorage.removeItem('consent_accepted');
+    }
     setUser({ role: null, isAuthenticated: false });
   }, []);
 

@@ -1,5 +1,5 @@
 .container {
-  margin: 20px 0;
+  margin: 10px 0;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -20,7 +20,7 @@
   }
 
   & .right {
-    width: 48%;
+    width: 52%;
   }
 
   & img {
@@ -31,10 +31,10 @@
   }
 
   & .right {
-    margin-top: 40px;
+    margin-top: 15px;
     display: grid;
-    gap: 15px;
-    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-rows: auto auto;
     align-items: start;
     grid-template-areas:
@@ -46,6 +46,7 @@
     & .registros {
       transition: all 0.3s ease;
       animation: slideUp 0.8s ease-out backwards;
+      min-width: 0;
     }
 
     & .datos:hover,
@@ -120,7 +121,7 @@
   }
 }
 
-@media (max-width: 1100px) and (min-width: 769px) {
+@media (max-width: 1200px) and (min-width: 1025px) {
   .container {
     flex-direction: column;
     align-items: center;
@@ -150,10 +151,10 @@
   display: none;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .container {
     flex-direction: column;
-    margin-top: 0;
+    margin-top: -20px;
     margin-left: -20px;
     margin-right: -20px;
     overflow-x: hidden;
@@ -179,15 +180,32 @@
   }
 
   .mobileHeaderBg {
-    background: linear-gradient(to bottom, #F5BCCF 0%, #fae6ec 100%);
-    padding: 30px 20px 60px 20px;
+    background: linear-gradient(to bottom, #f5bccf 0%, #fae6ec 100%);
+    padding: 45px 20px 105px 20px;
     width: 100%;
+    position: relative;
+    z-index: 10;
+    margin-top: 0;
+  }
+
+  .mobileAlertsOverlay {
+    position: absolute;
+    top: 80px;
+    left: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    animation: fadeIn 0.3s ease;
   }
 
   .mobileHeaderContent {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
   }
 
   .mobileGreeting {
@@ -213,51 +231,72 @@
     right: 3px;
     width: 8px;
     height: 8px;
-    background-color: #FF1053;
+    background-color: #ff1053;
     border-radius: 50%;
     border: 1px solid white;
   }
 
   .mobileCard {
     background: white;
-    border-radius: 25px 25px 0 0;
-    margin-top: -25px;
-    padding: 25px 20px;
+    border-radius: 40px 40px 0 0;
+    margin-top: -38px;
+    padding: 40px 20px 25px 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
+    position: relative;
+    box-shadow: 0 -12px 30px rgba(223, 93, 134, 0.06);
+    flex: 1;
+    z-index: 20;
   }
 
   .weeksCounter {
     display: flex;
-    align-items: flex-end;
-    gap: 12px;
-    margin-bottom: 5px;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 8px;
   }
 
   .weekSide {
-    font-size: 20px;
-    color: #AF6A7E;
-    font-weight: 500;
+    font-size: 22px;
+    color: rgba(202, 67, 110, 0.4);
+    font-weight: 600;
+    transition: all 0.3s ease;
   }
 
   .weekCenter {
-    font-size: 42px;
-    color: #E2A6B7;
-    font-weight: 500;
+    font-size: 54px;
+    color: #ca436e;
+    font-weight: 800;
     line-height: 0.85;
+    text-shadow: 0 4px 12px rgba(202, 67, 110, 0.15);
+    transition: all 0.3s ease;
   }
 
   .weeksLabel {
-    font-size: 18px;
-    color: #C04A6B;
-    font-weight: bold;
-    margin-bottom: 25px;
+    font-size: 20px;
+    color: #ca436e;
+    font-weight: 700;
+    margin-top: 2px;
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+
+  .mobileTrimestreLabel {
+    font-size: 14px;
+    color: #888;
+    font-weight: 600;
+    margin-bottom: 15px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
   .sintomasBtn {
-    background: linear-gradient(to right, #B9768B, #E0A4B6);
+    background: linear-gradient(to right, #b9768b, #e0a4b6);
     color: white;
     border: none;
     border-radius: 30px;
@@ -304,38 +343,112 @@
   }
 
   .prepCard {
-    background-color: #EEEEEE;
+    background-color: #eeeeee;
     border-radius: 15px;
     height: 140px;
     width: 100%;
   }
 }
 
-
 .seccion_informacion {
   position: relative;
   animation: float 3s ease-in-out infinite;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+
+  & img {
+    padding-left: 0 !important;
+    display: block;
+    margin: 0 auto;
+    max-width: 98%;
+    max-height: 73vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
 
   & .semanas {
-    padding-left: 100px;
+    padding-left: 0 !important;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
     bottom: 9%;
+    width: 100%;
 
     & h2 {
-      color: #9C4460;
+      color: #9c4460;
       font-size: 46px;
       font-weight: 600;
       margin: 0;
     }
 
     & p {
-      color: #DE7093;
+      color: #de7093;
       font-size: 18px;
       margin: 0;
       font-weight: 500;
     }
   }
+}
+
+.trimestreLabelOuter {
+  text-align: center;
+  color: #ca436e;
+  font-size: 24px;
+  font-weight: 700;
+  margin-top: 15px;
+  text-transform: capitalize;
+}
+
+.topActionBtn {
+  background: linear-gradient(135deg, #df5d86 0%, #ca436e 100%);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 12px 24px;
+  width: 100%;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(223, 93, 134, 0.25);
+  box-sizing: border-box;
+}
+
+.topActionBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(223, 93, 134, 0.35);
+}
+
+.topActionBtn:active {
+  transform: translateY(0);
+}
+
+.mobileAdditionalContainer {
+  padding: 0 20px;
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobileSectionHeader h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2e1020;
+  margin: 0;
+  letter-spacing: 0.3px;
+}
+
+.mobileSectionComponent {
+  width: 100% !important;
+  box-shadow: 0 4px 12px rgba(223, 93, 134, 0.08) !important;
 }

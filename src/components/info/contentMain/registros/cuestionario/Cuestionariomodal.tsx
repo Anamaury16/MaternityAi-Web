@@ -129,7 +129,7 @@ export const CuestionarioModal = ({ questions, loading, onClose, onSubmit }: Pro
       );
     }
 
-    if (q.tipo_respuesta === 'booleana') {
+    if (q.tipo_respuesta === 'booleana' || q.tipo_respuesta === 'si_no') {
       return (
         <div className={styles.boolGroup}>
           {([
@@ -152,7 +152,7 @@ export const CuestionarioModal = ({ questions, loading, onClose, onSubmit }: Pro
       );
     }
 
-    if (q.tipo_respuesta === 'numerica') {
+    if (q.tipo_respuesta === 'numerica' || q.tipo_respuesta === 'escala_numerica' || q.tipo_respuesta === 'escala_1_5') {
       return (
         <div className={styles.numericField}>
           <input

@@ -122,11 +122,16 @@ export const useCitas = () => {
 
   const fetch = useCallback(() => run(getCitas), [run]);
 
+  // No usa `run`: un fallo al crear no debe pisar el `error`/`data`
+  // compartido que usa la lista para renderizar (dejaría la lista
+  // completa oculta detrás de un mensaje de error aunque siga intacta).
   const create = useCallback(
     async (payload: CitaMedicaCreate) => {
-      await run(() => createCita(payload).then(() => getCitas()));
+      await createCita(payload);
+      const refreshed = await getCitas();
+      setData(refreshed);
     },
-    [run],
+    [setData],
   );
 
   const reprogramar = useCallback(

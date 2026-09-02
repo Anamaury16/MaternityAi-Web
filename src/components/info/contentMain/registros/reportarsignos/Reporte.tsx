@@ -15,7 +15,13 @@ export const Reporte = ({ text }: Props) => {
     descripcion: string,
     severidad: 'leve' | 'moderado' | 'severo' | null,
   ) => {
-    await report({ descripcion, severidad: severidad ?? undefined });
+    const severidadMap: Record<string, 'Leve' | 'Moderado' | 'Severo'> = {
+      leve: 'Leve',
+      moderado: 'Moderado',
+      severo: 'Severo',
+    };
+    const mappedSeveridad = severidad ? severidadMap[severidad] : undefined;
+    await report({ descripcion, severidad: mappedSeveridad });
   };
 
   return (

@@ -1,15 +1,42 @@
 import { useState } from 'react';
 import styles from './RiskSummaryCard.module.css';
 import { useRiskSummary } from '../../../../hooks/ia/useRiskSummary';
+import { Modal } from '../../../Modal';
+import { getExplainability, type ExplainabilityResponse } from '../../../../services/iaService';
 
 interface RiskDetails {
   class: string;
   label: string;
+  icon: string;
+  prefix: string;
 }
 
 export const RiskSummaryCard = () => {
   const { summary, isLoading, error, updateEvaluation } = useRiskSummary();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isExplainOpen, setIsExplainOpen] = useState(false);
+  const [explainData, setExplainData] = useState<ExplainabilityResponse | null>(null);
+  const [isExplainLoading, setIsExplainLoading] = useState(false);
+  const [explainError, setExplainError] = useState<string | null>(null);
+
+  const handleOpenExplain = async (assessmentId: string) => {
+    setIsExplainOpen(true);
+    if (explainData?.assessment_id === assessmentId) return;
+
+    setIsExplainLoading(true);
+    setExplainError(null);
+    try {
+      const response = await getExplainability(assessmentId);
+      setExplainData(response);
+    } catch (err: any) {
+      console.error('Error fetching explainability:', err);
+      setExplainError(
+        err.response?.data?.detail || 'No se pudo obtener la explicación de esta evaluación.'
+      );
+    } finally {
+      setIsExplainLoading(false);
+    }
+  };
 
   if (isLoading && !summary) {
     return (
@@ -35,6 +62,7 @@ export const RiskSummaryCard = () => {
   if (!summary) return null;
 
   const {
+    assessment_id,
     nivel_riesgo,
     resumen,
     factores_riesgo,
@@ -43,25 +71,33 @@ export const RiskSummaryCard = () => {
     semana_gestacion,
   } = summary;
 
-  // Mapear el nivel de riesgo a clases de estilo y etiquetas
+  // Mapear el nivel de riesgo a clases de estilo y etiquetas con mejoras de accesibilidad
   const riskConfig: Record<'verde' | 'amarillo' | 'rojo', RiskDetails> = {
     verde: {
       class: styles.riskGreen,
       label: 'Riesgo Bajo',
+      icon: '✅',
+      prefix: 'Estado:',
     },
     amarillo: {
       class: styles.riskYellow,
       label: 'Riesgo Medio',
+      icon: '⚠️',
+      prefix: 'Precaución:',
     },
     rojo: {
       class: styles.riskRed,
       label: 'Riesgo Alto',
+      icon: '🚨',
+      prefix: 'Alerta:',
     },
   };
 
   const currentRisk = riskConfig[nivel_riesgo] || {
     class: styles.riskYellow,
     label: 'Desconocido',
+    icon: '❓',
+    prefix: 'Estado:',
   };
 
   return (
@@ -69,10 +105,41 @@ export const RiskSummaryCard = () => {
       {/* Encabezado */}
       <div className={styles.header}>
         <div className={styles.riskBadge}>
-          <span className={`${styles.statusDot} ${styles[nivel_riesgo] || styles.verde}`} />
-          <span className={styles.riskLabel}>{currentRisk.label}</span>
+          <span className={styles.riskIcon} style={{ marginRight: '6px', fontSize: '18px' }}>{currentRisk.icon}</span>
+          <span className={styles.riskLabel}>
+            <span className={styles.accessibilityPrefix} style={{ fontSize: '13px', fontWeight: 500, opacity: 0.8, marginRight: '4px' }}>{currentRisk.prefix}</span>
+            {currentRisk.label}
+          </span>
         </div>
         <span className={styles.weekBadge}>Semana {semana_gestacion}</span>
+      </div>
+
+      {/* Semáforo visual prominente */}
+      <div className={styles.semaforoRow}>
+        <div className={styles.semaforoDots} aria-label={`Semáforo de riesgo: ${currentRisk.label}`}>
+          <div 
+            className={`${styles.semaforoDot} ${nivel_riesgo === 'rojo' ? styles.dotRojo : styles.dotOff}`} 
+            title="Posición superior: Alerta de Riesgo Alto"
+          />
+          <div 
+            className={`${styles.semaforoDot} ${nivel_riesgo === 'amarillo' ? styles.dotAmarillo : styles.dotOff}`} 
+            title="Posición media: Precaución de Riesgo Medio"
+          />
+          <div 
+            className={`${styles.semaforoDot} ${nivel_riesgo === 'verde' ? styles.dotVerde : styles.dotOff}`} 
+            title="Posición inferior: Estado de Riesgo Bajo"
+          />
+        </div>
+        <div className={styles.semaforoInfo}>
+          <span className={`${styles.semaforoLevel} ${styles[`level${nivel_riesgo.charAt(0).toUpperCase() + nivel_riesgo.slice(1)}`]}`}>
+            {currentRisk.icon} {currentRisk.label}
+          </span>
+          <span className={styles.semaforoDesc}>
+            {nivel_riesgo === 'verde' && 'Embarazo sin factores de riesgo críticos detectados. Continúa con tus controles.'}
+            {nivel_riesgo === 'amarillo' && 'Se detectaron factores a vigilar. Consulta a tu equipo médico pronto.'}
+            {nivel_riesgo === 'rojo' && '⚠️ Situación urgente. Contacta a tu equipo médico de inmediato.'}
+          </span>
+        </div>
       </div>
 
       {/* Resumen principal */}
@@ -146,6 +213,22 @@ export const RiskSummaryCard = () => {
 
       {/* Acciones */}
       <div className={styles.actions}>
+        {assessment_id && (
+          <button
+            onClick={() => handleOpenExplain(assessment_id)}
+            disabled={isLoading}
+            className={styles.refreshBtn}
+          >
+            <span className={styles.refreshBtnLabel}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={styles.titleIcon} style={{ marginRight: '6px' }}>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 1 1 5.83 1c0 2-3 2-3 4" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              Ver explicación
+            </span>
+          </button>
+        )}
         <button
           onClick={updateEvaluation}
           disabled={isLoading}
@@ -164,6 +247,49 @@ export const RiskSummaryCard = () => {
           )}
         </button>
       </div>
+
+      {/* Modal de explicabilidad */}
+      <Modal
+        isOpen={isExplainOpen}
+        onClose={() => setIsExplainOpen(false)}
+        title="Explicación de la evaluación de riesgo"
+      >
+        {isExplainLoading ? (
+          <p className={styles.resumenText}>Cargando explicación...</p>
+        ) : explainError ? (
+          <p className={styles.resumenText}>{explainError}</p>
+        ) : explainData ? (
+          <>
+            <p className={styles.resumenText}>{explainData.explicacion}</p>
+
+            {explainData.factores_determinantes.length > 0 && (
+              <div className={styles.section}>
+                <h4 className={styles.sectionTitle}>Factores determinantes</h4>
+                <ul className={styles.list}>
+                  {explainData.factores_determinantes.map((factor, idx) => (
+                    <li key={idx} className={styles.listItem}>
+                      {factor}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {explainData.datos_utilizados.length > 0 && (
+              <div className={styles.section}>
+                <h4 className={styles.sectionTitle}>Datos utilizados</h4>
+                <ul className={styles.list}>
+                  {explainData.datos_utilizados.map((dato, idx) => (
+                    <li key={idx} className={styles.listItem}>
+                      {dato}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </>
+        ) : null}
+      </Modal>
     </div>
   );
 };

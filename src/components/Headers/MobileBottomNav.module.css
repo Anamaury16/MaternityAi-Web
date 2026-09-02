@@ -28,6 +28,7 @@
 
 .navItem.active {
   color: #df5d86; /* Active state color matching theme */
+  animation: bounce 0.4s ease;
 }
 
 .icon {
@@ -45,10 +46,27 @@
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 10px rgba(223, 93, 134, 0.3);
+  transition: all 0.3s ease;
+}
+
+.navItem.active .aiIconWrapper {
+  animation: bounceAi 0.5s ease;
 }
 
 .iconAi {
   width: 24px;
   height: 24px;
   stroke: white;
+}
+
+@keyframes bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes bounceAi {
+  0% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.1) translateY(-4px); }
+  100% { transform: scale(1) translateY(0); }
 }

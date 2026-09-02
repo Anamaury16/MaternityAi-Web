@@ -1,81 +1,68 @@
 .recomendaciones {
-  background: linear-gradient(to bottom, #fbeff3, #e799b2, #c57e94);
-  border-radius: 20px;
-  padding: 10px 30px 70px 30px;
-  box-shadow: -3px 3px 6px rgb(180, 180, 180);
-
-  & h3 {
-    color: white;
-    font-weight: normal;
-    font-size: 28px;
-  }
-
-  & .articulo {
-    border: 1px solid none;
-    border-radius: 12px;
-    background-color: white;
-    padding: 17px 10px 17px 30px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-    color: rgb(170, 170, 170);
-    margin-bottom: 10px;
-  }
-
-  & .articulo:hover {
-    box-shadow: 3px 3px 6px rgb(124, 124, 124);
-    cursor: pointer;
-  }
-
-  & button {
-    background-color: transparent;
-    border: none;
-    color: #f8a2bd;
-    font-size: 12px;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
-@media (max-width: 768px) {
-  .recomendaciones {
-    background: transparent;
-    box-shadow: none;
-    padding: 0 0 10px 20px;
-    display: flex;
-    flex-direction: column;
-  }
+.sideLabel {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #ca436e;
+  margin: 0 0 2px 0;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
 
-  .recomendaciones h3 {
-    display: block;
-    color: #E24C6C;
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 15px;
-    margin-top: 0;
-  }
+.moduleHint {
+  font-size: 11px;
+  font-weight: 600;
+  color: #b05070;
+  margin: 0 0 4px 0;
+  opacity: 0.8;
+}
 
-  .carousel {
-    display: flex;
-    flex-direction: row;
-    overflow-x: auto;
-    gap: 15px;
-    scrollbar-width: none; /* Firefox */
-  }
+.rec {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  color: #4a2a38;
+  line-height: 1.55;
+  font-weight: 400;
+}
 
-  .carousel::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
-  }
+.recDot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f08aaa, #ca436e);
+  margin-top: 5px;
+  box-shadow: 0 1px 4px rgba(202, 67, 110, 0.35);
+}
 
-  .articulo {
-    min-width: 250px;
-    margin-bottom: 0;
-    flex-direction: column;
-    padding: 15px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    border: 1px solid #f9f9f9;
-  }
+.motivacional {
+  font-size: 12px;
+  color: #903c54;
+  font-style: italic;
+  margin: 4px 0 0 0;
+  line-height: 1.5;
+  border-top: 1px solid rgba(202, 67, 110, 0.12);
+  padding-top: 8px;
+}
 
-  .articulo button {
-    margin-top: 10px;
-    align-self: flex-start;
-  }
+/* Skeleton loading */
+.skeletonLine {
+  height: 13px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f5e0e8 0%, #fce8f0 50%, #f5e0e8 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  width: 100%;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }

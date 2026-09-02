@@ -14,6 +14,8 @@ import {
   type CitaAdminResponse,
 } from '../../services/adminService';
 
+import { calculateCurrentWeeks, getFaseOrTrimestre } from '../../utils/gestationalAgeUtils';
+
 const DIAS_SEMANA = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM'];
 
 const MESES = [
@@ -56,11 +58,34 @@ const formatFechaCorta = (iso: string) => {
   return `${d.getDate()} ${MESES_CORTOS[d.getMonth()]}`;
 };
 
-const getTrimestre = (semanas?: number | null) => {
-  if (!semanas) return 'N/A';
-  if (semanas <= 13) return 'Trimestre 1';
-  if (semanas <= 27) return 'Trimestre 2';
-  return 'Trimestre 3';
+const ESTADOS_SOLICITUD = ['pendiente', 'programada'];
+
+const estadoLabel = (estado: string) => {
+  switch (estado) {
+    case 'pendiente':
+    case 'programada':
+      return 'Pendiente';
+    case 'confirmada':
+      return 'Confirmada';
+    case 'cancelada':
+      return 'Cancelada';
+    default:
+      return estado;
+  }
+};
+
+const estadoBadgeClass = (estado: string) => {
+  switch (estado) {
+    case 'pendiente':
+    case 'programada':
+      return `${styles.estadoBadge} ${styles.estadoPendiente}`;
+    case 'confirmada':
+      return `${styles.estadoBadge} ${styles.estadoConfirmada}`;
+    case 'cancelada':
+      return `${styles.estadoBadge} ${styles.estadoCancelada}`;
+    default:
+      return styles.estadoBadge;
+  }
 };
 
 interface DiaCalendario {
@@ -90,6 +115,8 @@ const buildMonthGrid = (year: number, month: number): DiaCalendario[][] => {
   return weeks;
 };
 
+const MATERNAS_POR_PAGINA = 10;
+
 const EMPTY_NUEVA_CITA = {
   gestante_id: '',
   fecha: '',
@@ -101,7 +128,12 @@ export const AdminCitas = () => {
   const [gestantes, setGestantes] = useState<GestanteResponse[]>([]);
   const [citas, setCitas] = useState<CitaAdminResponse[]>([]);
   const [proximas, setProximas] = useState<CitaAdminResponse[]>([]);
+  const [solicitudes, setSolicitudes] = useState<CitaAdminResponse[]>([]);
+  const [solicitudesError, setSolicitudesError] = useState<string | null>(null);
+  const [quickActionId, setQuickActionId] = useState<string | null>(null);
+  const [quickActionError, setQuickActionError] = useState<string | null>(null);
   const [busqueda, setBusqueda] = useState('');
+  const [paginaMaternas, setPaginaMaternas] = useState(1);
   const [selPaciente, setSelPaciente] = useState<string | null>(() => {
     return localStorage.getItem('selected_gestante_gmi') || 'XYZ1002';
   });
@@ -109,10 +141,13 @@ export const AdminCitas = () => {
   useEffect(() => {
     if (selPaciente && selPaciente !== 'XYZ1002') {
       localStorage.setItem('selected_gestante_gmi', selPaciente);
+      const g = gestantes.find(p => p.codigo_gmi === selPaciente);
+      if (g) {
+        localStorage.setItem('selected_gestante_id', g.id);
+      }
     }
-  }, [selPaciente]);
+  }, [selPaciente, gestantes]);
 
-  const [vista, setVista] = useState<'Mes' | 'Semana'>('Mes');
   const [currentDate, setCurrentDate] = useState(() => {
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -168,9 +203,25 @@ export const AdminCitas = () => {
     }
   };
 
+  const fetchSolicitudes = async () => {
+    setSolicitudesError(null);
+    try {
+      const from = toISODate(new Date());
+      const data = await getAppointments({ from });
+      const activas = data
+        .filter(c => ESTADOS_SOLICITUD.includes(c.estado) || c.estado === 'cancelada')
+        .sort((a, b) => new Date(a.fecha_hora).getTime() - new Date(b.fecha_hora).getTime());
+      setSolicitudes(activas);
+    } catch (err: any) {
+      console.error(err);
+      setSolicitudesError('Error al cargar las solicitudes de citas.');
+    }
+  };
+
   useEffect(() => {
     fetchGestantes();
     fetchProximas();
+    fetchSolicitudes();
   }, []);
 
   useEffect(() => {
@@ -178,16 +229,59 @@ export const AdminCitas = () => {
   }, [currentDate]);
 
   const refrescarCitas = async () => {
-    await Promise.all([fetchCitasMes(), fetchProximas()]);
+    await Promise.all([fetchCitasMes(), fetchProximas(), fetchSolicitudes()]);
+  };
+
+  const quickConfirmar = async (id: string) => {
+    setQuickActionId(id);
+    setQuickActionError(null);
+    try {
+      await confirmarAppointment(id);
+      await refrescarCitas();
+    } catch (err: any) {
+      console.error(err);
+      setQuickActionError('Error al confirmar la cita.');
+    } finally {
+      setQuickActionId(null);
+    }
+  };
+
+  const quickCancelar = async (id: string) => {
+    setQuickActionId(id);
+    setQuickActionError(null);
+    try {
+      await cancelarAppointment(id);
+      await refrescarCitas();
+    } catch (err: any) {
+      console.error(err);
+      setQuickActionError('Error al cancelar la cita.');
+    } finally {
+      setQuickActionId(null);
+    }
   };
 
   const cambiarMes = (delta: number) => {
     setCurrentDate(d => new Date(d.getFullYear(), d.getMonth() + delta, 1));
   };
 
-  const filtrados = gestantes.filter(g =>
-    g.codigo_gmi.toLowerCase().includes(busqueda.toLowerCase())
+  const filtrados = gestantes
+    .filter(g => g.codigo_gmi.toLowerCase().includes(busqueda.toLowerCase()))
+    .sort((a, b) => {
+      const aAlerta = a.ultimo_estado_alerta === 'activa' ? 1 : 0;
+      const bAlerta = b.ultimo_estado_alerta === 'activa' ? 1 : 0;
+      return bAlerta - aAlerta;
+    });
+
+  const totalPaginasMaternas = Math.max(1, Math.ceil(filtrados.length / MATERNAS_POR_PAGINA));
+  const paginaMaternasClamped = Math.min(paginaMaternas, totalPaginasMaternas);
+  const maternasPagina = filtrados.slice(
+    (paginaMaternasClamped - 1) * MATERNAS_POR_PAGINA,
+    paginaMaternasClamped * MATERNAS_POR_PAGINA
   );
+
+  useEffect(() => {
+    setPaginaMaternas(1);
+  }, [busqueda]);
 
   const citasPorDia = new Set(citas.map(c => toISODate(new Date(c.fecha_hora))));
   const todayISO = toISODate(new Date());
@@ -306,19 +400,62 @@ export const AdminCitas = () => {
             />
           </div>
           <div className={styles.pList}>
-            {filtrados.map((p, i) => (
+            {maternasPagina.map((p, i) => {
+              const currentWeeks = calculateCurrentWeeks(p.fecha_ultima_menstruacion);
+              return (
               <div
                 key={p.id || i}
                 className={`${styles.pItem} ${p.codigo_gmi === selPaciente ? styles.pItemSel : ''}`}
                 onClick={() => setSelPaciente(p.codigo_gmi)}
               >
-                <span className={styles.pId}>{p.codigo_gmi}</span>
+                <span className={styles.pId}>
+                  {p.codigo_gmi}
+                  {p.ultimo_estado_alerta === 'activa' && (
+                    <svg 
+                      width="14" 
+                      height="14" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="#ff4b72" 
+                      strokeWidth="2.5" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round"
+                      style={{ marginLeft: '8px', display: 'inline-block', verticalAlign: 'middle' }}
+                    >
+                      <title>Alerta Activa</title>
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                  )}
+                </span>
                 <div>
-                  <div className={styles.pDetail}>Nro Semana · {p.semanas_eg_ingreso || 0}</div>
-                  <div className={styles.pDetail}>Fase · {getTrimestre(p.semanas_eg_ingreso)}</div>
+                  <div className={styles.pDetail}>Nro Semana · {currentWeeks}</div>
+                  <div className={styles.pDetail}>Fase · {getFaseOrTrimestre(currentWeeks)}</div>
                 </div>
               </div>
-            ))}
+            )})}
+          </div>
+          <div className={styles.paginacion}>
+            <button
+              type="button"
+              className={styles.paginacionBtn}
+              onClick={() => setPaginaMaternas(p => Math.max(1, p - 1))}
+              disabled={paginaMaternasClamped <= 1}
+            >
+              Anterior
+            </button>
+            <span className={styles.paginacionInfo}>
+              Página {paginaMaternasClamped} de {totalPaginasMaternas}
+            </span>
+            <button
+              type="button"
+              className={styles.paginacionBtn}
+              onClick={() => setPaginaMaternas(p => Math.min(totalPaginasMaternas, p + 1))}
+              disabled={paginaMaternasClamped >= totalPaginasMaternas}
+            >
+              Siguiente
+            </button>
           </div>
         </div>
 
@@ -341,15 +478,9 @@ export const AdminCitas = () => {
                   <button className={styles.navBtn} onClick={() => cambiarMes(1)}>›</button>
                 </div>
                 <div className={styles.vistaToggle}>
-                  {(['Mes', 'Semana'] as const).map(v => (
-                    <button
-                      key={v}
-                      className={`${styles.vistaBtn} ${vista === v ? styles.vistaBtnOn : ''}`}
-                      onClick={() => setVista(v)}
-                    >
-                      {v}
-                    </button>
-                  ))}
+                  <button className={`${styles.vistaBtn} ${styles.vistaBtnOn}`}>
+                    Mes
+                  </button>
                 </div>
               </div>
 
@@ -420,6 +551,58 @@ export const AdminCitas = () => {
                   );
                 })}
               </div>
+            </div>
+          </div>
+
+          {/* Solicitudes de citas hechas por las gestantes */}
+          <div className={styles.solicitudesSection}>
+            <h3 className={styles.proxTitulo}>Solicitudes de Citas de Gestantes</h3>
+            {solicitudesError && (
+              <p style={{ color: '#dc2626', fontSize: '13px', margin: '0 0 10px', fontWeight: 500 }}>⚠️ {solicitudesError}</p>
+            )}
+            {quickActionError && (
+              <p style={{ color: '#dc2626', fontSize: '13px', margin: '0 0 10px', fontWeight: 500 }}>⚠️ {quickActionError}</p>
+            )}
+            <div className={styles.solicitudesList}>
+              {solicitudes.length === 0 && (
+                <p style={{ color: '#999', fontSize: '12px', margin: 0 }}>No hay solicitudes de citas.</p>
+              )}
+              {solicitudes.map(c => {
+                const esPendiente = ESTADOS_SOLICITUD.includes(c.estado);
+                const loading = quickActionId === c.id;
+                return (
+                  <div key={c.id} className={styles.solicitudCard}>
+                    <div className={styles.solicitudInfo}>
+                      <span className={styles.citaPaciente}>{c.codigo_gmi}</span>
+                      <span className={styles.citaHora}>
+                        {formatFechaCorta(c.fecha_hora)} · {formatHora(c.fecha_hora)}
+                      </span>
+                      <span className={styles.citaTipoBadge}>{c.tipo_cita || 'Cita'}</span>
+                      <span className={estadoBadgeClass(c.estado)}>{estadoLabel(c.estado)}</span>
+                    </div>
+                    {esPendiente && (
+                      <div className={styles.solicitudActions}>
+                        <button
+                          type="button"
+                          className={styles.quickCancelBtn}
+                          onClick={() => quickCancelar(c.id)}
+                          disabled={loading}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.quickConfirmBtn}
+                          onClick={() => quickConfirmar(c.id)}
+                          disabled={loading}
+                        >
+                          Confirmar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 

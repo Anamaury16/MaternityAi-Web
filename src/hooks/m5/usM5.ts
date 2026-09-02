@@ -27,6 +27,7 @@ import {
   type AutoevaluacionResponse,
   type AutoevaluacionDetalleResponse,
 } from '../../services/m5Service';
+import { getActiveModule, type ActiveModule } from '../../services/m0Service';
 
 // ---------------------------------------------------------------------------
 // Hook base genérico interno
@@ -73,15 +74,38 @@ function useAsyncState<T>(initialData: T | null = null): [
 
 export const useEducationalContent = () => {
   const [state, run] = useAsyncState<ContenidoEducativoResponse[]>([]);
+  const [activeModule, setActiveModule] = useState<ActiveModule | null>(null);
 
-  const fetch = useCallback(() => run(getContentByModule), [run]);
+  const fetch = useCallback(async () => {
+    // 1. Sincronizar módulo activo desde FUM (actualiza modulo_activo_id en BD)
+    let moduloId: number | undefined;
+    try {
+      const modulo = await getActiveModule();
+      setActiveModule(modulo);
+      moduloId = modulo.modulo_id;
+    } catch {
+      // Si falla, igual intentamos traer el contenido sin filtro de módulo
+    }
+    // 2. Traer contenido filtrado por el módulo activo real (pasado explícitamente)
+    await run(() => getContentByModule(moduloId));
+  }, [run]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    fetch();
+    const handleModuleChange = () => {
+      fetch();
+    };
+    window.addEventListener('maternity-active-module-changed', handleModuleChange);
+    return () => {
+      window.removeEventListener('maternity-active-module-changed', handleModuleChange);
+    };
+  }, [fetch]);
 
   return {
     data: state.data ?? [],
     loading: state.loading,
     error: state.error,
+    activeModule,
     refresh: fetch,
   };
 };

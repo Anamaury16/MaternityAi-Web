@@ -79,13 +79,27 @@ export const DeleteAccount: React.FC = () => {
     }
   };
 
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
     <div className={styles.card} style={{ border: '1px solid rgba(227, 38, 54, 0.2)' }}>
-      <div className={styles.header}>
-        <h3 style={{ color: '#e32636' }}>Solicitar Eliminación de Cuenta</h3>
+      <div 
+        className={styles.header} 
+        onClick={() => setIsExpanded(!isExpanded)}
+        style={{ 
+          cursor: 'pointer', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          marginBottom: isExpanded ? '20px' : '0px'
+        }}
+      >
+        <h3 style={{ color: '#e32636', margin: 0 }}>Solicitar Eliminación de Cuenta</h3>
+        <span style={{ color: '#e32636', fontSize: '12px', fontWeight: 'bold' }}>{isExpanded ? '▲' : '▼'}</span>
       </div>
 
-      <div className={styles.content}>
+      {isExpanded && (
+        <div className={styles.content}>
         {/* Warning Banner */}
         <div style={{
           color: '#c62828',
@@ -222,7 +236,8 @@ export const DeleteAccount: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

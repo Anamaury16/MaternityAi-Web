@@ -1,4 +1,5 @@
 import api, { USE_MOCKS } from './api';
+import { getBirthRecord } from './m4Service';
 
 // ---------------------------------------------------------------------------
 // Interfaces — alineadas 1:1 con schemas.py del backend
@@ -96,7 +97,7 @@ export interface ActiveModule {
   modulo_id: number;
   codigo: string;
   nombre: string;
-  semana_gestacion_actual: number;
+  semana_gestacion_actual?: number | null;
 }
 
 // ---- Historial de Módulo ----
@@ -414,8 +415,83 @@ export const getActiveModule = async (): Promise<ActiveModule> => {
     await mockDelay();
     return MOCK_ACTIVE_MODULE;
   }
-  const response = await api.get('/api/v1/m0/active-module');
-  return response.data;
+
+  let baseModule: ActiveModule;
+  try {
+    const response = await api.get('/api/v1/m0/active-module');
+    baseModule = response.data;
+  } catch (error) {
+    // Fallback dinámico si el backend no puede determinar el módulo (ej. error 404 por superar las 42 semanas o NULL)
+    try {
+      const gestationalAge = await getGestationalAge();
+      const weeks = gestationalAge.semanas;
+      let modulo_id = 1;
+      let codigo = 'M1';
+      let nombre = 'Primer Trimestre';
+
+      if (weeks >= 14 && weeks <= 27) {
+        modulo_id = 2;
+        codigo = 'M2';
+        nombre = 'Segundo Trimestre';
+      } else if (weeks >= 28 && weeks <= 42) {
+        modulo_id = 3;
+        codigo = 'M3';
+        nombre = 'Tercer Trimestre - Crítico';
+      } else if (weeks > 42) {
+        modulo_id = 4;
+        codigo = 'M4';
+        nombre = 'Parto y Puerperio';
+      }
+
+      baseModule = {
+        modulo_id,
+        codigo,
+        nombre,
+        semana_gestacion_actual: weeks,
+      };
+    } catch {
+      throw error;
+    }
+  }
+
+  // Si es M1 o M2, no hay posibilidad de parto registrado
+  if (baseModule && (baseModule.codigo === 'M1' || baseModule.codigo === 'M2')) {
+    sessionStorage.setItem('has_birth_record', 'false');
+    return baseModule;
+  }
+
+  // Si es M3 o M4, verificamos de forma inteligente la existencia del parto
+  const cached = sessionStorage.getItem('has_birth_record');
+  if (cached === 'true') {
+    return {
+      modulo_id: 4,
+      codigo: 'M4',
+      nombre: 'Parto y Puerperio',
+      semana_gestacion_actual: undefined
+    };
+  } else if (cached === 'false') {
+    return baseModule;
+  }
+
+  // Si no está en caché, consultamos el endpoint
+  try {
+    const birth = await getBirthRecord();
+    if (birth && birth.id) {
+      sessionStorage.setItem('has_birth_record', 'true');
+      return {
+        modulo_id: 4,
+        codigo: 'M4',
+        nombre: 'Parto y Puerperio',
+        semana_gestacion_actual: undefined
+      };
+    } else {
+      sessionStorage.setItem('has_birth_record', 'false');
+    }
+  } catch (err) {
+    // Si hay error, continuamos sin almacenar caché 'false' permanentemente
+  }
+
+  return baseModule;
 };
 
 // GET /api/v1/m0/module-history
@@ -464,40 +540,188 @@ export interface ChecklistItem {
   modulo_id: number | null;
   semana_eg: number | null;
   orden: number | null;
-  activo: boolean;
+  activo?: boolean; // deprecated, use completado
+  completado?: boolean;
 }
 
 const MOCK_CHECKLIST: Record<string, ChecklistItem[]> = {
   M0: [
-    { id: 1, texto: 'Registro inicial completado', modulo_id: 0, semana_eg: null, orden: 1, activo: true },
-    { id: 2, texto: 'Perfil clínico diligenciado', modulo_id: 0, semana_eg: null, orden: 2, activo: false },
-    { id: 3, texto: 'Consentimiento informado firmado', modulo_id: 0, semana_eg: null, orden: 3, activo: false },
+    {
+      id: 1,
+      texto: 'Registro inicial completado',
+      modulo_id: 0,
+      semana_eg: null,
+      orden: 1,
+      activo: true,
+    },
+    {
+      id: 2,
+      texto: 'Perfil clínico diligenciado',
+      modulo_id: 0,
+      semana_eg: null,
+      orden: 2,
+      activo: false,
+    },
+    {
+      id: 3,
+      texto: 'Consentimiento informado firmado',
+      modulo_id: 0,
+      semana_eg: null,
+      orden: 3,
+      activo: false,
+    },
   ],
   M1: [
-    { id: 4, texto: 'Primer control prenatal realizado', modulo_id: 1, semana_eg: null, orden: 1, activo: true },
-    { id: 5, texto: 'Ácido fólico iniciado', modulo_id: 1, semana_eg: null, orden: 2, activo: true },
-    { id: 6, texto: 'Exámenes de laboratorio iniciales', modulo_id: 1, semana_eg: null, orden: 3, activo: false },
-    { id: 7, texto: 'Ecografía del primer trimestre', modulo_id: 1, semana_eg: 12, orden: 4, activo: false },
+    {
+      id: 4,
+      texto: 'Primer control prenatal realizado',
+      modulo_id: 1,
+      semana_eg: null,
+      orden: 1,
+      activo: true,
+    },
+    {
+      id: 5,
+      texto: 'Ácido fólico iniciado',
+      modulo_id: 1,
+      semana_eg: null,
+      orden: 2,
+      activo: true,
+    },
+    {
+      id: 6,
+      texto: 'Exámenes de laboratorio iniciales',
+      modulo_id: 1,
+      semana_eg: null,
+      orden: 3,
+      activo: false,
+    },
+    {
+      id: 7,
+      texto: 'Ecografía del primer trimestre',
+      modulo_id: 1,
+      semana_eg: 12,
+      orden: 4,
+      activo: false,
+    },
   ],
   M2: [
-    { id: 8, texto: 'Control prenatal semana 16-20', modulo_id: 2, semana_eg: null, orden: 1, activo: true },
-    { id: 9, texto: 'Vacuna influenza aplicada', modulo_id: 2, semana_eg: null, orden: 2, activo: false },
-    { id: 10, texto: 'Vacuna tosferina aplicada', modulo_id: 2, semana_eg: null, orden: 3, activo: false },
-    { id: 11, texto: 'Ecografía morfológica', modulo_id: 2, semana_eg: 20, orden: 4, activo: true },
-    { id: 12, texto: 'Hierro y calcio suministrados', modulo_id: 2, semana_eg: null, orden: 5, activo: false },
+    {
+      id: 8,
+      texto: 'Control prenatal semana 16-20',
+      modulo_id: 2,
+      semana_eg: null,
+      orden: 1,
+      activo: true,
+    },
+    {
+      id: 9,
+      texto: 'Vacuna influenza aplicada',
+      modulo_id: 2,
+      semana_eg: null,
+      orden: 2,
+      activo: false,
+    },
+    {
+      id: 10,
+      texto: 'Vacuna tosferina aplicada',
+      modulo_id: 2,
+      semana_eg: null,
+      orden: 3,
+      activo: false,
+    },
+    {
+      id: 11,
+      texto: 'Ecografía morfológica',
+      modulo_id: 2,
+      semana_eg: 20,
+      orden: 4,
+      activo: true,
+    },
+    {
+      id: 12,
+      texto: 'Hierro y calcio suministrados',
+      modulo_id: 2,
+      semana_eg: null,
+      orden: 5,
+      activo: false,
+    },
   ],
   M3: [
-    { id: 13, texto: 'Plan de parto elaborado', modulo_id: 3, semana_eg: null, orden: 1, activo: false },
-    { id: 14, texto: 'Control semana 28-32', modulo_id: 3, semana_eg: null, orden: 2, activo: true },
-    { id: 15, texto: 'Bolsa de maternidad lista', modulo_id: 3, semana_eg: 36, orden: 3, activo: false },
-    { id: 16, texto: 'Conteo de movimientos fetales iniciado', modulo_id: 3, semana_eg: null, orden: 4, activo: true },
-    { id: 17, texto: 'IPS de atención identificada', modulo_id: 3, semana_eg: null, orden: 5, activo: false },
+    {
+      id: 13,
+      texto: 'Plan de parto elaborado',
+      modulo_id: 3,
+      semana_eg: null,
+      orden: 1,
+      activo: false,
+    },
+    {
+      id: 14,
+      texto: 'Control semana 28-32',
+      modulo_id: 3,
+      semana_eg: null,
+      orden: 2,
+      activo: true,
+    },
+    {
+      id: 15,
+      texto: 'Bolsa de maternidad lista',
+      modulo_id: 3,
+      semana_eg: 36,
+      orden: 3,
+      activo: false,
+    },
+    {
+      id: 16,
+      texto: 'Conteo de movimientos fetales iniciado',
+      modulo_id: 3,
+      semana_eg: null,
+      orden: 4,
+      activo: true,
+    },
+    {
+      id: 17,
+      texto: 'IPS de atención identificada',
+      modulo_id: 3,
+      semana_eg: null,
+      orden: 5,
+      activo: false,
+    },
   ],
   M4: [
-    { id: 18, texto: 'Control posparto semana 1', modulo_id: 4, semana_eg: null, orden: 1, activo: true },
-    { id: 19, texto: 'Orientación lactancia materna', modulo_id: 4, semana_eg: null, orden: 2, activo: true },
-    { id: 20, texto: 'Método anticonceptivo definido', modulo_id: 4, semana_eg: null, orden: 3, activo: false },
-    { id: 21, texto: 'Control posparto semana 6', modulo_id: 4, semana_eg: null, orden: 4, activo: false },
+    {
+      id: 18,
+      texto: 'Control posparto semana 1',
+      modulo_id: 4,
+      semana_eg: null,
+      orden: 1,
+      activo: true,
+    },
+    {
+      id: 19,
+      texto: 'Orientación lactancia materna',
+      modulo_id: 4,
+      semana_eg: null,
+      orden: 2,
+      activo: true,
+    },
+    {
+      id: 20,
+      texto: 'Método anticonceptivo definido',
+      modulo_id: 4,
+      semana_eg: null,
+      orden: 3,
+      activo: false,
+    },
+    {
+      id: 21,
+      texto: 'Control posparto semana 6',
+      modulo_id: 4,
+      semana_eg: null,
+      orden: 4,
+      activo: false,
+    },
   ],
 };
 
@@ -510,9 +734,12 @@ export const getChecklistForGestante = async (
     return MOCK_CHECKLIST[moduloCodigo] ?? [];
   }
   try {
-    const response = await api.get<ChecklistItem[]>('/api/v1/clinical/checklist-items', {
-      params: { modulo_id: moduloId },
-    });
+    const response = await api.get<ChecklistItem[]>(
+      '/api/v1/clinical/checklist-items',
+      {
+        params: { modulo_id: moduloId },
+      }
+    );
     return response.data;
   } catch {
     // Endpoint aún no implementado — fallback a mocks

@@ -14,9 +14,8 @@ import {
 interface Pregunta {
   id: number;
   texto: string;
-  categoria: string;
+  categoria: string; // Módulo clínico descriptivo
   prioridad: 'Alta' | 'Medio' | 'Baja';
-  respuesta: string;
   tipo_respuesta: string;
   modulo_id?: number | null;
   frecuencia?: string | null;
@@ -26,36 +25,35 @@ interface Pregunta {
 }
 
 const MODULOS = [
-  { id: 1, nombre: 'M0 - Perfil Clínico' },
-  { id: 2, nombre: 'M1 - Primer Trimestre' },
-  { id: 3, nombre: 'M2 - Segundo Trimestre' },
-  { id: 4, nombre: 'M3 - Tercer Trimestre' },
+  { id: 1, nombre: 'M1 - Primer Trimestre' },
+  { id: 2, nombre: 'M2 - Segundo Trimestre' },
+  { id: 3, nombre: 'M3 - Tercer Trimestre' },
+  { id: 4, nombre: 'M4 - Parto y Puerperio' },
 ];
 
 const PRIORIDADES = [
-  { id: 1, nombre: 'Informativo' },
-  { id: 2, nombre: 'Bajo' },
-  { id: 3, nombre: 'Moderado' },
-  { id: 4, nombre: 'Alto' },
+  { id: 1, nombre: 'Baja (Informativa/Seguimiento)' },
+  { id: 2, nombre: 'Media (Alerta moderada)' },
+  { id: 3, nombre: 'Alta (Signo de alarma crítico)' },
 ];
 
 const TIPOS_RESPUESTA = [
-  { value: 'si_no', label: 'Sí / No' },
-  { value: 'escala_numerica', label: 'Escala numérica' },
+  { value: 'si_no', label: 'Sí / No (Check)' },
+  { value: 'escala_numerica', label: 'Escala numérica (1 - 10)' },
   { value: 'texto_libre', label: 'Texto libre' },
 ];
 
 const FRECUENCIAS = [
   { value: 'diaria', label: 'Diaria' },
   { value: 'semanal', label: 'Semanal' },
-  { value: 'unica', label: 'Única' },
+  { value: 'unica', label: 'Única vez' },
 ];
 
 const getModuloLabel = (id?: number | null) =>
-  MODULOS.find(m => m.id === id)?.nombre ?? '—';
+  MODULOS.find(m => m.id === id)?.nombre ?? 'Sin Módulo';
 
 const getPrioridadLabel = (id?: number | null) =>
-  PRIORIDADES.find(p => p.id === id)?.nombre ?? '—';
+  PRIORIDADES.find(p => p.id === id)?.nombre ?? 'Baja';
 
 const getTipoRespuestaLabel = (value?: string | null) =>
   TIPOS_RESPUESTA.find(t => t.value === value)?.label ?? (value || '—');
@@ -68,14 +66,17 @@ export const AdminPreguntas = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  // Estados para el nuevo formulario de creación
   const [form, setForm] = useState({
     descripcion: '',
-    prioridad: '',
-    categoria: '',
-    respuesta: '',
+    moduloId: 1, // M1 por defecto
+    frecuencia: 'diaria',
+    tipoRespuesta: 'si_no',
+    esSignoAlarma: false,
+    prioridadAlerta: 1, // Baja
   });
 
-  // ─── Modal de detalle / edición ───────────────────────────────────────────
+  // Modal de detalle / edición
   const [selected, setSelected] = useState<Pregunta | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<FollowUpQuestionUpdate>({});
@@ -87,22 +88,18 @@ export const AdminPreguntas = () => {
     setErrorMsg(null);
     try {
       const data = await getFollowUpQuestions({ page: 1, size: 100 });
-      // Filtrar activas y mapear campos a la estructura visual del frontend
       const mapped = data.filter(q => q.activo).map((q) => {
         let prioridad: 'Alta' | 'Medio' | 'Baja' = 'Baja';
-        if (q.prioridad_alerta_default_id === 4) prioridad = 'Alta';
-        else if (q.prioridad_alerta_default_id === 3) prioridad = 'Medio';
+        if (q.prioridad_alerta_default_id === 3) prioridad = 'Alta';
+        else if (q.prioridad_alerta_default_id === 2) prioridad = 'Medio';
 
-        let categoria = 'Síntomas';
-        if (q.modulo_id === 3) categoria = 'Controles';
-        else if (q.modulo_id === 4) categoria = 'Medicamentos';
+        const categoria = getModuloLabel(q.modulo_id);
 
         return {
           id: q.id,
           texto: q.texto_pregunta,
           categoria,
           prioridad,
-          respuesta: '', // respuesta no se mapea en el backend de seguimiento directo
           tipo_respuesta: q.tipo_respuesta,
           modulo_id: q.modulo_id,
           frecuencia: q.frecuencia,
@@ -125,30 +122,28 @@ export const AdminPreguntas = () => {
   }, []);
 
   const guardar = async () => {
-    if (!form.descripcion || !form.prioridad || !form.categoria) return;
+    if (!form.descripcion) return;
     setErrorMsg(null);
-
-    // Mapear prioridad visual a ID de prioridad en base de datos
-    let priorityId = 2; // Riesgo bajo (verde)
-    if (form.prioridad === 'Alta') priorityId = 4; // Riesgo alto (rojo)
-    else if (form.prioridad === 'Medio') priorityId = 3; // Riesgo moderado (amarillo)
-
-    // Mapear categoría visual a ID de módulo clínico
-    let moduloId = 2; // Primer Trimestre (M1) -> Síntomas
-    if (form.categoria === 'Controles') moduloId = 3; // Segundo Trimestre (M2) -> Controles
-    else if (form.categoria === 'Medicamentos') moduloId = 4; // Tercer Trimestre (M3) -> Medicamentos
 
     try {
       await createFollowUpQuestion({
         texto_pregunta: form.descripcion,
-        tipo_respuesta: 'si_no',
-        modulo_id: moduloId,
-        frecuencia: 'diaria',
-        es_signo_alarma: form.prioridad === 'Alta' || form.prioridad === 'Medio',
-        prioridad_alerta_default_id: priorityId,
+        tipo_respuesta: form.tipoRespuesta,
+        modulo_id: Number(form.moduloId),
+        frecuencia: form.frecuencia,
+        es_signo_alarma: form.esSignoAlarma,
+        prioridad_alerta_default_id: Number(form.prioridadAlerta),
         orden: 0
       });
-      setForm({ descripcion: '', prioridad: '', categoria: '', respuesta: '' });
+      // Reset form
+      setForm({
+        descripcion: '',
+        moduloId: 1,
+        frecuencia: 'diaria',
+        tipoRespuesta: 'si_no',
+        esSignoAlarma: false,
+        prioridadAlerta: 2,
+      });
       await fetchPreguntas();
     } catch (err: any) {
       console.error(err);
@@ -221,96 +216,127 @@ export const AdminPreguntas = () => {
   const baja  = preguntas.filter(p => p.prioridad === 'Baja').length;
   const cats  = [...new Set(preguntas.map(p => p.categoria))];
 
-
   return (
     <div className={styles.root}>
-
-      {/*header con tabs*/}
       <HeaderActividad rol="medico" tabActivo="Preguntas" />
 
-      {/*main grid*/}
       <div className={styles.grid}>
-
-        {/*column izq*/}
+        {/* Columna Izquierda: Formulario de Registro */}
         <div className={styles.leftCol}>
-
-          {/* Formulario */}
           <div className={styles.panel}>
-            <h2 className={styles.panelTitle}>Formular Preguntas</h2>
-            <p className={styles.secDesc}>Crea preguntas frecuentes para mejorar las respuestas del sistema.</p>
-            {errorMsg && <p style={{ color: '#dc2626', fontSize: '13px', margin: '8px 0 0 0', fontWeight: '500' }}>⚠️ {errorMsg}</p>}
-            {loading && <p style={{ color: '#666', fontSize: '12px', margin: '8px 0 0 0' }}>Cargando preguntas...</p>}
-
+            <h2 className={styles.panelTitle}>Formular Preguntas de Seguimiento</h2>
+            <p className={styles.secDesc}>
+              Registra preguntas de control diario/semanal que las gestantes responderán para el monitoreo clínico.
+            </p>
+            {errorMsg && <p style={{ color: '#dc2626', fontSize: '13px', margin: '8px 0', fontWeight: '500' }}>⚠️ {errorMsg}</p>}
+            {loading && <p style={{ color: '#666', fontSize: '12px', margin: '8px 0' }}>Cargando preguntas...</p>}
 
             <div className={styles.formRow}>
               <div className={styles.formGroup}>
-                <label className={styles.label}>Descripción</label>
+                <label className={styles.label}>Pregunta</label>
                 <textarea
                   className={styles.textarea}
-                  placeholder="Escribe la descripción de la pregunta..."
+                  placeholder="Ej: ¿Has tenido dolor de cabeza constante hoy?"
                   value={form.descripcion}
                   onChange={e => setForm({ ...form, descripcion: e.target.value })}
+                  style={{ height: '110px' }}
                 />
               </div>
+
               <div className={styles.formRightGroup}>
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Prioridad</label>
+                  <label className={styles.label}>Módulo de la Gestante</label>
                   <select
                     className={styles.select}
-                    value={form.prioridad}
-                    onChange={e => setForm({ ...form, prioridad: e.target.value })}
+                    value={form.moduloId}
+                    onChange={e => setForm({ ...form, moduloId: Number(e.target.value) })}
                   >
-                    <option value="">Seleccionar</option>
-                    <option>Alta</option>
-                    <option>Medio</option>
-                    <option>Baja</option>
+                    {MODULOS.map(m => (
+                      <option key={m.id} value={m.id}>{m.nombre}</option>
+                    ))}
                   </select>
                 </div>
+
                 <div className={styles.formGroup}>
-                  <label className={styles.label}>Categoría</label>
+                  <label className={styles.label}>Frecuencia de Pregunta</label>
                   <select
                     className={styles.select}
-                    value={form.categoria}
-                    onChange={e => setForm({ ...form, categoria: e.target.value })}
+                    value={form.frecuencia}
+                    onChange={e => setForm({ ...form, frecuencia: e.target.value })}
                   >
-                    <option value="">Seleccionar</option>
-                    <option>Síntomas</option>
-                    <option>Controles</option>
-                    <option>Medicamentos</option>
+                    {FRECUENCIAS.map(f => (
+                      <option key={f.value} value={f.value}>{f.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
             </div>
 
-            <div className={styles.formGroup}>
-              <label className={styles.label}>Respuesta Recomendada</label>
-              <textarea
-                className={`${styles.textarea} ${styles.textareaLarge}`}
-                placeholder="Escribe la respuesta que el sistema proporcionará automáticamente..."
-                value={form.respuesta}
-                onChange={e => setForm({ ...form, respuesta: e.target.value })}
+            <div className={styles.formRow} style={{ marginTop: '10px' }}>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Tipo de Respuesta</label>
+                <select
+                  className={styles.select}
+                  value={form.tipoRespuesta}
+                  onChange={e => setForm({ ...form, tipoRespuesta: e.target.value })}
+                >
+                  {TIPOS_RESPUESTA.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label className={styles.label}>Prioridad de Alerta</label>
+                <select
+                  className={styles.select}
+                  value={form.prioridadAlerta}
+                  onChange={e => setForm({ ...form, prioridadAlerta: Number(e.target.value) })}
+                >
+                  {PRIORIDADES.map(p => (
+                    <option key={p.id} value={p.id}>{p.nombre}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div className={styles.formGroup} style={{ marginTop: '15px', display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="checkbox"
+                id="esSignoAlarma"
+                checked={form.esSignoAlarma}
+                onChange={e => setForm({
+                  ...form,
+                  esSignoAlarma: e.target.checked,
+                  // Si es signo de alarma, sube automáticamente la prioridad a Moderada/Alta
+                  prioridadAlerta: e.target.checked ? (form.prioridadAlerta === 2 ? 3 : form.prioridadAlerta) : form.prioridadAlerta
+                })}
+                style={{ width: '18px', height: '18px', cursor: 'pointer' }}
               />
+              <label htmlFor="esSignoAlarma" className={styles.label} style={{ cursor: 'pointer', userSelect: 'none' }}>
+                ¿Es un signo de alarma crítico? (Generará alerta para el equipo médico si responde afirmativo)
+              </label>
             </div>
 
             <div className={styles.formFooter}>
-              <button className={styles.guardarBtn} onClick={guardar}>
-                Guardar Pregunta
+              <button className={styles.guardarBtn} onClick={guardar} disabled={!form.descripcion}>
+                Registrar Pregunta
               </button>
             </div>
           </div>
 
           {/* Resumen */}
           <div className={styles.panel}>
-            <h2 className={styles.panelTitle}>Resumen de preguntas</h2>
-            <p className={styles.secDesc}>Visualiza rápidamente cuántas preguntas hay por tipo y categoría.</p>
+            <h2 className={styles.panelTitle}>Resumen de Preguntas Activas</h2>
+            <p className={styles.secDesc}>Visualización del catálogo actual por prioridad y módulo clínico.</p>
 
             <div className={styles.resumenGrid}>
               <div>
                 <div className={styles.totalBox}>
-                  <span className={styles.totalLabel}>Total de registradas</span>
+                  <span className={styles.totalLabel}>Total registradas</span>
                   <span className={styles.totalNum}>{preguntas.length}</span>
                 </div>
-                <p className={styles.label}>Por Tipo</p>
+                <p className={styles.label}>Por Prioridad</p>
                 <table className={styles.resumenTable}>
                   <tbody>
                     <tr>
@@ -329,7 +355,7 @@ export const AdminPreguntas = () => {
                 </table>
               </div>
               <div>
-                <p className={styles.label}>Por Categoría</p>
+                <p className={styles.label}>Por Módulo Clínico</p>
                 <table className={styles.resumenTable}>
                   <tbody>
                     {cats.map(cat => (
@@ -345,19 +371,32 @@ export const AdminPreguntas = () => {
               </div>
             </div>
           </div>
-
         </div>
 
-        {/*colum derecha de preguntas*/}
+        {/* Columna Derecha: Preguntas Registradas */}
         <div className={`${styles.panel} ${styles.panelScroll}`}>
-          <h2 className={styles.panelTitle}>Preguntas Registradas</h2>
-          <p className={styles.secDesc}>Consulta y administra las preguntas ya creadas desde una sola vista.</p>
+          <h2 className={styles.panelTitle}>Catálogo de Preguntas</h2>
+          <p className={styles.secDesc}>Administra las preguntas clínicas asignadas a cada etapa.</p>
+
+          {/* Aviso: solo se muestran preguntas activas */}
+          <div style={{
+            display: 'flex', alignItems: 'flex-start', gap: '8px',
+            padding: '10px 12px', background: '#f0f9ff', border: '1px solid #bae6fd',
+            borderRadius: '8px', marginBottom: '12px'
+          }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0284c7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '1px', flexShrink: 0 }}>
+              <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <p style={{ margin: 0, fontSize: '11px', color: '#0369a1', lineHeight: '1.5' }}>
+              Mostrando <strong>{preguntas.length} preguntas activas</strong>. Las preguntas desactivadas no se listan aquí, pero siguen en el sistema. Puedes desactivar una pregunta desde el modal de edición.
+            </p>
+          </div>
 
           <table className={styles.tabla}>
             <thead>
               <tr>
                 <th>Pregunta</th>
-                <th>Categoría</th>
+                <th>Módulo</th>
                 <th>Prioridad</th>
                 <th>Acciones</th>
               </tr>
@@ -370,7 +409,7 @@ export const AdminPreguntas = () => {
                   style={{ cursor: 'pointer' }}
                 >
                   <td className={styles.pregTexto}>{p.texto}</td>
-                  <td className={styles.pregCat}>{p.categoria}</td>
+                  <td className={styles.pregCat}>{p.categoria.split(' - ')[0]}</td>
                   <td>
                     <span className={styles.badge} style={colorPrioridad(p.prioridad)}>
                       {p.prioridad}
@@ -389,10 +428,9 @@ export const AdminPreguntas = () => {
             </tbody>
           </table>
         </div>
-
       </div>
 
-      {/* Modal de detalle / edición de pregunta */}
+      {/* Modal de detalle / edición */}
       {selected && (
         <Modal
           isOpen={!!selected}
